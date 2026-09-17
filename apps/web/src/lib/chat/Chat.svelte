@@ -38,6 +38,13 @@
       draft = '';
     } else onplayhint();
   }
+  // Tab in the empty field completes the ghost hint so it can be edited or sent.
+  const keydown = (e: KeyboardEvent) => {
+    if (e.key === 'Tab' && !draft && hint) {
+      e.preventDefault();
+      draft = hint;
+    }
+  };
   const focusIn = () => oninput(true);
   const focusOut = () => oninput(draft.length > 0);
   const send = (p: string) => () => onsend(p);
@@ -80,6 +87,7 @@
         autocomplete="off"
         onfocus={focusIn}
         onblur={focusOut}
+        onkeydown={keydown}
       />
     </div>
     <button type="submit" aria-label={draft ? 'send' : 'ask the suggested question'}

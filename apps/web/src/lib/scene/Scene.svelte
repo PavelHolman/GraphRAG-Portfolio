@@ -15,28 +15,32 @@
     preview: ReadonlySet<number> | null;
     focus: number | null;
     portrait: boolean;
+    /** While a question is open the caption needs room: the view shifts up a little. */
+    lift: boolean;
     onpick?: ((index: number) => void) | undefined;
   }
-  let { graph, subgraph, preview, focus, portrait, onpick }: Props = $props();
+  let { graph, subgraph, preview, focus, portrait, lift, onpick }: Props = $props();
   interactivity();
   const positions = $derived(relayout(graph.positions, subgraph));
   const zoom = $derived(portrait ? 1.9 : 1);
   // On wide screens the constellation sits right of centre, beside the intro copy. The canvas stays
   // full width and the graph keeps orbiting its own centre: only the projection is shifted.
   const VIEW_SHIFT = 0.2;
+  const VIEW_LIFT = 0.1;
   const { invalidate, renderer, camera, size } = useThrelte();
   $effect(() => {
     const cam = $camera;
     const { width, height } = $size;
     if (!(cam instanceof PerspectiveCamera)) return;
-    if (portrait) cam.clearViewOffset();
-    else cam.setViewOffset(width, height, -width * VIEW_SHIFT, 0, width, height);
+    const dy = lift ? height * VIEW_LIFT : 0;
+    if (portrait) cam.setViewOffset(width, height, 0, dy, width, height);
+    else cam.setViewOffset(width, height, -width * VIEW_SHIFT, dy, width, height);
     invalidate();
   });
 
   // The wheel zooms only a little; at either end of the range the page scrolls instead.
-  const MIN_DISTANCE = 18;
-  const MAX_DISTANCE = 42;
+  const MIN_DISTANCE = 22;
+  const MAX_DISTANCE = 38;
   const DRIFT = 0.09;
 
   let controls = $state<CC | undefined>();

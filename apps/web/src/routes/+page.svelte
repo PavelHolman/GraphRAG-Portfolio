@@ -127,6 +127,7 @@
             {preview}
             focus={turn.focusNodeIndex()}
             {portrait}
+            lift={conversing}
             {onpick}
           />
         </Canvas>
@@ -215,6 +216,10 @@
   }
   .intro > * {
     pointer-events: auto;
+  }
+  /* With a question open the caption takes the lower part of the Hero; the intro moves up. */
+  .intro.aside {
+    transform: translateY(calc(-54% - 8vh));
   }
   @media (max-width: 760px) {
     .intro.aside {
