@@ -148,6 +148,14 @@
 	});
 
 	const seedLabels = $derived(labelSeeds && subgraph ? [...subgraph.seeds].slice(0, 12) : []);
+	// label anchors tracked per frame so labels follow nodes during a relayout
+	let labelPos = $state<Record<number, [number, number, number]>>({});
+	useTask(() => {
+		if (!seedLabels.length) return;
+		const next: Record<number, [number, number, number]> = {};
+		for (const i of seedLabels) next[i] = [cur[i * 3], cur[i * 3 + 1] + nodeSize * 3.2, cur[i * 3 + 2]];
+		labelPos = next;
+	});
 </script>
 
 <T is={mesh} onclick={(e: any) => e.instanceId != null && onpick?.(e.instanceId)} />
@@ -155,7 +163,7 @@
 <T.LineSegments geometry={edgeGeo} material={edgeMat} />
 
 {#each seedLabels as i (i)}
-	<Billboard position={[cur[i * 3], cur[i * 3 + 1] + nodeSize * 3.2, cur[i * 3 + 2]]}>
+	<Billboard position={labelPos[i] ?? [cur[i * 3], cur[i * 3 + 1] + nodeSize * 3.2, cur[i * 3 + 2]]}>
 		<Text text={graph.nodes[i].title} fontSize={0.42} color="#f4f6fb" anchorX="center" anchorY="bottom"
 			fillOpacity={0.95} outlineWidth={0.02} outlineColor="#070a12" outlineOpacity={0.9} />
 	</Billboard>
