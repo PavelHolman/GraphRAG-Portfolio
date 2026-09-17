@@ -28,7 +28,7 @@ Each Experience, Education and Skill item carries a small "ask about this" affor
 
 ## Navigation
 
-Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. Translucent over the Hero, opaque `--panel` once scrolled past it. On phones the anchors collapse into a menu; the three links stay as icons.
+Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. Frosted glass throughout (translucent panel plus `backdrop-filter`), deepening once the Hero is scrolled past. On phones the anchors collapse into a menu; the three links stay as icons.
 
 ## Generated files
 
