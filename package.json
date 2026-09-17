@@ -18,7 +18,7 @@
     "eval": "bun run packages/retrieval/eval/run.ts",
     "eval:answers": "bun run packages/retrieval/eval/run.ts --answers",
     "content:check": "bun run packages/graph-index/src/cli.ts check",
-    "content:index": "bun run packages/graph-index/src/cli.ts index",
+    "content:index": "oxfmt content && bun run packages/graph-index/src/cli.ts index",
     "content:ask": "bun run packages/graph-index/src/cli.ts ask",
     "content:new": "bun run packages/graph-index/src/cli.ts new",
     "prepare": "husky"
