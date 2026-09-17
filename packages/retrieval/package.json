@@ -13,5 +13,9 @@
     "@graphrag/schema": "workspace:*",
     "effect": "4.0.0-rc.115",
     "temporal-polyfill": "^1.0.5"
+  },
+  "devDependencies": {
+    "@graphrag/graph-index": "workspace:*",
+    "yaml": "^2.9.1"
   }
 }

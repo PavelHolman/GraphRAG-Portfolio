@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "group:allNonMajor", "schedule:weekly"],
+  "packageRules": [
+    {
+      "groupName": "oxc",
+      "matchPackageNames": ["oxlint", "oxfmt", "oxlint-plugin-eslint"]
+    },
+    {
+      "groupName": "effect rc",
+      "matchPackageNames": ["effect", "@effect/**"]
+    }
+  ],
+  "automerge": false
+}

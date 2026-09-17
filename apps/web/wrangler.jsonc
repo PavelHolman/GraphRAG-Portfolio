@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "graphrag-web",
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".svelte-kit/cloudflare", "binding": "ASSETS" },
+  "ai": { "binding": "AI" },
+  "observability": { "enabled": true },
+  "vars": {
+    "LLM_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "DEPLOYMENT_ENVIRONMENT": "production",
+  },
+  // Secrets (wrangler secret put): WORKERS_AI_TOKEN, CLOUDFLARE_ACCOUNT_ID,
+  // OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_HEADERS. docs/spec/ci.md.
+}

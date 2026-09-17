@@ -1,0 +1,36 @@
+{
+  "name": "@graphrag/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@graphrag/graph-index": "workspace:*",
+    "@graphrag/retrieval": "workspace:*",
+    "@graphrag/schema": "workspace:*",
+    "effect": "4.0.0-rc.115",
+    "temporal-polyfill": "^1.0.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260917.1",
+    "@playwright/test": "^1.63.0",
+    "@sveltejs/adapter-cloudflare": "^7.2.9",
+    "@sveltejs/kit": "^2.70.3",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@threlte/core": "^8.6.0",
+    "@threlte/extras": "^9.21.1",
+    "@types/three": "0.186.0",
+    "camera-controls": "^3.1.2",
+    "svelte": "^5.57.0",
+    "svelte-check": "^4.7.6",
+    "three": "0.186.0",
+    "vite": "^8.3.0",
+    "wrangler": "^4.133.0"
+  }
+}

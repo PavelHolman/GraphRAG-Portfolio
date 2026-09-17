@@ -1,0 +1,10 @@
+{
+  "file_types": {
+    "Markdown": ["content/**/*.md"],
+    "YAML": ["content/hints.yaml", "evals/cases/*.yaml"]
+  },
+  "format_on_save": "on",
+  "formatter": {
+    "external": { "command": "bunx", "arguments": ["oxfmt", "--stdin-filepath", "{buffer_path}"] }
+  }
+}

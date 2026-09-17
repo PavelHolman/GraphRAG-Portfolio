@@ -1,0 +1,107 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [master]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      content_only: ${{ steps.co.outputs.content_only }}
+      render: ${{ steps.filter.outputs.render }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '!(content/**|packages/graph-index/generated/**|packages/graph-index/.cache/**)'
+            render:
+              - 'content/**'
+              - 'apps/web/src/routes/print/**'
+              - 'apps/web/src/lib/sections/**'
+      - run: echo "content_only=${{ steps.filter.outputs.code == 'false' }}" >> "$GITHUB_OUTPUT"
+        id: co
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - run: bun content:check
+      - run: bun content:index --verify # rebuild from the committed cache, fail on miss or diff
+      - run: bun lint
+      - run: bun format:check
+      - run: bun typecheck
+      - run: bun test
+      - run: bun eval
+      - if: github.event_name == 'pull_request'
+        run: echo "${{ github.event.pull_request.title }}" | bunx commitlint
+      # content:render (cv.pdf, hero.png) is not implemented yet; docs/spec/page.md.
+      # - if: steps.filter.outputs.render == 'true'
+      #   run: bun run build && bunx playwright install --with-deps chromium && bun content:render --verify
+
+  e2e:
+    needs: check
+    if: needs.check.outputs.content_only != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bunx playwright install --with-deps chromium
+      - run: bun test:e2e
+        env:
+          CI: 'true'
+
+  preview:
+    needs: [check, e2e]
+    if: github.event_name == 'pull_request' && always() && needs.check.result == 'success' && (needs.e2e.result == 'success' || needs.e2e.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - id: upload
+        run: |
+          url=$(bunx wrangler versions upload --config apps/web/wrangler.jsonc --json | jq -r '.previewUrl // .preview_url')
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: 'Preview: ${{ steps.upload.outputs.url }}'
+
+  deploy:
+    needs: [check, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bunx wrangler deploy --config apps/web/wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
