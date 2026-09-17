@@ -1,6 +1,6 @@
 ---
 title: Pavel Holman
-summary: AI engineer and co-founder; leads small teams that ship products; three-time ICPC finalist. Open to remote work and thesis-linked collaboration.
+summary: AI engineer and co-founder writing software professionally since 2020; leads small teams that ship products; three-time ICPC finalist. Open to remote work and thesis-linked collaboration.
 headline: AI engineer and co-founder
 lede: AI master's student at CTU and co-founder of two shipped products. I lead small teams end to end, from Kotlin backends and multiplatform apps at Deels to a SvelteKit and Effect lab platform at poqet, with agentic development tooling that keeps both honest. ICPC finalist, three times.
 location: Prague, Czechia
@@ -15,6 +15,6 @@ languages:
   English: professional working proficiency (Cambridge English First, B2)
 ---
 
-Pavel Holman is a Prague software engineer finishing a master's degree in Artificial Intelligence at CTU FEE (expected June 2027) after a bachelor's in AI at CTU FIT. He co-founded DeelsCorp (2024) and poqet (2026) and is the principal engineer of both: he led the four-person Deels team across mobile apps, a Kotlin backend, APIs and infrastructure, and now leads the three-person SLIM team while owning its agent-assisted development process. Part-time at Merica since 2020 on C# business software. ICPC finalist at CERC 2024, CERC 2025 and EUC 2026.
+Pavel Holman is a Prague software engineer, working professionally since March 2020, finishing a master's degree in Artificial Intelligence at CTU FEE (expected June 2027) after a bachelor's in AI at CTU FIT. He co-founded DeelsCorp (2024) and poqet (2026) and is the principal engineer of both: he led the four-person Deels team across mobile apps, a Kotlin backend, APIs and infrastructure, and now leads the three-person SLIM team while owning its agent-assisted development process. Part-time at Merica since 2020 on C# business software. ICPC finalist at CERC 2024, CERC 2025 and EUC 2026.
 
 Strongest skills: TypeScript with Effect, Kotlin, and agentic engineering. He prefers practical impact over theory, typed and explicit systems, and claims backed by evidence, which is why this portfolio answers from a knowledge graph with citations. Interests: programming languages (Kotlin, Swift, Rust), functional programming, algorithms, and neuro-symbolic AI and automated experimentation as areas he is curious about.

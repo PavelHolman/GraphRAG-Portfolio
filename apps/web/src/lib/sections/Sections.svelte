@@ -40,6 +40,8 @@
           <dd>{model.person.name}</dd>
           {#if model.person.headline}<dt>Role</dt>
             <dd>{model.person.headline}</dd>{/if}
+          {#if model.person.experience}<dt>Experience</dt>
+            <dd>{model.person.experience}</dd>{/if}
           {#if model.person.location}<dt>Location</dt>
             <dd>{model.person.location}</dd>{/if}
           {#if email}<dt>Email</dt>

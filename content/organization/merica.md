@@ -1,6 +1,6 @@
 ---
 title: Merica
-summary: Czech software company (Merica s.r.o.) building C# business software, including an ERP system.
+summary: Czech software company building C# business software, including an ERP system.
 kind: company
 location: Czechia
 in-domain: [domain/business-software]

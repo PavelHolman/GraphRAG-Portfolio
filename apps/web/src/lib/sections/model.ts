@@ -4,6 +4,7 @@ import { compareStart, startOf } from '@graphrag/schema';
 /** Section view models built server-side from the artifact. `docs/spec/page.md`. */
 export interface ExperienceItem {
   readonly id: string;
+  readonly startYear: number | undefined;
   readonly title: string;
   readonly role: string | undefined;
   readonly organization: string | undefined;
@@ -63,6 +64,8 @@ export interface PageModel {
     body: string;
     location: string | undefined;
     availability: string | undefined;
+    /** Derived from the earliest Experience start, e.g. "6 years, since 2020". */
+    experience: string | undefined;
     links: Record<string, string>;
     languages: Record<string, string>;
   };
@@ -86,6 +89,14 @@ const field = (n: ArtifactNode, k: string): string | undefined => {
   const v = n.fields[k];
   return typeof v === 'string' ? v : undefined;
 };
+/** "6 years, since 2020": whole years from the earliest start to today. Never authored. ADR 0001. */
+const yearsOfExperience = (years: ReadonlyArray<number | undefined>): string | undefined => {
+  const starts = years.filter((y): y is number => y !== undefined);
+  if (!starts.length) return undefined;
+  const since = Math.min(...starts);
+  const n = Temporal.Now.plainDateISO().year - since;
+  return `${n} year${n === 1 ? '' : 's'}, since ${since}`;
+};
 const urlOf = (n: ArtifactNode | undefined): string | undefined =>
   n ? field(n, 'url') : undefined;
 
@@ -108,6 +119,7 @@ export const buildPageModel = (
     .sort(byStartDesc)
     .map((n): ExperienceItem => ({
       id: n.id,
+      startYear: n.start ? startOf(n.start).year : undefined,
       title: n.title,
       role: field(n, 'role'),
       organization: byId.get(out(n.id, 'at')[0]?.target ?? '')?.title,
@@ -195,6 +207,7 @@ export const buildPageModel = (
       body: person?.body ?? '',
       location: person ? field(person, 'location') : undefined,
       availability: person ? field(person, 'availability') : undefined,
+      experience: yearsOfExperience(experience.map((x) => x.startYear)),
       links: person?.links ?? {},
       languages: person?.languages ?? {},
     },

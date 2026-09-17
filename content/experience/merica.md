@@ -16,4 +16,4 @@ uses:
 in-domain: [domain/business-software]
 ---
 
-Part-time software developer at Merica (Merica s.r.o.) since March 2020, occasional project work alongside studies. Developed features and data loaders for FERP, Merica's ERP system; worked in a two-person team on an employee rostering solver built with Google OR-Tools and OptalCP, leading the constraint modelling; and modernised a technology stack from .NET Framework to .NET Core.
+Part-time software developer at Merica since March 2020, occasional project work alongside studies. Developed features and data loaders for FERP, Merica's ERP system; worked in a two-person team on an employee rostering solver built with Google OR-Tools and OptalCP, leading the constraint modelling; and modernised a technology stack from .NET Framework to .NET Core.
