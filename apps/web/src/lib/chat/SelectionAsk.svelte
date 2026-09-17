@@ -19,6 +19,8 @@
   let text = $state('');
   /** The selection's bottom-right corner, in viewport coordinates. */
   let corner = $state<{ x: number; y: number } | null>(null);
+  /** An accent bar at each end of the selection, so its extent reads at a glance. */
+  let bars = $state<Array<{ x: number; y: number; h: number }>>([]);
   let pillWidth = $state(0);
   let pillHeight = $state(0);
   let viewportWidth = $state(0);
@@ -39,6 +41,7 @@
   const clear = () => {
     text = '';
     corner = null;
+    bars = [];
   };
 
   const read = () => {
@@ -50,10 +53,15 @@
     // The last client rect is the selection's final line, so the pill lands where the text ends
     // rather than at the right edge of the widest line.
     const rects = sel.getRangeAt(0).getClientRects();
+    const first = rects[0];
     const last = rects[rects.length - 1];
-    if (!last || (!last.width && !last.height)) return clear();
+    if (!first || !last || (!last.width && !last.height)) return clear();
     text = picked;
     corner = { x: last.right, y: last.bottom + GAP };
+    bars = [
+      { x: first.left, y: first.top, h: first.height },
+      { x: last.right, y: last.top, h: last.height },
+    ];
   };
 
   // `selectionchange` fires on every pointer move through a drag; one read per frame is plenty.
@@ -80,13 +88,21 @@
   onresize={schedule}
 />
 
+{#each bars as b, i (i)}
+  <span
+    class="bar"
+    aria-hidden="true"
+    style:transform="translate3d({b.x}px, {b.y}px, 0)"
+    style:height="{b.h}px"
+  ></span>
+{/each}
+
 {#if text && corner}
   <button
     class="pill"
     bind:clientWidth={pillWidth}
     bind:clientHeight={pillHeight}
-    style:left="{left}px"
-    style:top="{top}px"
+    style:transform="translate3d({left}px, {top}px, 0)"
     title="Ask about the selected text"
     onmousedown={(e) => e.preventDefault()}
     onclick={() => {
@@ -99,10 +115,31 @@
 {/if}
 
 <style>
+  .bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(255, 138, 114, 0.6);
+    pointer-events: none;
+    z-index: 39;
+    will-change: transform;
+    /* Follows the drag instead of snapping to each new rect. */
+    transition:
+      transform 0.12s cubic-bezier(0.22, 1, 0.36, 1),
+      height 0.12s ease;
+    animation: appear 0.15s ease;
+  }
   .pill {
     position: fixed;
+    top: 0;
+    left: 0;
     /* Over the sticky header, which sits at 30. */
     z-index: 40;
+    will-change: transform;
+    transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
     white-space: nowrap;
     background: var(--panel);
     border: 1px solid var(--accent);
@@ -127,8 +164,10 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
+    .bar,
     .pill {
       animation: none;
+      transition: none;
     }
   }
 </style>
