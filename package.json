@@ -13,7 +13,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "typecheck": "bun run --filter '*' typecheck",
-    "test": "bun test packages",
+    "test": "bun test",
     "test:e2e": "bun run --filter @graphrag/web test:e2e",
     "eval": "bun run packages/retrieval/eval/run.ts",
     "eval:answers": "bun run packages/retrieval/eval/run.ts --answers",

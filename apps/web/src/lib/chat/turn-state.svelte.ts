@@ -3,41 +3,8 @@
 import type { HistoryTurn, TurnEvent, TurnRequest } from '@graphrag/schema';
 import type { SceneGraph, Subgraph } from '$lib/scene/types.ts';
 import { streamTurn } from './client.ts';
-import type { CitePart, Message } from './types.ts';
-
-/** How far back in the streamed text a Citation may reach to underline its mention. */
-const MENTION_WINDOW = 240;
-
-/**
- * Places a Citation on the nearest preceding mention of one of `names` in the Answer text, so the
- * existing words get underlined instead of a second name being appended. Without a mention the
- * Citation is appended bare (superscript only).
- */
-export const attachCitation = (a: Message, cite: CitePart, names: ReadonlyArray<string>): void => {
-  const last = a.parts.at(-1);
-  if (last?.kind === 'text') {
-    const hay = last.text.toLowerCase();
-    let best: { at: number; len: number } | undefined;
-    for (const name of names) {
-      const needle = name.trim().toLowerCase();
-      if (needle.length < 2) continue;
-      const at = hay.lastIndexOf(needle);
-      if (at === -1 || hay.length - at > MENTION_WINDOW) continue;
-      if (!best || at > best.at) best = { at, len: needle.length };
-    }
-    if (best) {
-      const before = last.text.slice(0, best.at);
-      const label = last.text.slice(best.at, best.at + best.len);
-      const after = last.text.slice(best.at + best.len);
-      a.parts.pop();
-      if (before) a.parts.push({ kind: 'text', text: before });
-      a.parts.push({ ...cite, label });
-      if (after) a.parts.push({ kind: 'text', text: after });
-      return;
-    }
-  }
-  a.parts.push(cite);
-};
+import { attachCitation } from './mention.ts';
+import type { Message } from './types.ts';
 
 export class TurnState {
   messages = $state<Message[]>([]);

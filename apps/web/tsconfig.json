@@ -12,7 +12,7 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "types": ["@cloudflare/workers-types"],
+    "types": ["@cloudflare/workers-types", "bun"],
     "plugins": [{ "name": "@effect/language-service" }]
   }
 }

@@ -13,7 +13,7 @@ bun content:check              # validate the Knowledge Graph
 bun content:index              # rebuild the committed artifact (needs WORKERS_AI_TOKEN + CLOUDFLARE_ACCOUNT_ID for real embeddings)
 bun content:ask "a question"   # what retrieval would select, no LLM
 bun dev                        # SvelteKit dev server against the committed artifact
-bun test                       # unit tests (packages/)
+bun test                       # unit tests: every *.test.ts (Playwright owns *.e2e.ts)
 bun eval                       # retrieval-tier evals
 bun lint && bun format:check && bun typecheck
 ```
