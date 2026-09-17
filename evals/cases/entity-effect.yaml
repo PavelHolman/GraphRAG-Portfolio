@@ -1,0 +1,12 @@
+id: entity-effect
+mode: entity
+prompt: Tell me about your Effect work
+retrieval:
+  must_seed: [skill/effect]
+  must_include: [project/graphrag-portfolio, experience/poqet]
+  must_exclude: []
+  max_nodes: 40
+answer:
+  must_cite: [skill/effect]
+  decline: false
+  shape: prose

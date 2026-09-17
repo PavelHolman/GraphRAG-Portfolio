@@ -6,12 +6,12 @@ Decisions from [Decide: CI and deploy workflow](https://github.com/PavelHolman/G
 
 One workflow, `.github/workflows/ci.yml`, on pull requests and pushes to `master`. Four jobs:
 
-| Job | Runs on | Does |
-|---|---|---|
-| `check` | every PR and push | Bun install (cached), `content:check`, artifact verification against the committed cache, `lint`, `format:check`, `typecheck`, unit tests, `bun eval` (retrieval tier), commitlint on the PR title; on content or print-route changes also build + `content:render` verification (PDF text and image dimensions) |
-| `e2e` | code PRs and pushes; skipped for content-only PRs | build, Playwright against the preview build with the recorded LLM layer |
-| `preview` | PRs, after `check` (and `e2e` when it ran) | `wrangler versions upload`, sticky PR comment with the preview URL |
-| `deploy` | pushes to `master`, after `e2e` | `wrangler deploy` |
+| Job       | Runs on                                           | Does                                                                                                                                                                                                                                                                                                             |
+| --------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check`   | every PR and push                                 | Bun install (cached), `content:check`, artifact verification against the committed cache, `lint`, `format:check`, `typecheck`, unit tests, `bun eval` (retrieval tier), commitlint on the PR title; on content or print-route changes also build + `content:render` verification (PDF text and image dimensions) |
+| `e2e`     | code PRs and pushes; skipped for content-only PRs | build, Playwright against the preview build with the recorded LLM layer                                                                                                                                                                                                                                          |
+| `preview` | PRs, after `check` (and `e2e` when it ran)        | `wrangler versions upload`, sticky PR comment with the preview URL                                                                                                                                                                                                                                               |
+| `deploy`  | pushes to `master`, after `e2e`                   | `wrangler deploy`                                                                                                                                                                                                                                                                                                |
 
 Content-only PR = changes limited to `content/**` and `packages/graph-index/generated/**` (and `.cache/**`). Path filtering uses `dorny/paths-filter`; the `e2e` job still reports success when skipped so the required check is satisfied.
 
@@ -21,12 +21,12 @@ Branch protection on `master`: required checks `check` and `e2e`; squash merges 
 
 ## Secrets
 
-| Where | Name | Purpose |
-|---|---|---|
-| GitHub Actions | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | preview and deploy |
-| wrangler secrets (runtime) | `WORKERS_AI_TOKEN` | LLM calls via the OpenAI-compatible REST endpoint until a binding-backed adapter exists; embeddings use the `AI` binding and need no token |
-| wrangler secrets (runtime) | `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS` | telemetry backend |
-| local only | `WORKERS_AI_TOKEN` | `content:index` embedding cache misses; CI never embeds |
+| Where                      | Name                                                        | Purpose                                                                                                                                    |
+| -------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| GitHub Actions             | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`             | preview and deploy                                                                                                                         |
+| wrangler secrets (runtime) | `WORKERS_AI_TOKEN`                                          | LLM calls via the OpenAI-compatible REST endpoint until a binding-backed adapter exists; embeddings use the `AI` binding and need no token |
+| wrangler secrets (runtime) | `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS` | telemetry backend                                                                                                                          |
+| local only                 | `WORKERS_AI_TOKEN`                                          | `content:index` embedding cache misses; CI never embeds                                                                                    |
 
 No Anthropic key anywhere. It appears only if the paid upgrade path is adopted, as a wrangler secret.
 
@@ -75,7 +75,7 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
       - run: bun content:check
-      - run: bun content:index --verify   # rebuild from the committed cache, fail on miss or diff
+      - run: bun content:index --verify # rebuild from the committed cache, fail on miss or diff
       - run: bun lint
       - run: bun format:check
       - run: bun typecheck
@@ -120,7 +120,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
-          message: "Preview: ${{ steps.upload.outputs.url }}"
+          message: 'Preview: ${{ steps.upload.outputs.url }}'
 
   deploy:
     needs: [check, e2e]

@@ -1,0 +1,11 @@
+id: entity-type-skills
+mode: entity
+prompt: What are your skills?
+retrieval:
+  must_seed: [skill/effect, skill/typescript, skill/svelte]
+  must_include: [person/pavel-holman]
+  max_nodes: 40
+answer:
+  must_cite: [skill/typescript]
+  decline: false
+  shape: prose

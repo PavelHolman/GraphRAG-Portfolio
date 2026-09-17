@@ -25,12 +25,12 @@ The build-time indexer (Bun, filesystem, embedding API) and the runtime Retrieva
 
 ## Effect services that cross seams
 
-| Service | Adapters |
-|---|---|
-| `Embedder` | Workers AI binding (runtime), Workers AI REST from Bun (build), fake (tests) |
-| `LanguageModel` | Anthropic via Effect AI, recorded layer (tests) |
-| `GraphArtifact` | disk (build, tests), static import from `graph-index/generated` (runtime) |
-| `Clock` | Effect built-in, for derived Skill spans |
+| Service         | Adapters                                                                     |
+| --------------- | ---------------------------------------------------------------------------- |
+| `Embedder`      | Workers AI binding (runtime), Workers AI REST from Bun (build), fake (tests) |
+| `LanguageModel` | Anthropic via Effect AI, recorded layer (tests)                              |
+| `GraphArtifact` | disk (build, tests), static import from `graph-index/generated` (runtime)    |
+| `Clock`         | Effect built-in, for derived Skill spans                                     |
 
 Rate limiting, tracing, and config are layers the app composes around retrieval; they are not part of retrieval's interface.
 

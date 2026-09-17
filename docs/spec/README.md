@@ -13,18 +13,18 @@ Output of the wayfinder map [Wayfinder map: GraphRAG-powered 3D portfolio resume
 
 ## Specs (`docs/spec/`)
 
-| Spec | Covers |
-|---|---|
-| [tooling.md](tooling.md) | oxlint/oxfmt configs, tsconfig, Temporal polyfill, hooks, commitlint |
-| [scene.md](scene.md) | force layout, answer-time shift, highlight tiers, constellation renderer, palette, mobile |
-| [chat.md](chat.md) | centred field and caption, ghost hints and their Scene preview, citations, stream handling |
-| [page.md](page.md) | Hero plus Sections from the artifact, header, CV and hero image generation, JSON-LD |
-| [authoring.md](authoring.md) | content commands, committed artifact and embedding cache, CI verification |
-| [evals.md](evals.md) | retrieval and answer tiers, case format, commands, committed results |
-| [hardening.md](hardening.md) | input limits, rate limits, neuron budget and model degradation, abuse logging |
-| [observability.md](observability.md) | OpenTelemetry event model, trace shape, browser events, privacy rule |
-| [observability-backend.md](observability-backend.md) | OpenObserve target, Grafana Cloud stopgap, endpoint values, VPS runbook |
-| [ci.md](ci.md) | the workflow file, gates, secrets |
+| Spec                                                 | Covers                                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [tooling.md](tooling.md)                             | oxlint/oxfmt configs, tsconfig, Temporal polyfill, hooks, commitlint                       |
+| [scene.md](scene.md)                                 | force layout, answer-time shift, highlight tiers, constellation renderer, palette, mobile  |
+| [chat.md](chat.md)                                   | centred field and caption, ghost hints and their Scene preview, citations, stream handling |
+| [page.md](page.md)                                   | Hero plus Sections from the artifact, header, CV and hero image generation, JSON-LD        |
+| [authoring.md](authoring.md)                         | content commands, committed artifact and embedding cache, CI verification                  |
+| [evals.md](evals.md)                                 | retrieval and answer tiers, case format, commands, committed results                       |
+| [hardening.md](hardening.md)                         | input limits, rate limits, neuron budget and model degradation, abuse logging              |
+| [observability.md](observability.md)                 | OpenTelemetry event model, trace shape, browser events, privacy rule                       |
+| [observability-backend.md](observability-backend.md) | OpenObserve target, Grafana Cloud stopgap, endpoint values, VPS runbook                    |
+| [ci.md](ci.md)                                       | the workflow file, gates, secrets                                                          |
 
 ## Research (branches `research/*`, `docs/research/*.md`)
 

@@ -8,11 +8,11 @@ Every check below runs before any paid call, in this order: input limits → per
 
 ## Input limits (request schema in `packages/schema`)
 
-| Field | Limit | Error tag |
-|---|---|---|
-| `prompt` | 8,000 characters | `input-too-large` |
-| `history` | 3 Turns, 6,000 characters total | `input-too-large` |
-| `previousUsedIds` | 60 ids, each must exist in the artifact | `input-invalid` |
+| Field             | Limit                                   | Error tag         |
+| ----------------- | --------------------------------------- | ----------------- |
+| `prompt`          | 8,000 characters                        | `input-too-large` |
+| `history`         | 3 Turns, 6,000 characters total         | `input-too-large` |
+| `previousUsedIds` | 60 ids, each must exist in the artifact | `input-invalid`   |
 
 The client pre-checks with the same schema; the server rejects with a terminal `error` event naming the limit.
 
@@ -26,10 +26,10 @@ The client pre-checks with the same schema; the server rejects with a terminal `
 
 One Durable Object (`TurnBudget`) holds per-UTC-day counters. Budget is counted in **estimated neurons**, not requests, because embeddings share Workers AI's 10,000 free neurons per day.
 
-| Pool | Allocation |
-|---|---|
+| Pool                    | Allocation    |
+| ----------------------- | ------------- |
 | Embeddings (query-time) | 2,000 neurons |
-| Turns | 8,000 neurons |
+| Turns                   | 8,000 neurons |
 
 - Turns 0 to 60% of the Turn pool: `@cf/meta/llama-3.3-70b-instruct-fp8-fast`.
 - 60% to 100%: `@cf/qwen/qwen3-30b-a3b-fp8` with reasoning disabled (about six times cheaper per Turn).

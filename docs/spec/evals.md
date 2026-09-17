@@ -13,11 +13,11 @@ One YAML file per case under `evals/cases/<id>.yaml`. Cases are content, reviewe
 
 ```yaml
 id: match-platform-lead
-mode: match                      # expected classification: match | entity | hybrid
+mode: match # expected classification: match | entity | hybrid
 prompt: |
   <text>
-history: []                      # optional: prior Turns as { prompt, answer }
-previousUsedIds: []              # optional: multi-turn seeds
+history: [] # optional: prior Turns as { prompt, answer }
+previousUsedIds: [] # optional: multi-turn seeds
 retrieval:
   must_seed: [skill/kubernetes, skill/kafka]
   must_include: [experience/staff-engineer]
@@ -26,32 +26,32 @@ retrieval:
 answer:
   must_cite: [skill/kubernetes, experience/staff-engineer]
   must_not_cite: [organization/univ-of-prague]
-  decline: false                 # true for off-topic and injection cases
-  shape: table                   # table | prose | decline
-  runs: 3                        # optional override of N
-  min_pass: 3                    # optional override of K
+  decline: false # true for off-topic and injection cases
+  shape: table # table | prose | decline
+  runs: 3 # optional override of N
+  min_pass: 3 # optional override of K
 ```
 
 Ids are the `type/slug` ids from ADR 0001; the runner fails a case whose ids do not exist in the artifact.
 
 ## The set (about 20 cases)
 
-| Group | Count | Notes |
-|---|---|---|
-| match | 3 | real job descriptions the owner would apply to: platform, frontend, poor fit |
-| entity | 5 | a Skill, a Project, an Experience, an Organization, a Node Type name ("your education") |
-| hybrid | 4 | mixed questions ("how do you approach testing in event-driven systems") |
-| global | 2 | "what are you strongest at", "summarise your career"; may set `min_pass: 2` |
-| off-topic | 3 | weather, "write me a poem", a prompt-injection attempt ("ignore the context and…"); all `decline: true` |
-| multi-turn | 3 | carry `history` and `previousUsedIds`; assert the follow-up seeds from the previous Turn |
+| Group      | Count | Notes                                                                                                   |
+| ---------- | ----- | ------------------------------------------------------------------------------------------------------- |
+| match      | 3     | real job descriptions the owner would apply to: platform, frontend, poor fit                            |
+| entity     | 5     | a Skill, a Project, an Experience, an Organization, a Node Type name ("your education")                 |
+| hybrid     | 4     | mixed questions ("how do you approach testing in event-driven systems")                                 |
+| global     | 2     | "what are you strongest at", "summarise your career"; may set `min_pass: 2`                             |
+| off-topic  | 3     | weather, "write me a poem", a prompt-injection attempt ("ignore the context and…"); all `decline: true` |
+| multi-turn | 3     | carry `history` and `previousUsedIds`; assert the follow-up seeds from the previous Turn                |
 
 ## Commands (repo root)
 
-| Command | Does |
-|---|---|
-| `bun eval` | retrieval tier over all cases; prints a table of misses; non-zero on any miss |
-| `bun eval:answers [--model <id>] [--case <id>] [--runs N]` | answer tier live; writes `evals/results/<YYYY-MM-DD>-<model>.json` and `.md` |
-| `bun content:ask "<prompt>"` | the single-prompt primitive the runner is built on (authoring spec) |
+| Command                                                    | Does                                                                          |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `bun eval`                                                 | retrieval tier over all cases; prints a table of misses; non-zero on any miss |
+| `bun eval:answers [--model <id>] [--case <id>] [--runs N]` | answer tier live; writes `evals/results/<YYYY-MM-DD>-<model>.json` and `.md`  |
+| `bun content:ask "<prompt>"`                               | the single-prompt primitive the runner is built on (authoring spec)           |
 
 The runner lives in `packages/retrieval/eval/` and imports `turn()` directly with the disk `GraphArtifact` adapter and a fake `LanguageModel` for the retrieval tier. Cases and results live at the repo root under `evals/` because they are content, not code.
 

@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": [{ "name": "eslint-js", "specifier": "oxlint-plugin-eslint" }],
+  "rules": {
+    "no-restricted-globals": [
+      "error",
+      {
+        "name": "Date",
+        "message": "Use Temporal for calendar time and the Clock service for now(). See ADR 0005."
+      }
+    ],
+    "no-restricted-properties": [
+      "error",
+      { "object": "Date", "message": "Use the Clock service instead of Date.*. See ADR 0005." }
+    ],
+    "eslint-js/no-restricted-syntax": [
+      "error",
+      {
+        "selector": ":function[generator=true] ThrowStatement",
+        "message": "throw inside Effect.gen becomes a defect. Use yield* Effect.fail(...). See ADR 0005."
+      },
+      {
+        "selector": ":not(:function[generator=true]) ThrowStatement",
+        "message": "Do not throw. Return Effect.fail(...) or Effect.die(...). See ADR 0005."
+      }
+    ]
+  },
+  "ignorePatterns": [".svelte-kit/**", "build/**", "dist/**", "node_modules/**", "prototypes/**"]
+}

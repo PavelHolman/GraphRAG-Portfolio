@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "singleQuote": true,
+  "svelte": {
+    "allowShorthand": true,
+    "indentScriptAndStyle": true,
+    "sortOrder": "options-scripts-markup-styles"
+  },
+  "ignorePatterns": [
+    ".svelte-kit/",
+    "build/",
+    "dist/",
+    "prototypes/",
+    "packages/graph-index/generated/",
+    "packages/graph-index/.cache/",
+    "bun.lock",
+    "evals/results/"
+  ]
+}

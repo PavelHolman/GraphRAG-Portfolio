@@ -1,0 +1,5 @@
+hints:
+  - id: effect
+    prompt: Tell me about your Effect work
+  - id: lead
+    prompt: What did you lead at Acme?

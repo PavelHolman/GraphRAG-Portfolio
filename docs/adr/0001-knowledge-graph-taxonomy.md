@@ -8,15 +8,15 @@ The Knowledge Graph is hand-authored, single-subject, and consumed by GraphRAG-s
 
 ## Node Types
 
-| Type | Instances | Per-type fields |
-|---|---|---|
-| Person | exactly one | `location`, `links` (label → URL) |
-| Skill | many | `category` ∈ `language \| framework \| platform \| practice \| leadership`, `aliases` |
-| Project | many | `start`, `end`, `url`, `repo` |
-| Experience | many | `start` (required), `end`, `role`, `employment` ∈ `full-time \| contract \| freelance \| founder` |
-| Education | many | `start`, `end`, `degree`, `field` |
-| Organization | many | `url`, `location`, `kind` ∈ `company \| university \| client \| community` |
-| Domain | many | `aliases` |
+| Type         | Instances   | Per-type fields                                                                                   |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------------- |
+| Person       | exactly one | `location`, `links` (label → URL)                                                                 |
+| Skill        | many        | `category` ∈ `language \| framework \| platform \| practice \| leadership`, `aliases`             |
+| Project      | many        | `start`, `end`, `url`, `repo`                                                                     |
+| Experience   | many        | `start` (required), `end`, `role`, `employment` ∈ `full-time \| contract \| freelance \| founder` |
+| Education    | many        | `start`, `end`, `degree`, `field`                                                                 |
+| Organization | many        | `url`, `location`, `kind` ∈ `company \| university \| client \| community`                        |
+| Domain       | many        | `aliases`                                                                                         |
 
 Common fields on every Node: `title` (required), `summary` (optional one-liner for labels and hover cards), `hidden` (default `false`: present in the graph, never rendered or cited), and the Edge lists below. A Node Type with fewer than two real instances is not added; the Person Node is the sole exception.
 
@@ -24,16 +24,16 @@ Common fields on every Node: `title` (required), `summary` (optional one-liner f
 
 Edges are directed, declared on the source Node, keyed by Edge type. Each entry is `{ to, note? }` or the bare `to` string as shorthand.
 
-| Edge | From | To |
-|---|---|---|
-| `uses` | Project, Experience | Skill |
-| `at` | Experience, Education | Organization |
-| `delivered` | Experience | Project |
-| `led` | Experience | Project |
-| `in-domain` | Project, Experience, Organization | Domain |
-| `part-of` | Skill | Skill |
-| `related-to` | Skill | Skill |
-| `taught` | Education | Skill |
+| Edge         | From                              | To           |
+| ------------ | --------------------------------- | ------------ |
+| `uses`       | Project, Experience               | Skill        |
+| `at`         | Experience, Education             | Organization |
+| `delivered`  | Experience                        | Project      |
+| `led`        | Experience                        | Project      |
+| `in-domain`  | Project, Experience, Organization | Domain       |
+| `part-of`    | Skill                             | Skill        |
+| `related-to` | Skill                             | Skill        |
+| `taught`     | Education                         | Skill        |
 
 The Person Node declares no Edges; it is implicitly connected to every Node. `note` is optional; when absent, the indexer embeds a template sentence ("<source title> uses <target title>"). Notes on `uses` Edges are where the concrete evidence lives and are what make a job-description match convincing. The build fails on a dangling `to` reference or an Edge type not permitted for the source Node Type.
 

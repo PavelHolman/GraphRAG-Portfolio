@@ -9,12 +9,12 @@ Decisions from the Scene prototype ([ticket](https://github.com/PavelHolman/Grap
 
 ## Highlight language
 
-| State | Colour | Size | Glow |
-|---|---|---|---|
-| Rest | `#d6d2c9`; Person `#f1efe9` | 0.8 + degree-scaled; Person 2.4 | 0.35; Person 0.9 |
-| Seed (cited, in Prompt) | `#ff8a72` (the only accent) | 3.0 | 1.8 |
-| Cited neighbour | `#f1efe9` | 1.7 | 0.7 |
-| Not cited | `#4a4743` | 0.55 | 0 |
+| State                   | Colour                      | Size                            | Glow             |
+| ----------------------- | --------------------------- | ------------------------------- | ---------------- |
+| Rest                    | `#d6d2c9`; Person `#f1efe9` | 0.8 + degree-scaled; Person 2.4 | 0.35; Person 0.9 |
+| Seed (cited, in Prompt) | `#ff8a72` (the only accent) | 3.0                             | 1.8              |
+| Cited neighbour         | `#f1efe9`                   | 1.7                             | 0.7              |
+| Not cited               | `#4a4743`                   | 0.55                            | 0                |
 
 Edges: rest `#242220`, cited `#8a5f54`, not cited `#1a1816`, additive hairlines. Labels: seeds only, billboarded, capped at 12, off-white with a dark outline, positioned per frame.
 

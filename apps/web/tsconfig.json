@@ -1,0 +1,18 @@
+{
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "types": ["@cloudflare/workers-types"],
+    "plugins": [{ "name": "@effect/language-service" }]
+  }
+}
