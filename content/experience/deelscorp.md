@@ -23,7 +23,10 @@ uses:
       to: skill/postgraphile,
       note: 'PostGraphile generates the GraphQL API from the Postgres schema',
     }
-  - { to: skill/grafana, note: 'Grafana LGTM stack observing the Deels infrastructure' }
+  - {
+      to: skill/grafana,
+      note: 'Grafana, Loki, Tempo and Prometheus observing the Deels infrastructure',
+    }
   - {
       to: skill/mentoring-and-code-review,
       note: 'mentored the team and reviewed Kotlin and Swift code',
@@ -35,4 +38,4 @@ uses:
 in-domain: [domain/consumer-marketplaces]
 ---
 
-Co-founder and principal engineer of DeelsCorp since May 2024. Led engineering end to end for a four-person team: mobile applications, backend services, APIs and infrastructure. Backend in Kotlin with PostgreSQL, exposed through PostGraphile behind a GraphQL Hive and Mesh gateway; apps with Kotlin Multiplatform, Compose Multiplatform and SwiftUI; Docker for services, hosted on Oracle Cloud Infrastructure and observed with the Grafana LGTM stack. Mentored the team and reviewed its Kotlin and Swift code. DeelsCorp won a CZK 1 million grant from CzechInvest's Technology Incubation programme. Deels shipped and is now in maintenance with little ongoing work.
+Co-founder and principal engineer of DeelsCorp since May 2024. Led engineering end to end for a four-person team: mobile applications, backend services, APIs and infrastructure. Backend in Kotlin with PostgreSQL, exposed through PostGraphile behind a GraphQL Hive and Mesh gateway; apps with Kotlin Multiplatform, Compose Multiplatform and SwiftUI; Docker for services, hosted on Oracle Cloud Infrastructure and observed with Grafana, Loki, Tempo and Prometheus. Mentored the team and reviewed its Kotlin and Swift code. DeelsCorp won a CZK 1 million grant from CzechInvest's Technology Incubation programme. Deels shipped and is now in maintenance with little ongoing work.
