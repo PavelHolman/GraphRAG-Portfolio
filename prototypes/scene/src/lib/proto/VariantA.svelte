@@ -7,8 +7,8 @@
 	import GraphMesh, { type Style } from './GraphMesh.svelte';
 	import { forceLayout, relayout, type Graph, type Subgraph } from './graph';
 
-	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void; zoom?: number; pull?: number; style: Style }
-	let { graph, subgraph, onpick, zoom = 1, pull = 0, style }: Props = $props();
+	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void; zoom?: number; pull?: number; style: Style; focus?: number | null }
+	let { graph, subgraph, onpick, zoom = 1, pull = 0, style, focus = null }: Props = $props();
 	interactivity();
 	const base = forceLayout(graph);
 	const positions = $derived(relayout(base, subgraph, pull));
@@ -19,6 +19,16 @@
 	const { invalidate } = useThrelte();
 	useTask((dt) => {
 		if (idle && controls) { controls.azimuthAngle += dt * 0.05; invalidate(); }
+	});
+
+	// click-to-focus: glide the camera target to the cited Node, keep distance
+	$effect(() => {
+		if (focus == null || !controls) return;
+		idle = false;
+		const p = positions;
+		controls.moveTo(p[focus * 3], p[focus * 3 + 1], p[focus * 3 + 2], true);
+		controls.dollyTo(Math.min(controls.distance, 14), true);
+		invalidate();
 	});
 </script>
 

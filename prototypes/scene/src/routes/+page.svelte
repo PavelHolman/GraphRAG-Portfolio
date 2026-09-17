@@ -1,83 +1,107 @@
 <script lang="ts">
-	// PROTOTYPE iteration 2: variant A won. Three strengths of the answer-time gravity shift,
-	// switchable via ?variant=A|B|C, plus a modern visual pass. Fake data; nothing here is production.
+	// PROTOTYPE iteration 4: chat panel × Scene. Three panel relationships, switchable via ?variant=A|B|C,
+	// over the winning Ember Scene. A fake stream shaped like ADR 0003 drives progressive highlight.
 	import { Canvas } from '@threlte/core';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import VariantA from '$lib/proto/VariantA.svelte';
 	import Switcher from '$lib/proto/Switcher.svelte';
-	import { makeGraph, makeTurns, type Subgraph } from '$lib/proto/graph';
+	import ChatA from '$lib/proto/ChatA.svelte';
+	import ChatB from '$lib/proto/ChatB.svelte';
+	import ChatC from '$lib/proto/ChatC.svelte';
+	import { makeGraph, type Subgraph } from '$lib/proto/graph';
+	import { fakeTurn, emptySubgraph, type TurnEvent } from '$lib/proto/stream';
+	import type { Message } from '$lib/proto/chat';
 
-	// Iteration 3: the constellation look won, mild gravity shift won. Three flavours of the look.
 	const variants = [
-		{ key: 'A', name: 'Ember', style: { name: 'Ember', pointScale: 1, seedGlow: 1.8, citedGlow: 0.7, haloK: 2.6, ring: 0, edgeHi: '#8a5f54', edgeRest: '#242220', dustCount: 700, dustOpacity: 0.55, upperLabels: false } },
-		{ key: 'B', name: 'Rings', style: { name: 'Rings', pointScale: 0.9, seedGlow: 0.5, citedGlow: 0.3, haloK: 3.5, ring: 1, edgeHi: '#a86e60', edgeRest: '#22201e', dustCount: 400, dustOpacity: 0.4, upperLabels: true } },
-		{ key: 'C', name: 'Nebula', style: { name: 'Nebula', pointScale: 1.15, seedGlow: 2.8, citedGlow: 1.3, haloK: 1.5, ring: 0, edgeHi: '#5a4640', edgeRest: '#1f1d1b', dustCount: 1300, dustOpacity: 0.7, upperLabels: false } }
+		{ key: 'A', name: 'Side panel / bottom sheet' },
+		{ key: 'B', name: 'Floating card + bar' },
+		{ key: 'C', name: 'Scene-first strip' }
 	];
 	const variant = $derived(page.url.searchParams.get('variant') ?? 'A');
-	const style = $derived(variants.find((v) => v.key === variant)?.style ?? variants[0].style);
-	const pull = 0.45;
+	const ember = { name: 'Ember', pointScale: 1, seedGlow: 1.8, citedGlow: 0.7, haloK: 2.6, ring: 0, edgeHi: '#8a5f54', edgeRest: '#242220', dustCount: 700, dustOpacity: 0.55, upperLabels: false };
 
 	const graph = makeGraph();
-	const turns = makeTurns(graph);
 	let subgraph = $state<Subgraph | null>(null);
+	let messages = $state<Message[]>([]);
+	let followups = $state<string[]>([]);
+	let streaming = $state(false);
+	let focused = $state<number | null>(null);
 	let picked = $state<number | null>(null);
+	let abort: AbortController | null = null;
 
-	let fps = $state(0);
-	let lost = $state(false);
-	let dpr = $state(1);
-	let zoom = $state(1);
+	function onsend(prompt: string) {
+		abort?.abort(); // new Prompt mid-stream: interrupt, keep previous highlight until the new subgraph arrives
+		if (messages.at(-1)?.streaming) messages.at(-1)!.streaming = false;
+		abort = new AbortController();
+		followups = []; focused = null;
+		messages.push({ role: 'visitor', parts: [{ kind: 'text', text: prompt }], streaming: false });
+		const answer: Message = { role: 'answer', parts: [], streaming: true };
+		messages.push(answer);
+		streaming = true;
+		let live: Subgraph = emptySubgraph();
+		fakeTurn(graph, prompt, abort.signal, (e: TurnEvent) => {
+			const a = messages.at(-1)!;
+			switch (e.type) {
+				case 'subgraph':
+					live = { name: '', seeds: new Set(), nodes: new Set(e.nodeIds), edges: new Set(e.edgeIds) };
+					subgraph = live; // candidate: pre-dim everything else
+					break;
+				case 'text': {
+					const last = a.parts.at(-1);
+					if (last?.kind === 'text') last.text += e.delta; else a.parts.push({ kind: 'text', text: e.delta });
+					break;
+				}
+				case 'citation':
+					a.parts.push({ kind: 'cite', nodeId: e.nodeId, ordinal: e.ordinal, title: graph.nodes[e.nodeId].title });
+					live = { ...live, seeds: new Set([...live.seeds, e.nodeId]) };
+					subgraph = live; // progressive highlight
+					break;
+				case 'followups': followups = e.prompts; break;
+				case 'turn-finished':
+					subgraph = { name: '', seeds: new Set(e.usedNodeIds), nodes: new Set([...e.usedNodeIds, 0]), edges: new Set(e.usedEdgeIds) };
+					a.streaming = false; streaming = false; break;
+				case 'error': a.error = e.message; a.streaming = false; streaming = false; break;
+			}
+		});
+	}
+	function oncite(nodeId: number) { focused = nodeId; }
+
+	let fps = $state(0), dpr = $state(1), zoom = $state(1);
 	onMount(() => {
 		dpr = Math.min(window.devicePixelRatio, 2);
 		zoom = window.innerWidth < window.innerHeight ? 1.9 : 1;
-		let frames = 0, last = performance.now();
-		let raf = 0;
-		const tick = (t: number) => {
-			frames++;
-			if (t - last >= 1000) { fps = frames; frames = 0; last = t; }
-			raf = requestAnimationFrame(tick);
-		};
+		let frames = 0, last = performance.now(), raf = 0;
+		const tick = (t: number) => { frames++; if (t - last >= 1000) { fps = frames; frames = 0; last = t; } raf = requestAnimationFrame(tick); };
 		raf = requestAnimationFrame(tick);
-		const c = document.querySelector('canvas');
-		const onLost = (e: Event) => { e.preventDefault(); lost = true; };
-		c?.addEventListener('webglcontextlost', onLost);
-		return () => { cancelAnimationFrame(raf); c?.removeEventListener('webglcontextlost', onLost); };
+		return () => cancelAnimationFrame(raf);
 	});
 </script>
 
 <svelte:head>
-	<title>Scene prototype · {variant}</title>
+	<title>Chat prototype · {variant}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Azeret+Mono:wght@400&family=Bricolage+Grotesque:wght@600&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Azeret+Mono:wght@400&family=Bricolage+Grotesque:wght@600&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<div class="stage">
+<div class="stage" class:withPanel={variant === 'A'}>
 	<Canvas dpr={[1, 2]} renderMode="on-demand" shadows={false}>
-		{#key variant}
-			<VariantA {graph} {subgraph} {zoom} {pull} {style} onpick={(i) => (picked = i)} />
-		{/key}
+		<VariantA {graph} {subgraph} {zoom} pull={0.45} style={ember} focus={focused} onpick={(i) => (picked = i)} />
 	</Canvas>
 </div>
 
 <header class="hud">
-	<div class="stats"><span class="dot"></span>{fps} fps · dpr {dpr} · {graph.nodes.length} nodes
-		{#if lost}<strong> · context lost, reload</strong>{/if}</div>
-	<div class="turns">
-		{#each turns as t, i (i)}
-			<button class:active={subgraph === t} onclick={() => (subgraph = t)}>{t.name}</button>
-		{/each}
-		<button class="ghost" onclick={() => (subgraph = null)}>Clear</button>
-	</div>
+	<div class="stats"><span class="dot"></span>{fps} fps · dpr {dpr} · {graph.nodes.length} nodes · {streaming ? 'streaming' : 'idle'}</div>
 </header>
 
-{#if picked != null}
-	<aside class="pick">
-		<span class="type">{graph.nodes[picked].type}</span>
-		<b>{graph.nodes[picked].title}</b>
-		<small>{graph.nodes[picked].degree} connections</small>
-	</aside>
+{#if picked != null && variant !== 'A'}
+	<aside class="pick"><span class="type">{graph.nodes[picked].type}</span><b>{graph.nodes[picked].title}</b></aside>
 {/if}
+
+{#if variant === 'B'}<ChatB {messages} {followups} {streaming} {onsend} {oncite} {focused} />
+{:else if variant === 'C'}<ChatC {messages} {followups} {streaming} {onsend} {oncite} {focused} />
+{:else}<ChatA {messages} {followups} {streaming} {onsend} {oncite} {focused} />{/if}
 
 <Switcher {variants} current={variant} />
 
@@ -89,33 +113,12 @@
 		-webkit-font-smoothing: antialiased;
 	}
 	.stage { position: fixed; inset: 0; touch-action: none; }
-	.hud {
-		position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px;
-		display: flex; flex-direction: column; gap: 10px; pointer-events: none;
-	}
-	.hud > * { pointer-events: auto; }
-	.stats {
-		font: 11px/1 "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; text-transform: uppercase;
-		color: #9d9a92; display: flex; align-items: center; gap: 8px;
-	}
+	.stage.withPanel { right: min(400px, 100vw); }
+	@media (max-width: 700px) { .stage.withPanel { right: 0; bottom: 112px; } }
+	.hud { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; pointer-events: none; }
+	.stats { font: 11px/1 "Azeret Mono", monospace; letter-spacing: .12em; text-transform: uppercase; color: #9d9a92; display: flex; align-items: center; gap: 8px; }
 	.dot { width: 6px; height: 6px; border-radius: 50%; background: #ff8a72; box-shadow: 0 0 10px #ff8a72; }
-	.turns { display: flex; flex-wrap: wrap; gap: 8px; }
-	.turns button {
-		background: #0f0e0d; color: #f1efe9; border: 1px solid rgba(241,239,233,.12);
-		border-radius: 999px; padding: 9px 16px; font: 500 13px "DM Sans", system-ui, sans-serif;
-		transition: background .15s, border-color .15s, transform .15s, color .15s;
-	}
-	.turns button:hover { border-color: rgba(241,239,233,.28); }
-	.turns button:active { transform: scale(.97); }
-	.turns button.active { background: rgba(255,138,114,.14); border-color: #ff8a72; color: #ff8a72; }
-	.turns button.ghost { color: #9d9a92; }
-	.pick {
-		position: fixed; left: 12px; bottom: max(88px, calc(env(safe-area-inset-bottom) + 88px));
-		display: grid; gap: 4px; padding: 14px 18px; border-radius: 12px; max-width: min(320px, calc(100vw - 24px));
-		background: #0f0e0d; border: 1px solid rgba(244,242,238,.12); box-shadow: 0 16px 40px rgba(0,0,0,.5);
-	}
-	.pick .type { font: 10px/1 "Azeret Mono", ui-monospace, monospace; letter-spacing: .14em; text-transform: uppercase; color: #ff8a72; }
-	.pick b { font: 600 18px/1.2 "Bricolage Grotesque", "DM Sans", system-ui, sans-serif; letter-spacing: -.01em; }
-	.pick small { color: #a6a29a; font-size: 12px; }
-	@media (max-width: 600px) { .turns button { font-size: 12px; padding: 8px 13px; } }
+	.pick { position: fixed; right: 12px; top: max(12px, env(safe-area-inset-top)); display: grid; gap: 2px; padding: 10px 14px; border-radius: 12px; background: #0f0e0d; border: 1px solid rgba(244,242,238,.12); }
+	.pick .type { font: 10px/1 "Azeret Mono", monospace; letter-spacing: .14em; text-transform: uppercase; color: #ff8a72; }
+	.pick b { font: 600 15px/1.2 "Bricolage Grotesque", sans-serif; }
 </style>
