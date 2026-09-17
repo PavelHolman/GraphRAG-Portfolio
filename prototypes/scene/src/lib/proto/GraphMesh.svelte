@@ -4,7 +4,7 @@
 	import { T, useTask, useThrelte } from '@threlte/core';
 	import { Text, Billboard } from '@threlte/extras';
 	import * as THREE from 'three';
-	import { TYPE_COLOR, type Graph, type Subgraph } from './graph';
+	import type { Graph, Subgraph } from './graph';
 
 	interface Props {
 		graph: Graph;
@@ -17,7 +17,7 @@
 	let { graph, positions, subgraph, nodeSize = 0.3, labelSeeds = true, onpick }: Props = $props();
 
 	const { invalidate, scene } = useThrelte();
-	scene.fog = new THREE.FogExp2('#070a12', 0.018);
+	scene.fog = new THREE.FogExp2('#161514', 0.02);
 	const n = graph.nodes.length;
 
 	// core nodes: unlit, vertex-coloured per instance
@@ -28,7 +28,7 @@
 
 	// halo layer: larger, additive, back-side so it reads as a soft glow around cited nodes
 	const haloMat = new THREE.MeshBasicMaterial({
-		transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.BackSide, toneMapped: false, fog: false
+		transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.BackSide, toneMapped: false, fog: false
 	});
 	const halo = new THREE.InstancedMesh(geometry, haloMat, n);
 	halo.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
@@ -45,8 +45,12 @@
 
 	const dummy = new THREE.Object3D();
 	const tmp = new THREE.Color();
-	const DIM = new THREE.Color('#1b2130');
-	const REST = 0.75; // resting brightness so the idle graph is calm, cited nodes pop
+	// Poqet palette: warm near-black, warm off-white, muted grey, one coral accent
+	const DIM = new THREE.Color('#33312e');
+	const REST_C = new THREE.Color('#9d9a92');
+	const PERSON_C = new THREE.Color('#f1efe9');
+	const SEED_C = new THREE.Color('#ff8a72');
+	const CITED_C = new THREE.Color('#f1efe9');
 
 	const edgeGeo = new THREE.BufferGeometry();
 	const edgePos = new Float32Array(graph.edges.length * 6);
@@ -57,26 +61,26 @@
 		vertexColors: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false
 	});
 	const edgeTgt = new Float32Array(graph.edges.length * 6);
-	const EDGE_DIM = new THREE.Color('#0d1119');
-	const EDGE_REST = new THREE.Color('#232a3a');
-	const EDGE_HI = new THREE.Color('#9fb4ff');
+	const EDGE_DIM = new THREE.Color('#1d1b19');
+	const EDGE_REST = new THREE.Color('#2e2c29');
+	const EDGE_HI = new THREE.Color('#c9a598');
 
 	function retarget(sg: Subgraph | null) {
 		for (let i = 0; i < n; i++) {
 			const t = graph.nodes[i].type;
 			let haloS = 0;
 			if (!sg) {
-				tmp.set(TYPE_COLOR[t]).multiplyScalar(REST);
-				tgtScale[i] = t === 'person' ? 2 : 1;
+				tmp.copy(t === 'person' ? PERSON_C : REST_C);
+				tgtScale[i] = t === 'person' ? 2 : 0.8;
 			} else if (sg.seeds.has(i)) {
-				tmp.set(TYPE_COLOR[t]);
-				tgtScale[i] = 2.4; haloS = 2.2;
+				tmp.copy(SEED_C);
+				tgtScale[i] = 2.4; haloS = 2.4;
 			} else if (sg.nodes.has(i)) {
-				tmp.set(TYPE_COLOR[t]);
-				tgtScale[i] = 1.5; haloS = 1.6;
+				tmp.copy(t === 'person' ? PERSON_C : CITED_C);
+				tgtScale[i] = t === 'person' ? 2 : 1.4; haloS = 1.5;
 			} else {
 				tmp.copy(DIM);
-				tgtScale[i] = 0.5;
+				tgtScale[i] = 0.45;
 			}
 			tgtColor[i * 3] = tmp.r; tgtColor[i * 3 + 1] = tmp.g; tgtColor[i * 3 + 2] = tmp.b;
 			tgtHalo[i] = haloS;
@@ -165,7 +169,7 @@
 
 {#each seedLabels as i (i)}
 	<Billboard position={labelPos[i] ?? [cur[i * 3], cur[i * 3 + 1] + nodeSize * 3.2, cur[i * 3 + 2]]}>
-		<Text text={graph.nodes[i].title} fontSize={0.42} color="#f4f6fb" anchorX="center" anchorY="bottom"
-			fillOpacity={0.95} outlineWidth={0.02} outlineColor="#070a12" outlineOpacity={0.9} />
+		<Text text={graph.nodes[i].title} fontSize={0.4} color="#f1efe9" font="https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriCZOIHTWEBlw.woff2" anchorX="center" anchorY="bottom"
+			fillOpacity={0.95} outlineWidth={0.02} outlineColor="#161514" outlineOpacity={0.9} />
 	</Billboard>
 {/each}

@@ -6,7 +6,7 @@
 	import { onMount } from 'svelte';
 	import VariantA from '$lib/proto/VariantA.svelte';
 	import Switcher from '$lib/proto/Switcher.svelte';
-	import { makeGraph, makeTurns, TYPE_COLOR, type Subgraph } from '$lib/proto/graph';
+	import { makeGraph, makeTurns, type Subgraph } from '$lib/proto/graph';
 
 	const variants = [
 		{ key: 'A', name: 'Static layout', pull: 0 },
@@ -46,6 +46,8 @@
 <svelte:head>
 	<title>Scene prototype · {variant}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Azeret+Mono:wght@400&family=Bricolage+Grotesque:wght@600&display=swap" rel="stylesheet" />
 </svelte:head>
 
 <div class="stage">
@@ -68,7 +70,7 @@
 </header>
 
 {#if picked != null}
-	<aside class="pick" style="--c: {TYPE_COLOR[graph.nodes[picked].type]}">
+	<aside class="pick">
 		<span class="type">{graph.nodes[picked].type}</span>
 		<b>{graph.nodes[picked].title}</b>
 		<small>{graph.nodes[picked].degree} connections</small>
@@ -79,37 +81,39 @@
 
 <style>
 	:global(html, body) {
-		margin: 0; height: 100%; color: #e8ecf5; overscroll-behavior: none;
-		font: 13px/1.4 -apple-system, "SF Pro Text", Inter, system-ui, sans-serif;
-		background: radial-gradient(120% 80% at 50% 10%, #141a2b 0%, #0a0d16 55%, #05070c 100%) fixed;
+		margin: 0; height: 100%; color: #f1efe9; overscroll-behavior: none;
+		font: 14px/1.5 "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+		background: radial-gradient(90% 60% at 50% 0%, #1d1b19 0%, #161514 60%, #0f0e0d 100%) fixed;
 		-webkit-font-smoothing: antialiased;
 	}
 	.stage { position: fixed; inset: 0; touch-action: none; }
 	.hud {
-		position: fixed; top: max(10px, env(safe-area-inset-top)); left: 10px; right: 10px;
-		display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+		position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px;
+		display: flex; flex-direction: column; gap: 10px; pointer-events: none;
 	}
 	.hud > * { pointer-events: auto; }
-	.stats { font-variant-numeric: tabular-nums; color: #8b93a7; font-size: 11px; letter-spacing: .02em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
-	.dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
-	.turns { display: flex; flex-wrap: wrap; gap: 6px; }
+	.stats {
+		font: 11px/1 "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; text-transform: uppercase;
+		color: #9d9a92; display: flex; align-items: center; gap: 8px;
+	}
+	.dot { width: 6px; height: 6px; border-radius: 50%; background: #ff8a72; box-shadow: 0 0 10px #ff8a72; }
+	.turns { display: flex; flex-wrap: wrap; gap: 8px; }
 	.turns button {
-		background: rgba(255,255,255,.06); color: #e8ecf5; border: 1px solid rgba(255,255,255,.1);
-		border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 500;
-		backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-		transition: background .15s, border-color .15s, transform .15s;
+		background: #0f0e0d; color: #f1efe9; border: 1px solid rgba(241,239,233,.12);
+		border-radius: 999px; padding: 9px 16px; font: 500 13px "DM Sans", system-ui, sans-serif;
+		transition: background .15s, border-color .15s, transform .15s, color .15s;
 	}
+	.turns button:hover { border-color: rgba(241,239,233,.28); }
 	.turns button:active { transform: scale(.97); }
-	.turns button.active { background: rgba(120,140,255,.22); border-color: rgba(140,160,255,.55); box-shadow: 0 0 0 1px rgba(140,160,255,.25), 0 8px 24px rgba(80,100,255,.25); }
-	.turns button.ghost { color: #8b93a7; }
+	.turns button.active { background: rgba(255,138,114,.14); border-color: #ff8a72; color: #ff8a72; }
+	.turns button.ghost { color: #9d9a92; }
 	.pick {
-		position: fixed; left: 10px; bottom: max(84px, calc(env(safe-area-inset-bottom) + 84px));
-		display: grid; gap: 2px; padding: 10px 14px 10px 16px; border-radius: 14px; max-width: min(320px, calc(100vw - 20px));
-		background: rgba(14,18,30,.7); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-		box-shadow: inset 3px 0 0 var(--c), 0 12px 32px rgba(0,0,0,.45);
+		position: fixed; left: 12px; bottom: max(88px, calc(env(safe-area-inset-bottom) + 88px));
+		display: grid; gap: 4px; padding: 14px 18px; border-radius: 12px; max-width: min(320px, calc(100vw - 24px));
+		background: #0f0e0d; border: 1px solid rgba(244,242,238,.12); box-shadow: 0 16px 40px rgba(0,0,0,.5);
 	}
-	.pick .type { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--c); }
-	.pick b { font-size: 15px; font-weight: 600; }
-	.pick small { color: #8b93a7; }
-	@media (max-width: 600px) { .turns button { font-size: 11px; padding: 7px 11px; } }
+	.pick .type { font: 10px/1 "Azeret Mono", ui-monospace, monospace; letter-spacing: .14em; text-transform: uppercase; color: #ff8a72; }
+	.pick b { font: 600 18px/1.2 "Bricolage Grotesque", "DM Sans", system-ui, sans-serif; letter-spacing: -.01em; }
+	.pick small { color: #a6a29a; font-size: 12px; }
+	@media (max-width: 600px) { .turns button { font-size: 12px; padding: 8px 13px; } }
 </style>
