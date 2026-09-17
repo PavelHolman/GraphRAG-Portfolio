@@ -11,7 +11,7 @@ The build-time indexer (Bun, filesystem, embedding API) and the runtime Retrieva
 ├── content/<type>/<slug>.md       ← the Knowledge Graph source; data, not code
 ├── apps/web                       ← SvelteKit: endpoint, chat panel, Scene (src/lib/scene)
 ├── packages/schema                ← Effect Schemas only: Node, Edge, artifact, Turn parts
-├── packages/graph-index           ← build step: read content/, validate, derive spans, embed, layout → dist/ artifact
+├── packages/graph-index           ← build step: read content/, validate, derive spans, embed, layout → generated/ artifact (committed)
 ├── packages/retrieval             ← runtime: turn(prompt, previousSubgraph?) → Stream<TurnPart>
 ├── tsconfig.base.json, .oxlintrc.json   ← root config; workspaces extend
 ```
@@ -19,7 +19,7 @@ The build-time indexer (Bun, filesystem, embedding API) and the runtime Retrieva
 ## Interfaces
 
 - **`packages/schema`**: exports Effect Schemas and their types. No runtime dependencies beyond `effect`. Every other workspace depends on it; it depends on nothing in the repo.
-- **`packages/graph-index`**: one operation, `index(contentDir) → Effect<Artifact>`, plus a `bun run index` entry that writes `dist/`. Requires `Embedder` and a filesystem. The artifact is gitignored; whether to commit it is decided by the authoring workflow ticket.
+- **`packages/graph-index`**: one operation, `index(contentDir) → Effect<Artifact>`, plus a `bun content:index` entry that writes `generated/`. Requires `Embedder` and a filesystem. **Amended by the authoring workflow decision (`docs/spec/authoring.md`)**: the artifact and the embedding cache are committed under `generated/` and `.cache/`; `dist/` is real build output and gitignored.
 - **`packages/retrieval`**: one operation, `turn(prompt, previousSubgraph?) → Stream<TurnPart>`. Classification, seeding, one-hop expansion, budgeting, the LLM call, and id validation are internal seams used by its own tests. Requires exactly three services: `Embedder`, `LanguageModel`, `GraphArtifact`.
 - **`apps/web`**: the `/api/turn` endpoint is a pass-through from HTTP to the retrieval Stream. The Scene lives at `src/lib/scene`, not in a package.
 
@@ -29,7 +29,7 @@ The build-time indexer (Bun, filesystem, embedding API) and the runtime Retrieva
 |---|---|
 | `Embedder` | Workers AI binding (runtime), Workers AI REST from Bun (build), fake (tests) |
 | `LanguageModel` | Anthropic via Effect AI, recorded layer (tests) |
-| `GraphArtifact` | disk (build, tests), static import from `graph-index/dist` (runtime) |
+| `GraphArtifact` | disk (build, tests), static import from `graph-index/generated` (runtime) |
 | `Clock` | Effect built-in, for derived Skill spans |
 
 Rate limiting, tracing, and config are layers the app composes around retrieval; they are not part of retrieval's interface.
