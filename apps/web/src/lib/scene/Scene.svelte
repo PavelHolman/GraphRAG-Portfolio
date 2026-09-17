@@ -93,32 +93,33 @@
     invalidate();
   });
 
-  // Capture-phase gate in front of CameraControls' own wheel listener: once the zoom range is used
-  // up in the wheel's direction, the event never reaches the controls, nothing calls
-  // preventDefault, and the page scrolls normally. The controls smooth their distance, so the
-  // range is tracked here per tick rather than read back from the animated camera.
+  // The wheel is handled here, not by CameraControls: each tick moves an exact target distance
+  // within [MIN, MAX] and dollies the camera to it. Only when the target already sits at the outer
+  // limit (or the inner one, scrolling up) is the event left alone, so the page scrolls. The zoom
+  // is therefore always fully used up before the page moves.
   let wheelDistance = 30 * zoom;
-  const WHEEL_STEP = 1.07;
+  const WHEEL_RATE = 0.0012;
   const gateWheel = (e: WheelEvent) => {
     if (!controls || e.deltaY === 0) return;
+    e.stopPropagation();
     const min = MIN_DISTANCE * zoom;
     const max = MAX_DISTANCE * zoom;
     const outward = e.deltaY > 0;
-    if ((outward && wheelDistance >= max - 0.01) || (!outward && wheelDistance <= min + 0.01)) {
-      e.stopPropagation();
+    if ((outward && wheelDistance >= max - 0.01) || (!outward && wheelDistance <= min + 0.01))
       return;
-    }
-    wheelDistance = Math.min(
-      max,
-      Math.max(min, wheelDistance * (outward ? WHEEL_STEP : 1 / WHEEL_STEP)),
-    );
+    e.preventDefault();
+    wheelDistance = Math.min(max, Math.max(min, wheelDistance * Math.exp(e.deltaY * WHEEL_RATE)));
+    controls.dollyTo(wheelDistance, true);
+    stopIdle();
+    scheduleResume();
+    invalidate();
   };
   const resync = () => {
     if (controls) wheelDistance = controls.distance;
   };
   onMount(() => {
     const el = renderer.domElement.parentElement;
-    el?.addEventListener('wheel', gateWheel, { capture: true, passive: true });
+    el?.addEventListener('wheel', gateWheel, { capture: true, passive: false });
     return () => {
       el?.removeEventListener('wheel', gateWheel, { capture: true });
       clearTimeout(resumeTimer);
