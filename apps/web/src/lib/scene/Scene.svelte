@@ -3,6 +3,7 @@
   import { T, useTask, useThrelte } from '@threlte/core';
   import { CameraControls, interactivity } from '@threlte/extras';
   import type CC from 'camera-controls';
+  import { onMount } from 'svelte';
   import GraphMesh from './GraphMesh.svelte';
   import { relayout } from './relayout.ts';
   import type { SceneGraph, Subgraph } from './types.ts';
@@ -20,6 +21,11 @@
   const positions = $derived(relayout(graph.positions, subgraph));
   const zoom = $derived(portrait ? 1.9 : 1);
 
+  // The wheel zooms only a little; at either end of the range the page scrolls instead.
+  const MIN_DISTANCE = 18;
+  const MAX_DISTANCE = 42;
+  const DRIFT = 0.09;
+
   let controls = $state<CC | undefined>();
   let idle = true;
   const stopIdle = () => {
@@ -28,11 +34,12 @@
   const created = (c: CC) => {
     controls = c;
     c.addEventListener('controlstart', stopIdle);
+    c.addEventListener('controlend', resync);
   };
-  const { invalidate } = useThrelte();
+  const { invalidate, renderer } = useThrelte();
   useTask((dt) => {
     if (idle && controls) {
-      controls.azimuthAngle += dt * 0.05;
+      controls.azimuthAngle += dt * DRIFT;
       invalidate();
     }
   });
@@ -45,10 +52,45 @@
     controls.dollyTo(Math.min(controls.distance, 14), true);
     invalidate();
   });
+
+  // Capture-phase gate in front of CameraControls' own wheel listener: once the zoom range is used
+  // up in the wheel's direction, the event never reaches the controls, nothing calls
+  // preventDefault, and the page scrolls normally. The controls smooth their distance, so the
+  // range is tracked here per tick rather than read back from the animated camera.
+  let wheelDistance = 30 * zoom;
+  const WHEEL_STEP = 1.07;
+  const gateWheel = (e: WheelEvent) => {
+    if (!controls || e.deltaY === 0) return;
+    const min = MIN_DISTANCE * zoom;
+    const max = MAX_DISTANCE * zoom;
+    const outward = e.deltaY > 0;
+    if ((outward && wheelDistance >= max - 0.01) || (!outward && wheelDistance <= min + 0.01)) {
+      e.stopPropagation();
+      return;
+    }
+    wheelDistance = Math.min(
+      max,
+      Math.max(min, wheelDistance * (outward ? WHEEL_STEP : 1 / WHEEL_STEP)),
+    );
+  };
+  const resync = () => {
+    if (controls) wheelDistance = controls.distance;
+  };
+  onMount(() => {
+    const el = renderer.domElement.parentElement;
+    el?.addEventListener('wheel', gateWheel, { capture: true, passive: true });
+    return () => el?.removeEventListener('wheel', gateWheel, { capture: true });
+  });
 </script>
 
 <T.PerspectiveCamera makeDefault position={[0, 6 * zoom, 30 * zoom]} fov={50}>
-  <CameraControls smoothTime={0.3} minDistance={6} maxDistance={70} oncreate={created} />
+  <CameraControls
+    smoothTime={0.3}
+    minDistance={MIN_DISTANCE * zoom}
+    maxDistance={MAX_DISTANCE * zoom}
+    dollySpeed={0.6}
+    oncreate={created}
+  />
 </T.PerspectiveCamera>
 
 <GraphMesh {graph} {positions} {subgraph} {preview} {onpick} />

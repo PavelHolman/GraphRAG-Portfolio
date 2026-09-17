@@ -1,5 +1,6 @@
 <script lang="ts">
-  // Sticky header: name left, anchors centre, links right; translucent over the Hero. docs/spec/page.md.
+  // Sticky header: name left, anchors centre, links and the CV button right; translucent over the
+  // Hero, opaque once scrolled past it. docs/spec/page.md.
   interface Props {
     name: string;
     links: Record<string, string>;
@@ -7,16 +8,27 @@
   }
   let { name, links, scrolled }: Props = $props();
   const anchors = ['about', 'experience', 'education', 'skills', 'contact'];
-  const icon: Record<string, string> = { github: 'GH', linkedin: 'in', email: '@', cv: 'CV' };
+  const icon: Record<string, string> = { github: 'GH', linkedin: 'in', email: '@' };
+  const initials = $derived(
+    name
+      .split(/\s+/)
+      .map((w) => w.charAt(0))
+      .join('')
+      .slice(0, 3)
+      .toUpperCase(),
+  );
+  const iconLinks = $derived(Object.entries(links).filter(([k]) => k !== 'cv'));
 </script>
 
 <header class="top" class:scrolled>
-  <a class="name" href="#top">{name}</a>
+  <a class="name" href="#top"
+    ><span class="initials">{initials}</span><span class="full">{name}</span></a
+  >
   <nav class="anchors">
     {#each anchors as a (a)}<a href={'#' + a}>{a}</a>{/each}
   </nav>
   <nav class="links">
-    {#each Object.entries(links) as [k, href] (k)}
+    {#each iconLinks as [k, href] (k)}
       <a
         {href}
         target={href.startsWith('mailto:') ? undefined : '_blank'}
@@ -24,6 +36,7 @@
         aria-label={k}>{icon[k] ?? k}</a
       >
     {/each}
+    {#if links.cv}<a class="cta" href={links.cv} target="_blank" rel="noopener">Download CV</a>{/if}
   </nav>
 </header>
 
@@ -38,23 +51,31 @@
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
     gap: 12px;
-    padding: max(10px, env(safe-area-inset-top)) 16px 10px;
-    transition: background 0.3s;
+    padding: max(12px, env(safe-area-inset-top)) 20px 12px;
+    transition:
+      background 0.3s,
+      border-color 0.3s;
+    border-bottom: 1px solid transparent;
   }
   .top.scrolled {
-    background: var(--panel);
-    border-bottom: 1px solid var(--line);
+    background: rgba(15, 14, 13, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom-color: var(--line);
   }
   .name {
     font:
-      600 15px 'Bricolage Grotesque',
+      600 16px 'Bricolage Grotesque',
       sans-serif;
     color: var(--fg);
     text-decoration: none;
   }
+  .initials {
+    display: none;
+  }
   .anchors {
     display: flex;
-    gap: 14px;
+    gap: 18px;
   }
   .anchors a {
     font:
@@ -71,6 +92,7 @@
   .links {
     display: flex;
     justify-content: end;
+    align-items: center;
     gap: 6px;
   }
   .links a {
@@ -82,15 +104,39 @@
     text-decoration: none;
     border: 1px solid var(--line);
     border-radius: 999px;
-    padding: 7px 9px;
+    padding: 8px 10px;
   }
   .links a:hover {
     border-color: var(--accent);
     color: var(--accent);
   }
-  @media (max-width: 700px) {
+  .links .cta {
+    font:
+      500 12px 'DM Sans',
+      sans-serif;
+    letter-spacing: 0;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+    padding: 8px 14px;
+    margin-left: 6px;
+  }
+  .links .cta:hover {
+    color: var(--bg);
+    filter: brightness(1.08);
+  }
+  @media (max-width: 760px) {
     .anchors {
       display: none;
+    }
+    .initials {
+      display: inline;
+    }
+    .full {
+      display: none;
+    }
+    .top {
+      grid-template-columns: auto 1fr;
     }
   }
 </style>

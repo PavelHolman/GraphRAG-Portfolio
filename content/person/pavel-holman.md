@@ -1,6 +1,7 @@
 ---
 title: Pavel Holman
 summary: Software engineer building typed, streaming web platforms.
+headline: Software engineer
 lede: Software engineer who builds end-to-end web platforms with TypeScript and Effect, from the data model to the pixels.
 location: Prague, Czechia
 links:

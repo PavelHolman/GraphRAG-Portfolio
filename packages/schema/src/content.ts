@@ -35,6 +35,8 @@ export const OrganizationKind = Schema.Literals(['company', 'university', 'clien
 export const PersonFrontmatter = Schema.Struct({
   ...Common,
   type: Schema.Literal('person'),
+  /** One line under the name in the Hero, e.g. a job title. */
+  headline: Schema.optionalKey(Schema.String),
   lede: Schema.optionalKey(Schema.String),
   location: Schema.optionalKey(Schema.String),
   links: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),

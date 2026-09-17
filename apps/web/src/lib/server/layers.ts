@@ -1,3 +1,4 @@
+import { dev } from '$app/environment';
 import { Effect, Layer } from 'effect';
 import { Embedder, LanguageModel } from '@graphrag/retrieval';
 import {
@@ -18,8 +19,18 @@ const DEFAULT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
  * Picks the Embedder and LanguageModel for this request from the platform bindings and secrets.
  * The Embedder must match the model that built the committed artifact.
  */
-export const runtimeLayer = (env: App.Platform['env'] | undefined) =>
+export const runtimeLayer = (platformEnv: App.Platform['env'] | undefined) =>
   Effect.gen(function* () {
+    // In dev the platform proxy has no secrets and its AI binding is a stub that cannot serve
+    // requests, so the process environment (.env at the repo root) supplies the REST credentials.
+    const proc = typeof process !== 'undefined' ? process.env : undefined;
+    const env: NonNullable<App.Platform['env']> = { ...platformEnv };
+    if (dev && proc) {
+      delete env.AI;
+      if (proc.WORKERS_AI_TOKEN) env.WORKERS_AI_TOKEN = proc.WORKERS_AI_TOKEN;
+      if (proc.CLOUDFLARE_ACCOUNT_ID) env.CLOUDFLARE_ACCOUNT_ID = proc.CLOUDFLARE_ACCOUNT_ID;
+      if (proc.LLM_MODEL) env.LLM_MODEL = proc.LLM_MODEL;
+    }
     // GRAPHRAG_FAKE_AI=1 (e2e, preview without credentials) forces the offline layers regardless
     // of which bindings the platform exposes; a local AI binding stub cannot serve requests.
     const fake =

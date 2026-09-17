@@ -250,15 +250,23 @@
     color: var(--fg-muted);
     cursor: pointer;
   }
+  /* The whole Answer stays reachable: the text scrolls inside the caption, never behind the chips. */
   .text {
-    max-height: 9em;
-    overflow: hidden;
-    mask-image: linear-gradient(#000 75%, transparent);
+    max-height: 34vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 6px;
   }
   .caption.open .text {
-    max-height: 50vh;
-    overflow: auto;
-    mask-image: none;
+    max-height: 62vh;
+  }
+  @media (max-width: 700px) {
+    .text {
+      max-height: 26vh;
+    }
+    .caption.open .text {
+      max-height: 50vh;
+    }
   }
   .caret {
     display: inline-block;
@@ -283,8 +291,8 @@
   .cites,
   .follow {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
-    overflow-x: auto;
   }
   .cites button {
     flex: none;
@@ -320,6 +328,9 @@
   }
   .follow button {
     flex: none;
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
     background: none;
     border: 1px solid rgba(241, 239, 233, 0.14);
     color: var(--fg-muted);

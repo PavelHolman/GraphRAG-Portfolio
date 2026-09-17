@@ -1,5 +1,5 @@
 <script lang="ts">
-  // One route: the Hero (Scene + centred chat) and the Sections below it. docs/spec/page.md.
+  // One route: the Hero (Scene, intro and the centred chat) and the Sections below it. docs/spec/page.md.
   import { Canvas } from '@threlte/core';
   import { onMount, untrack } from 'svelte';
   import Scene from '$lib/scene/Scene.svelte';
@@ -32,6 +32,8 @@
   const preview = $derived(
     !typing && !turn.streaming && turn.subgraph === null && hint ? new Set(hint.candidates) : null,
   );
+  // The intro copy steps aside once a conversation has started.
+  const conversing = $derived(turn.messages.length > 0);
 
   const onsend = (p: string) => turn.run(p, 'typed');
   const onplayhint = () => {
@@ -40,6 +42,7 @@
     hintIndex++;
   };
   const onfollowup = (p: string) => turn.run(p, 'followup');
+  const onsendOrFollowup = (p: string) => (turn.followups.includes(p) ? onfollowup(p) : onsend(p));
   const oncite = (id: string) => {
     turn.focused = id;
   };
@@ -53,6 +56,7 @@
   const onpick = (i: number) => {
     picked = i;
   };
+  const askIntro = () => onask('What are you strongest at?');
 
   // JSON-LD Person for crawlers. The tag is assembled from pieces so linters that extract
   // <script> blocks from Svelte files do not mistake it for one.
@@ -61,6 +65,7 @@
       '@context': 'https://schema.org',
       '@type': 'Person',
       name: data.model.person.name,
+      jobTitle: data.model.person.headline,
       sameAs: Object.values(data.model.person.links).filter((l) => !l.startsWith('mailto:')),
       knowsAbout: data.model.skills.flatMap((g) => g.skills.map((s) => s.title)).slice(0, 12),
       worksFor: data.model.experience[0]?.organization
@@ -130,6 +135,22 @@
       <div class="fallback" aria-hidden="true"></div>
     {/if}
   </div>
+
+  <div class="intro" class:aside={conversing}>
+    <h1>{data.model.person.name}</h1>
+    {#if data.model.person.headline}<p class="headline">{data.model.person.headline}</p>{/if}
+    {#if data.model.person.lede}<p class="lede">{data.model.person.lede}</p>{/if}
+    <div class="actions">
+      <button class="primary" onclick={askIntro}>✦ Ask about me</button>
+      {#if data.model.person.links.email}<a class="secondary" href={data.model.person.links.email}
+          >Contact me</a
+        >{/if}
+      {#if data.model.person.links.cv}<a class="secondary" href={data.model.person.links.cv}
+          >Download CV</a
+        >{/if}
+    </div>
+  </div>
+
   {#if picked != null}
     <aside class="pick">
       <span class="type">{graph.nodes[picked]?.type}</span><b>{graph.nodes[picked]?.title}</b>
@@ -146,7 +167,7 @@
     hint={hint?.prompt ?? ''}
     streaming={turn.streaming}
     focused={turn.focused}
-    onsend={(p) => (turn.followups.includes(p) ? onfollowup(p) : onsend(p))}
+    onsend={onsendOrFollowup}
     {onplayhint}
     {oncite}
     {oninput}
@@ -174,15 +195,95 @@
     inset: 0;
     touch-action: none;
   }
+  /* On wide screens the constellation sits to the right of the intro copy. */
+  @media (min-width: 1000px) {
+    .stage {
+      left: 26%;
+    }
+  }
   .fallback {
     position: absolute;
     inset: 0;
     background: radial-gradient(40% 40% at 50% 45%, rgba(255, 138, 114, 0.12), transparent);
   }
+  .intro {
+    position: absolute;
+    left: max(20px, calc((100% - 1024px) / 2 + 16px));
+    top: 22vh;
+    max-width: 520px;
+    pointer-events: none;
+    transition:
+      opacity 0.5s ease,
+      transform 0.5s ease;
+    z-index: 5;
+  }
+  .intro > * {
+    pointer-events: auto;
+  }
+  .intro.aside {
+    opacity: 0;
+    transform: translateY(-12px);
+    pointer-events: none;
+  }
+  .intro.aside > * {
+    pointer-events: none;
+  }
+  h1 {
+    font:
+      600 clamp(40px, 6vw, 68px) / 1.02 'Bricolage Grotesque',
+      sans-serif;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+  }
+  .headline {
+    font:
+      400 clamp(18px, 2.2vw, 26px) / 1.3 'DM Sans',
+      sans-serif;
+    color: var(--fg-muted);
+    margin: 0 0 18px;
+  }
+  .lede {
+    font-size: 17px;
+    line-height: 1.55;
+    margin: 0 0 24px;
+    color: var(--fg);
+    max-width: 460px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .actions .primary,
+  .actions .secondary {
+    border-radius: 999px;
+    padding: 10px 18px;
+    font:
+      500 14px 'DM Sans',
+      sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .actions .primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: 1px solid var(--accent);
+  }
+  .actions .secondary {
+    background: rgba(15, 14, 13, 0.6);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(8px);
+  }
+  .actions .secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
   .pick {
     position: absolute;
     right: 12px;
-    top: max(56px, calc(env(safe-area-inset-top) + 56px));
+    top: max(64px, calc(env(safe-area-inset-top) + 64px));
     display: grid;
     gap: 2px;
     padding: 10px 14px;
@@ -206,8 +307,8 @@
   }
   .notice {
     position: absolute;
-    left: 12px;
-    top: max(56px, calc(env(safe-area-inset-top) + 56px));
+    right: 12px;
+    bottom: 12px;
     font:
       10px/1.4 'Azeret Mono',
       monospace;
@@ -215,10 +316,21 @@
     text-transform: uppercase;
     color: var(--fg-muted);
     max-width: 240px;
+    text-align: right;
     z-index: 5;
   }
   main {
     position: relative;
-    background: var(--bg);
+  }
+  @media (max-width: 760px) {
+    .intro {
+      left: 16px;
+      right: 16px;
+      top: 14vh;
+      max-width: none;
+    }
+    .lede {
+      font-size: 15px;
+    }
   }
 </style>

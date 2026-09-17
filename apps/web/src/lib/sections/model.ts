@@ -38,6 +38,7 @@ export interface SkillGroup {
 export interface PageModel {
   readonly person: {
     name: string;
+    headline: string | undefined;
     lede: string | undefined;
     body: string;
     location: string | undefined;
@@ -142,6 +143,7 @@ export const buildPageModel = (
   return {
     person: {
       name: person?.title ?? '',
+      headline: person ? field(person, 'headline') : undefined,
       lede: person ? field(person, 'lede') : undefined,
       body: person?.body ?? '',
       location: person ? field(person, 'location') : undefined,

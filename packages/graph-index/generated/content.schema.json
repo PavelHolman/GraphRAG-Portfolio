@@ -21,6 +21,9 @@
               "person"
             ]
           },
+          "headline": {
+            "type": "string"
+          },
           "lede": {
             "type": "string"
           },

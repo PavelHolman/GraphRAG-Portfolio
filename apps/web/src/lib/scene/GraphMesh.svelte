@@ -19,7 +19,10 @@
 
   const { invalidate, scene } = useThrelte();
   scene.fog = new THREE.FogExp2(PALETTE.bg, 0.016);
-  const n = graph.nodes.length;
+  // The graph and its base Layout are fixed for the life of the component; captured once.
+  const nodes = graph.nodes;
+  const edges = graph.edges;
+  const n = nodes.length;
 
   const DIM = new THREE.Color(PALETTE.dim);
   const REST_C = new THREE.Color(PALETTE.rest);
@@ -101,6 +104,10 @@
   const dust = new THREE.Points(dustGeo, dustMat);
   dust.frustumCulled = false;
 
+  // Base targets from the Highlight state, plus the animated targets the task lerps toward.
+  const baseColor = new Float32Array(n * 3);
+  const baseSize = new Float32Array(n);
+  const baseGlow = new Float32Array(n);
   const tgtColor = new Float32Array(n * 3);
   const tgtSize = new Float32Array(n);
   const tgtGlow = new Float32Array(n);
@@ -108,8 +115,8 @@
   const tmp = new THREE.Color();
 
   const edgeGeo = new THREE.BufferGeometry();
-  const edgePos = new Float32Array(graph.edges.length * 6);
-  const edgeCol = new Float32Array(graph.edges.length * 6);
+  const edgePos = new Float32Array(edges.length * 6);
+  const edgeCol = new Float32Array(edges.length * 6);
   edgeGeo.setAttribute('position', new THREE.BufferAttribute(edgePos, 3));
   edgeGeo.setAttribute('color', new THREE.BufferAttribute(edgeCol, 3));
   const edgeMat = new THREE.LineBasicMaterial({
@@ -120,14 +127,14 @@
     depthWrite: false,
     fog: true,
   });
-  const edgeTgt = new Float32Array(graph.edges.length * 6);
+  const edgeTgt = new Float32Array(edges.length * 6);
   const EDGE_DIM = new THREE.Color(PALETTE.edgeDim);
   const EDGE_REST = new THREE.Color(PALETTE.edgeRest);
   const EDGE_HI = new THREE.Color(PALETTE.edgeHi);
 
   function retarget(sg: Subgraph | null, pv: ReadonlySet<number> | null) {
     for (let i = 0; i < n; i++) {
-      const node = graph.nodes[i];
+      const node = nodes[i];
       const isPerson = node?.type === 'person';
       const deg = Math.min(1, (node?.degree ?? 0) / 12);
       let size = 0;
@@ -160,13 +167,16 @@
         size = isPerson ? 2.4 : 0.8 + deg * 0.6;
         glow = isPerson ? 0.9 : 0.35;
       }
-      tgtColor[i * 3] = tmp.r;
-      tgtColor[i * 3 + 1] = tmp.g;
-      tgtColor[i * 3 + 2] = tmp.b;
-      tgtSize[i] = size;
-      tgtGlow[i] = glow;
+      baseColor[i * 3] = tmp.r;
+      baseColor[i * 3 + 1] = tmp.g;
+      baseColor[i * 3 + 2] = tmp.b;
+      baseSize[i] = size;
+      baseGlow[i] = glow;
     }
-    graph.edges.forEach((_, ei) => {
+    tgtColor.set(baseColor);
+    tgtSize.set(baseSize);
+    tgtGlow.set(baseGlow);
+    edges.forEach((_, ei) => {
       const c = !sg ? EDGE_REST : sg.edges.has(ei) ? EDGE_HI : EDGE_DIM;
       for (const k of [0, 3]) {
         edgeTgt[ei * 6 + k] = c.r;
@@ -187,6 +197,83 @@
   });
   $effect(() => {
     tgtPos = positions;
+    invalidate();
+  });
+
+  // Idle sparkle: while no Turn is highlighted (the faint hint preview does not count), a Node now
+  // and then glows up briefly and shows its title, then fades back. Up to three at a time.
+  interface Spark {
+    readonly i: number;
+    age: number;
+  }
+  const SPARK_LIFE = 2.6;
+  const SPARK_MAX = 3;
+  let sparks: Array<Spark> = [];
+  let sparkClock = 0;
+  let sparkNext = 1.2;
+  let sparkLabels = $state<Array<number>>([]);
+  const envelope = (age: number): number => {
+    if (age < 0.5) return age / 0.5;
+    if (age < 1.8) return 1;
+    return Math.max(0, 1 - (age - 1.8) / (SPARK_LIFE - 1.8));
+  };
+  const pickSpark = (): number | undefined => {
+    if (n < 2) return undefined;
+    for (let tries = 0; tries < 8; tries++) {
+      const i = Math.floor(rnd() * n);
+      if (nodes[i]?.type !== 'person' && !sparks.some((sp) => sp.i === i)) return i;
+    }
+    return undefined;
+  };
+  const restore = (i: number) => {
+    tgtColor[i * 3] = baseColor[i * 3] ?? 0;
+    tgtColor[i * 3 + 1] = baseColor[i * 3 + 1] ?? 0;
+    tgtColor[i * 3 + 2] = baseColor[i * 3 + 2] ?? 0;
+    tgtSize[i] = baseSize[i] ?? 0;
+    tgtGlow[i] = baseGlow[i] ?? 0;
+  };
+  useTask((dt) => {
+    const idleScene = subgraph === null;
+    if (!idleScene) {
+      if (sparks.length) {
+        for (const sp of sparks) restore(sp.i);
+        sparks = [];
+        sparkLabels = [];
+      }
+      return;
+    }
+    sparkClock += dt;
+    if (sparkClock >= sparkNext && sparks.length < SPARK_MAX) {
+      sparkClock = 0;
+      sparkNext = 1.4 + rnd() * 1.6;
+      const i = pickSpark();
+      if (i !== undefined) sparks.push({ i, age: 0 });
+    }
+    if (!sparks.length) return;
+    const next: Array<Spark> = [];
+    for (const sp of sparks) {
+      sp.age += dt;
+      const e = envelope(sp.age);
+      tmp
+        .setRGB(
+          baseColor[sp.i * 3] ?? 0,
+          baseColor[sp.i * 3 + 1] ?? 0,
+          baseColor[sp.i * 3 + 2] ?? 0,
+        )
+        .lerp(PERSON_C, e * 0.8);
+      tgtColor[sp.i * 3] = tmp.r;
+      tgtColor[sp.i * 3 + 1] = tmp.g;
+      tgtColor[sp.i * 3 + 2] = tmp.b;
+      tgtSize[sp.i] = (baseSize[sp.i] ?? 0) + 1.1 * e;
+      tgtGlow[sp.i] = (baseGlow[sp.i] ?? 0) + 1.0 * e;
+      if (sp.age < SPARK_LIFE) next.push(sp);
+      else restore(sp.i);
+    }
+    sparks = next;
+    const shown = sparks.filter((sp) => envelope(sp.age) > 0.35).map((sp) => sp.i);
+    if (shown.length !== sparkLabels.length || shown.some((i, k) => sparkLabels[k] !== i)) {
+      sparkLabels = shown;
+    }
     invalidate();
   });
 
@@ -216,7 +303,7 @@
     geo.attributes.aColor!.needsUpdate = true;
     geo.attributes.aSize!.needsUpdate = true;
     geo.attributes.aGlow!.needsUpdate = true;
-    graph.edges.forEach((e, ei) => {
+    edges.forEach((e, ei) => {
       edgePos[ei * 6] = cur[e.source * 3] ?? 0;
       edgePos[ei * 6 + 1] = cur[e.source * 3 + 1] ?? 0;
       edgePos[ei * 6 + 2] = cur[e.source * 3 + 2] ?? 0;
@@ -249,12 +336,14 @@
   }
 
   const seedLabels = $derived(subgraph ? [...subgraph.seeds].slice(0, 12) : []);
+  const labels = $derived(subgraph ? seedLabels : sparkLabels);
   let labelPos = $state<Record<number, [number, number, number]>>({});
   useTask(() => {
-    if (!seedLabels.length) return;
+    if (!labels.length) return;
     const next: Record<number, [number, number, number]> = {};
-    for (const i of seedLabels)
+    for (const i of labels) {
       next[i] = [cur[i * 3] ?? 0, (cur[i * 3 + 1] ?? 0) + 1.1, cur[i * 3 + 2] ?? 0];
+    }
     labelPos = next;
   });
   const labelAt = (i: number): [number, number, number] =>
@@ -263,20 +352,16 @@
   $effect(() => {
     mat.uniforms.uDpr!.value = Math.min(window.devicePixelRatio, 2);
   });
-
-  export function currentPosition(i: number): [number, number, number] {
-    return [cur[i * 3] ?? 0, cur[i * 3 + 1] ?? 0, cur[i * 3 + 2] ?? 0];
-  }
 </script>
 
 <T is={dust} />
 <T.LineSegments geometry={edgeGeo} material={edgeMat} />
 <T is={points} onclick={pick} {raycast} />
 
-{#each seedLabels as i (i)}
+{#each labels as i (i)}
   <Billboard position={labelAt(i)}>
     <Text
-      text={graph.nodes[i]?.title ?? ''}
+      text={nodes[i]?.title ?? ''}
       fontSize={0.38}
       color={PALETTE.person}
       anchorX="center"

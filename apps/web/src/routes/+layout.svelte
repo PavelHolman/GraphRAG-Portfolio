@@ -31,5 +31,18 @@
   }
   :global(*) {
     box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(241, 239, 233, 0.18) transparent;
+  }
+  :global(*::-webkit-scrollbar) {
+    width: 6px;
+    height: 6px;
+  }
+  :global(*::-webkit-scrollbar-thumb) {
+    background: rgba(241, 239, 233, 0.18);
+    border-radius: 999px;
+  }
+  :global(*::-webkit-scrollbar-track) {
+    background: transparent;
   }
 </style>

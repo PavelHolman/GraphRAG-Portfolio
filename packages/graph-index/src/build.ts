@@ -44,6 +44,7 @@ export interface BuildResult {
 }
 
 const SCALAR_FIELDS = [
+  'headline',
   'category',
   'role',
   'employment',
