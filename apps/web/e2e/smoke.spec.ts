@@ -18,7 +18,7 @@ test('the Turn endpoint speaks NDJSON in ADR 0003 order', async ({ request }) =>
     .trim()
     .split('\n')
     .map((l) => JSON.parse(l) as { type: string });
-  expect(lines[0]?.type).toBe('turn-started');
+  expect(lines[0], JSON.stringify(lines[0])).toMatchObject({ type: 'turn-started' });
   expect(lines[1]?.type).toBe('subgraph');
   expect(lines.at(-1)?.type).toBe('turn-finished');
 });

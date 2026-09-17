@@ -10,6 +10,7 @@ declare global {
         CLOUDFLARE_ACCOUNT_ID?: string;
         LLM_MODEL?: string;
         DEPLOYMENT_ENVIRONMENT?: string;
+        GRAPHRAG_FAKE_AI?: string;
       };
       context?: { waitUntil: (p: Promise<unknown>) => void };
     }
