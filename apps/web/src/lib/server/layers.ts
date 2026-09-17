@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
 import { Effect, Layer } from 'effect';
-import { Embedder, LanguageModel } from '@graphrag/retrieval';
+import { EmbedError, Embedder, LanguageModel } from '@graphrag/retrieval';
 import {
   LOCAL_HASHING_MODEL,
   LocalHashingEmbedderLayer,
@@ -58,10 +58,15 @@ export const runtimeLayer = (platformEnv: App.Platform['env'] | undefined) =>
         token: env.WORKERS_AI_TOKEN,
       });
     } else {
-      yield* Effect.logWarning(
-        `no Embedder available for artifact model ${model}; falling back to the local hashing embedder`,
-      );
-      embedder = LocalHashingEmbedderLayer;
+      // Never mix models between sides (ADR 0004): query vectors from another embedder would make
+      // every cosine score meaningless. Refuse the Turn with a visible error instead.
+      const message = `no Embedder available for the artifact's model ${model}: bind AI or set WORKERS_AI_TOKEN and CLOUDFLARE_ACCOUNT_ID`;
+      yield* Effect.logError(message);
+      embedder = Layer.succeed(Embedder, {
+        model,
+        dimensions: artifact.meta.embedding.dimensions,
+        embed: () => Effect.fail(new EmbedError({ message, retryable: false })),
+      });
     }
 
     let languageModel: Layer.Layer<LanguageModel>;
