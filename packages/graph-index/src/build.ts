@@ -83,6 +83,9 @@ const toArtifactNode = (
     ...(fm.links && typeof fm.links === 'object'
       ? { links: fm.links as Record<string, string> }
       : {}),
+    ...(fm.languages && typeof fm.languages === 'object'
+      ? { languages: fm.languages as Record<string, string> }
+      : {}),
     ...(fm.start !== undefined ? { start: fm.start as NonNullable<ArtifactNode['start']> } : {}),
     ...(fm.end !== undefined ? { end: fm.end as NonNullable<ArtifactNode['end']> } : {}),
     ...(span ? { span: span as NonNullable<ArtifactNode['span']> } : {}),

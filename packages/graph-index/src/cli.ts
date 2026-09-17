@@ -120,15 +120,15 @@ const cmdAsk = (prompt: string) =>
 
 const TEMPLATES: Record<NodeType, string> = {
   person:
-    'lede: One or two sentences for the About section.\nlocation: City, Country\nlinks:\n  email: mailto:you@example.com\n  github: https://github.com/you\n  linkedin: https://www.linkedin.com/in/you',
+    'lede: One or two sentences for the About section.\nlocation: City, Country\nlinks:\n  email: mailto:you@example.com\n  github: https://github.com/you\n  linkedin: https://www.linkedin.com/in/you\nlanguages:\n  English: professional working proficiency',
   skill:
     'category: language | framework | platform | practice | leadership\naliases: []\n# part-of: [skill/broader]\n# related-to: [skill/other]',
   project:
     'start: 2024-01\nend: 2024-06\n# url: https://\n# repo: https://\nuses:\n  - { to: skill/example, note: concrete evidence of how it was used }\n# in-domain: [domain/example]',
   experience:
-    'start: 2024-01\n# end: 2025-01\nrole: Job title\nemployment: full-time | contract | freelance | founder\nat: [organization/example]\nuses:\n  - { to: skill/example, note: concrete evidence of how it was used }\n# delivered: [project/example]\n# led: [project/example]\n# in-domain: [domain/example]',
+    'start: 2024-01\n# end: 2025-01\nrole: Job title\nemployment: full-time | part-time | contract | freelance | founder\nat: [organization/example]\nuses:\n  - { to: skill/example, note: concrete evidence of how it was used }\n# delivered: [project/example]\n# led: [project/example]\n# in-domain: [domain/example]',
   education:
-    'start: 2015-09\nend: 2020-06\ndegree: MSc\nfield: Computer Science\nat: [organization/example]\n# taught: [skill/example]',
+    'start: 2015-09\nend: 2020-06\ndegree: MSc\nfield: Computer Science\nat: [organization/example]\n# taught: [skill/example]\n# delivered: [project/thesis]',
   organization:
     'kind: company | university | client | community\n# url: https://\n# location: City, Country\n# in-domain: [domain/example]',
   domain: 'aliases: []',

@@ -7,7 +7,7 @@
     scrolled: boolean;
   }
   let { name, links, scrolled }: Props = $props();
-  const anchors = ['about', 'experience', 'education', 'skills', 'contact'];
+  const anchors = ['about', 'experience', 'education', 'projects', 'skills', 'contact'];
   const icon: Record<string, string> = { github: 'GH', linkedin: 'in', email: '@' };
   const initials = $derived(
     name

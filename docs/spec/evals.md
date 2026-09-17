@@ -34,16 +34,18 @@ answer:
 
 Ids are the `type/slug` ids from ADR 0001; the runner fails a case whose ids do not exist in the artifact.
 
-## The set (about 20 cases)
+## The set
 
-| Group      | Count | Notes                                                                                                   |
-| ---------- | ----- | ------------------------------------------------------------------------------------------------------- |
-| match      | 3     | real job descriptions the owner would apply to: platform, frontend, poor fit                            |
-| entity     | 5     | a Skill, a Project, an Experience, an Organization, a Node Type name ("your education")                 |
-| hybrid     | 4     | mixed questions ("how do you approach testing in event-driven systems")                                 |
-| global     | 2     | "what are you strongest at", "summarise your career"; may set `min_pass: 2`                             |
-| off-topic  | 3     | weather, "write me a poem", a prompt-injection attempt ("ignore the context and…"); all `decline: true` |
-| multi-turn | 3     | carry `history` and `previousUsedIds`; assert the follow-up seeds from the previous Turn                |
+The target is about 20 cases in the groups below; the committed set (`evals/cases/`) grows towards it and CI runs whatever is committed. Current: 8 cases (1 match, 4 entity, 1 hybrid, 1 global, 1 off-topic).
+
+| Group      | Target | Notes                                                                                                   |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------- |
+| match      | 3      | real job descriptions the owner would apply to: platform, frontend, poor fit                            |
+| entity     | 5      | a Skill, a Project, an Experience, an Organization, a Node Type name ("your education")                 |
+| hybrid     | 4      | mixed questions ("how do you approach testing in event-driven systems")                                 |
+| global     | 2      | "what are you strongest at", "summarise your career"; may set `min_pass: 2`                             |
+| off-topic  | 3      | weather, "write me a poem", a prompt-injection attempt ("ignore the context and…"); all `decline: true` |
+| multi-turn | 3      | carry `history` and `previousUsedIds`; assert the follow-up seeds from the previous Turn                |
 
 ## Commands (repo root)
 

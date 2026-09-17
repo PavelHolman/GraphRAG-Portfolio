@@ -29,7 +29,7 @@ export type EdgeType = typeof EdgeType.Type;
 export const EDGE_RULES: Record<EdgeType, { from: ReadonlyArray<NodeType>; to: NodeType }> = {
   uses: { from: ['project', 'experience'], to: 'skill' },
   at: { from: ['experience', 'education'], to: 'organization' },
-  delivered: { from: ['experience'], to: 'project' },
+  delivered: { from: ['experience', 'education'], to: 'project' },
   led: { from: ['experience'], to: 'project' },
   'in-domain': { from: ['project', 'experience', 'organization'], to: 'domain' },
   'part-of': { from: ['skill'], to: 'skill' },

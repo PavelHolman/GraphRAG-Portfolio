@@ -37,6 +37,10 @@
             <dd>{model.person.location}</dd>{/if}
           {#if email}<dt>Email</dt>
             <dd><a href={email}>{linkValue(email)}</a></dd>{/if}
+          {#each Object.entries(model.person.languages) as [lang, level] (lang)}
+            <dt>{lang}</dt>
+            <dd>{level}</dd>
+          {/each}
         </dl>
         <button class="ask" onclick={ask('Give me a short overview of your career')}
           >✦ ask for an overview</button
@@ -104,6 +108,16 @@
               </p>
             </header>
             {#each paragraphs(e.body) as p (p)}<p>{p}</p>{/each}
+            {#if e.projects.length}
+              <ul class="projects">
+                {#each e.projects as p (p.id)}
+                  <li>
+                    <b>{p.title}</b>
+                    {#if p.summary}<span class="sum">{p.summary}</span>{/if}
+                  </li>
+                {/each}
+              </ul>
+            {/if}
             <button class="ask" onclick={ask(`Tell me about your ${e.title}`)}
               >✦ ask about this</button
             >
@@ -114,7 +128,40 @@
   </section>
 {/if}
 
-<section id="skills" class="section alt">
+{#if model.projects.length}
+  <section id="projects" class="section alt">
+    <div class="container">
+      <h2>Projects</h2>
+      <div class="stack">
+        {#each model.projects as p (p.id)}
+          <article class="card">
+            <header>
+              <h3>{p.title}</h3>
+              <p class="meta">
+                {#if p.range}<span>{p.range}</span>{/if}
+                {#if p.range && (p.url || p.repo)}<span class="sep">·</span>{/if}
+                {#if p.url}<a href={p.url} target="_blank" rel="noopener">{linkValue(p.url)}</a
+                  >{/if}
+                {#if p.url && p.repo}<span class="sep">·</span>{/if}
+                {#if p.repo}<a href={p.repo} target="_blank" rel="noopener">{linkValue(p.repo)}</a
+                  >{/if}
+              </p>
+            </header>
+            {#each paragraphs(p.body) as t (t)}<p>{t}</p>{/each}
+            {#if p.skills.length}
+              <ul class="chips">
+                {#each p.skills as s (s)}<li>{s}</li>{/each}
+              </ul>
+            {/if}
+            <button class="ask" onclick={ask(`Tell me about ${p.title}`)}>✦ ask about this</button>
+          </article>
+        {/each}
+      </div>
+    </div>
+  </section>
+{/if}
+
+<section id="skills" class="section">
   <div class="container">
     <h2>Skills</h2>
     <div class="grid">
@@ -139,7 +186,7 @@
   </div>
 </section>
 
-<section id="contact" class="section">
+<section id="contact" class="section alt">
   <div class="container">
     <h2>Contact</h2>
     <div class="grid">

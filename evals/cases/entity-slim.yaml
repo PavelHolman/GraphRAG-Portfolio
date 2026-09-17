@@ -1,0 +1,11 @@
+id: entity-slim
+mode: entity
+prompt: Tell me about SLIM
+retrieval:
+  must_seed: [project/slim]
+  must_include: [experience/poqet, skill/agentic-engineering]
+  max_nodes: 40
+answer:
+  must_cite: [project/slim]
+  decline: false
+  shape: prose

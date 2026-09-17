@@ -1,0 +1,11 @@
+id: global-strongest
+mode: hybrid
+prompt: What are you strongest at?
+retrieval:
+  must_include: [skill/typescript, skill/kotlin, skill/agentic-engineering, person/pavel-holman]
+  max_nodes: 40
+answer:
+  must_cite: [skill/typescript]
+  decline: false
+  shape: prose
+  min_pass: 2

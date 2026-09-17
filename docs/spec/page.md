@@ -15,11 +15,12 @@ Every section renders from the committed Knowledge Graph artifact. Nothing is au
 | 1   | Hero       | Scene + chat over the artifact; Turn endpoint                                                                                                                |
 | 2   | About      | Person `lede` (new frontmatter field, one or two sentences) and body as Markdown, `location`                                                                 |
 | 3   | Experience | Experience Nodes by `start` desc: `role`, Organization title, date range, body, top Skills by Edge notes, Projects it `delivered` or `led` as a compact list |
-| 4   | Education  | Education Nodes: `degree`, `field`, Organization, date range, body                                                                                           |
-| 5   | Skills     | grouped by `category`, sorted by Derived Span desc; aliases not shown                                                                                        |
-| 6   | Contact    | Person `links` (email as `mailto:`, LinkedIn, GitHub) and the CV download                                                                                    |
+| 4   | Education  | Education Nodes: `degree`, `field`, Organization, date range, body, Projects it `delivered` (a thesis)                                                       |
+| 5   | Projects   | only Projects no Experience or Education `delivered` or `led` (this site, contest results): title, date range, `url`, `repo`, body, Skills it `uses`         |
+| 6   | Skills     | grouped by `category`, sorted by Derived Span desc; aliases not shown                                                                                        |
+| 7   | Contact    | Person `links` (email as `mailto:`, LinkedIn, GitHub) and the CV download; `languages` appear in the About facts                                             |
 
-No Projects section: Projects appear under their Experience. No contact form.
+Projects owned by an Experience or Education appear under it, never twice. No contact form.
 
 ## Ask about this
 
@@ -44,4 +45,4 @@ Sections are SSR HTML, so crawlers get the full resume. The Hero swaps the canva
 
 ## Rejected
 
-Scene as a persistent background (GPU cost, contrast fights); separate `/resume` route (splits crawlability from the experience); separately authored section copy; a Projects section; a contact form; a hand-made CV as the primary (kept as fallback if the generated one disappoints); a prototype for section-to-Scene interaction (reduced to a canned Prompt).
+Scene as a persistent background (GPU cost, contrast fights); separate `/resume` route (splits crawlability from the experience); separately authored section copy; a Projects section listing every Project (owned ones stay under their Experience or Education); a contact form; a hand-made CV as the primary (kept as fallback if the generated one disappoints); a prototype for section-to-Scene interaction (reduced to a canned Prompt).
