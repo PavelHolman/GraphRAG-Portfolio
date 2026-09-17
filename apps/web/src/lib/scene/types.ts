@@ -5,6 +5,7 @@ export interface SceneNode {
   readonly id: string;
   readonly type: NodeType;
   readonly title: string;
+  readonly summary?: string | undefined;
   readonly degree: number;
 }
 

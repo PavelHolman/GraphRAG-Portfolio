@@ -64,7 +64,7 @@
     <h2>Experience</h2>
     <div class="stack">
       {#each model.experience as x (x.id)}
-        <article class="card askable">
+        <article class="card askable" id={x.id}>
           <header>
             <h3>{x.role ?? x.title}</h3>
             <p class="meta">
@@ -115,7 +115,7 @@
       <h2>Education</h2>
       <div class="stack">
         {#each model.education as e (e.id)}
-          <article class="card askable">
+          <article class="card askable" id={e.id}>
             <header>
               <h3>{[e.degree, e.field].filter(Boolean).join(' in ') || e.title}</h3>
               <p class="meta">
@@ -153,7 +153,7 @@
       <h2>Projects</h2>
       <div class="stack">
         {#each model.projects as p (p.id)}
-          <article class="card askable">
+          <article class="card askable" id={p.id}>
             <header>
               <h3>{p.title}</h3>
               <p class="meta">
@@ -199,7 +199,7 @@
           <h3 class="cat">{g.category}</h3>
           <ul class="chips uniform">
             {#each g.skills as s (s.id)}
-              <li>
+              <li id={s.id}>
                 <button
                   class="chip"
                   title={s.summary ?? ''}
@@ -267,6 +267,16 @@
     font-size: 18px;
     text-transform: capitalize;
     margin-bottom: 14px;
+  }
+  .card,
+  .chips li {
+    scroll-margin-top: 80px;
+  }
+  /* The card or chip a Scene pick linked to. */
+  .card:target,
+  .chips li:target {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
   }
   .card {
     position: relative;
