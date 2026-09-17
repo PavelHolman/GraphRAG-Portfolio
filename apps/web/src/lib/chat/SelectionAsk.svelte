@@ -1,8 +1,8 @@
 <script lang="ts">
-  // Select any text in the page and a pill in the bottom-right corner offers to ask about it, so a
-  // reader can dig into a phrase a card or an Answer mentions without retyping it. A fixed corner
-  // rather than a bubble over the selection: it never fights the browser's own selection menu and
-  // never has to be repositioned while scrolling. docs/spec/page.md.
+  // Select any text in the page and a pill appears just off the end of the selection, offering to
+  // ask about it, so a reader can dig into a phrase a card or an Answer mentions without retyping
+  // it. Below and right of the selection's last line: that is where the browser's own selection
+  // menu is not. docs/spec/page.md.
   import { onMount } from 'svelte';
   interface Props {
     /** Runs the selected text as a Prompt. */
@@ -12,12 +12,21 @@
   /** Below this a selection is an accident; above it, a paragraph rather than a question. */
   const MIN_CHARS = 3;
   const MAX_CHARS = 200;
-  /** The pill quotes the selection so "this" is never ambiguous from the corner. */
-  const SNIPPET_CHARS = 34;
+  /** Gap between the selection and the pill, and the smallest margin to a viewport edge. */
+  const GAP = 8;
+  const EDGE = 12;
 
   let text = $state('');
-  const snippet = $derived(
-    text.length > SNIPPET_CHARS ? `${text.slice(0, SNIPPET_CHARS).trimEnd()}…` : text,
+  /** The selection's bottom-right corner, in viewport coordinates. */
+  let corner = $state<{ x: number; y: number } | null>(null);
+  let pillWidth = $state(0);
+  let pillHeight = $state(0);
+  let viewportWidth = $state(0);
+  let viewportHeight = $state(0);
+  // Clamped so a selection at the edge of the window still shows the whole pill.
+  const left = $derived(Math.max(EDGE, Math.min(corner?.x ?? 0, viewportWidth - pillWidth - EDGE)));
+  const top = $derived(
+    Math.max(EDGE, Math.min(corner?.y ?? 0, viewportHeight - pillHeight - EDGE)),
   );
 
   /** Page content only: never the sticky header, the Scene's pick card or a form field. */
@@ -27,97 +36,94 @@
     return Boolean(el.closest('#top, main'));
   };
 
-  const read = () => {
-    const sel = document.getSelection();
-    if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
-      text = '';
-      return;
-    }
-    const picked = sel.toString().replace(/\s+/g, ' ').trim();
-    const usable =
-      picked.length >= MIN_CHARS &&
-      picked.length <= MAX_CHARS &&
-      inContent(sel.anchorNode) &&
-      inContent(sel.focusNode);
-    text = usable ? picked : '';
+  const clear = () => {
+    text = '';
+    corner = null;
   };
 
-  const ask = () => {
-    const prompt = text;
-    document.getSelection()?.removeAllRanges();
-    text = '';
-    onask(prompt);
+  const read = () => {
+    const sel = document.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return clear();
+    const picked = sel.toString().replace(/\s+/g, ' ').trim();
+    if (picked.length < MIN_CHARS || picked.length > MAX_CHARS) return clear();
+    if (!inContent(sel.anchorNode) || !inContent(sel.focusNode)) return clear();
+    // The last client rect is the selection's final line, so the pill lands where the text ends
+    // rather than at the right edge of the widest line.
+    const rects = sel.getRangeAt(0).getClientRects();
+    const last = rects[rects.length - 1];
+    if (!last || (!last.width && !last.height)) return clear();
+    text = picked;
+    corner = { x: last.right, y: last.bottom + GAP };
+  };
+
+  // `selectionchange` fires on every pointer move through a drag; one read per frame is plenty.
+  let queued = false;
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      read();
+    });
   };
 
   onMount(() => {
-    // `selectionchange` fires on every pointer move through a drag; one read per frame is plenty.
-    let queued = false;
-    const schedule = () => {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(() => {
-        queued = false;
-        read();
-      });
-    };
     document.addEventListener('selectionchange', schedule);
     return () => document.removeEventListener('selectionchange', schedule);
   });
 </script>
 
-{#if text}
+<svelte:window
+  bind:innerWidth={viewportWidth}
+  bind:innerHeight={viewportHeight}
+  onscroll={schedule}
+  onresize={schedule}
+/>
+
+{#if text && corner}
   <button
     class="pill"
+    bind:clientWidth={pillWidth}
+    bind:clientHeight={pillHeight}
+    style:left="{left}px"
+    style:top="{top}px"
     title="Ask about the selected text"
     onmousedown={(e) => e.preventDefault()}
-    onclick={ask}><span class="lead">✦ ask about</span><q>{snippet}</q></button
+    onclick={() => {
+      const prompt = text;
+      document.getSelection()?.removeAllRanges();
+      clear();
+      onask(prompt);
+    }}>✦ ask about this</button
   >
 {/if}
 
 <style>
   .pill {
     position: fixed;
-    right: 16px;
-    bottom: max(16px, calc(env(safe-area-inset-bottom) + 16px));
     /* Over the sticky header, which sits at 30. */
     z-index: 40;
-    max-width: min(320px, calc(100vw - 32px));
-    display: flex;
-    gap: 6px;
-    align-items: baseline;
+    white-space: nowrap;
     background: var(--panel);
     border: 1px solid var(--accent);
     border-radius: 999px;
-    padding: 9px 16px;
+    padding: 6px 13px;
     color: var(--fg);
     font:
-      12.5px 'DM Sans',
+      12px 'DM Sans',
       sans-serif;
     cursor: pointer;
-    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    animation: rise 0.18s ease;
-  }
-  .pill .lead {
-    flex: none;
-    white-space: nowrap;
-  }
-  .pill q {
-    flex: 0 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: var(--accent);
+    animation: appear 0.15s ease;
   }
   .pill:hover {
     background: var(--accent-soft);
   }
-  @keyframes rise {
+  @keyframes appear {
     from {
       opacity: 0;
-      transform: translateY(6px);
     }
   }
   @media (prefers-reduced-motion: reduce) {

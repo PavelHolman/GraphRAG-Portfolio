@@ -26,7 +26,7 @@ Projects owned by an Experience or Education appear under it, never twice. No co
 
 Every Experience, Education, Project and Skill item carries its Node id as an anchor, so the Scene's pick card links straight to it, and a small "ask about this" affordance. It scrolls to the Hero and submits a canned Prompt marked ✦ (for example "Tell me about your time at Acme Bank"), reusing the normal Turn pipeline. No cross-scroll hover highlighting.
 
-Selecting text anywhere in the Hero or the Sections raises the same affordance as a pill in the bottom-right corner, quoting the selection; it sends the phrase verbatim (whitespace collapsed, 3 to 200 characters) as a **typed** Prompt. A fixed corner, not a bubble over the selection: it never fights the browser's own selection menu and never needs repositioning on scroll. Selections inside the header, the pick card or a form field are ignored.
+Selecting text anywhere in the Hero or the Sections raises the same affordance as a pill just below and right of the selection's last line, clear of the browser's own selection menu and clamped to the viewport; it sends the phrase verbatim (whitespace collapsed, 3 to 200 characters) as a **typed** Prompt. Selections inside the header, the pick card or a form field are ignored.
 
 ## Navigation
 
