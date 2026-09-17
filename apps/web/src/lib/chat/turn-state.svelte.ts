@@ -44,6 +44,8 @@ export class TurnState {
   followups = $state<string[]>([]);
   streaming = $state(false);
   focused = $state<string | null>(null);
+  /** Bumped on every citation click, so focusing the same star twice still moves the camera. */
+  focusTick = $state(0);
   subgraph = $state<Subgraph | null>(null);
   private abort: AbortController | null = null;
   private runCounter = 0;

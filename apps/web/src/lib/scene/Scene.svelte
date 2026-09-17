@@ -14,12 +14,14 @@
     subgraph: Subgraph | null;
     preview: ReadonlySet<number> | null;
     focus: number | null;
+    /** Changes on every focus request, even for the same Node. */
+    focusTick: number;
     portrait: boolean;
     /** While a question is open the caption needs room: the view shifts up a little. */
     lift: boolean;
     onpick?: ((index: number) => void) | undefined;
   }
-  let { graph, subgraph, preview, focus, portrait, lift, onpick }: Props = $props();
+  let { graph, subgraph, preview, focus, focusTick, portrait, lift, onpick }: Props = $props();
   interactivity();
   const positions = $derived(relayout(graph.positions, subgraph));
   const zoom = $derived(portrait ? 1.9 : 1);
@@ -90,6 +92,7 @@
   });
 
   $effect(() => {
+    void focusTick;
     if (focus == null || !controls) return;
     stopIdle();
     scheduleResume();

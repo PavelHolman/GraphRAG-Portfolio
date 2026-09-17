@@ -57,6 +57,7 @@
   const onsendOrFollowup = (p: string) => (turn.followups.includes(p) ? onfollowup(p) : onsend(p));
   const oncite = (id: string) => {
     turn.focused = id;
+    turn.focusTick++;
   };
   const oninput = (active: boolean) => {
     typing = active;
@@ -141,6 +142,7 @@
             subgraph={turn.subgraph}
             {preview}
             focus={turn.focusNodeIndex()}
+            focusTick={turn.focusTick}
             {portrait}
             lift={conversing && portrait}
             {onpick}
