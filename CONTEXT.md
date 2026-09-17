@@ -93,8 +93,24 @@ The streamed text response to a Prompt, carrying Citations.
 _Avoid_: Response, completion, reply
 
 **Citation**:
-A reference inside an Answer to one Node in the Subgraph.
+A reference inside an Answer to one Node or Edge in the Subgraph, written by the LLM as an inline marker and re-emitted by Retrieval as an ordered event.
 _Avoid_: Source, reference, footnote
+
+**Candidate Subgraph**:
+The Nodes and Edges Retrieval selected before the LLM ran, sent first so the Scene can pre-dim them.
+_Avoid_: Context set, pre-highlight
+
+**Used Subgraph**:
+The Nodes and Edges the LLM actually cited, validated at the end of a Turn; what remains Highlighted.
+_Avoid_: Final set, result
+
+**Marker**:
+The inline `[[id]]` token the LLM writes in an Answer to make a Citation.
+_Avoid_: Tag, reference token
+
+**Followup**:
+A suggested next Prompt returned at the end of a Turn.
+_Avoid_: Suggestion, chip, next question
 
 ### Scene
 
