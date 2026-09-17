@@ -1,6 +1,8 @@
 <script lang="ts">
-  // Select any text in the page and a pill offers to ask about it, so a reader can dig into a
-  // phrase a card or an Answer mentions without retyping it. docs/spec/page.md.
+  // Select any text in the page and a pill in the bottom-right corner offers to ask about it, so a
+  // reader can dig into a phrase a card or an Answer mentions without retyping it. A fixed corner
+  // rather than a bubble over the selection: it never fights the browser's own selection menu and
+  // never has to be repositioned while scrolling. docs/spec/page.md.
   import { onMount } from 'svelte';
   interface Props {
     /** Runs the selected text as a Prompt. */
@@ -10,11 +12,13 @@
   /** Below this a selection is an accident; above it, a paragraph rather than a question. */
   const MIN_CHARS = 3;
   const MAX_CHARS = 200;
-  /** Gap between the selection box and the pill. */
-  const GAP = 10;
+  /** The pill quotes the selection so "this" is never ambiguous from the corner. */
+  const SNIPPET_CHARS = 34;
 
   let text = $state('');
-  let spot = $state<{ x: number; y: number; below: boolean } | null>(null);
+  const snippet = $derived(
+    text.length > SNIPPET_CHARS ? `${text.slice(0, SNIPPET_CHARS).trimEnd()}…` : text,
+  );
 
   /** Page content only: never the sticky header, the Scene's pick card or a form field. */
   const inContent = (n: Node | null): boolean => {
@@ -23,33 +27,25 @@
     return Boolean(el.closest('#top, main'));
   };
 
-  const clear = () => {
-    text = '';
-    spot = null;
-  };
-
   const read = () => {
     const sel = document.getSelection();
-    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return clear();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+      text = '';
+      return;
+    }
     const picked = sel.toString().replace(/\s+/g, ' ').trim();
-    if (picked.length < MIN_CHARS || picked.length > MAX_CHARS) return clear();
-    if (!inContent(sel.anchorNode) || !inContent(sel.focusNode)) return clear();
-    const r = sel.getRangeAt(0).getBoundingClientRect();
-    if (!r.width && !r.height) return clear();
-    // Above the selection, unless the sticky header would eat it.
-    const below = r.top < 90;
-    text = picked;
-    spot = {
-      x: Math.min(Math.max(r.left + r.width / 2, 80), window.innerWidth - 80),
-      y: below ? r.bottom + GAP : r.top - GAP,
-      below,
-    };
+    const usable =
+      picked.length >= MIN_CHARS &&
+      picked.length <= MAX_CHARS &&
+      inContent(sel.anchorNode) &&
+      inContent(sel.focusNode);
+    text = usable ? picked : '';
   };
 
   const ask = () => {
     const prompt = text;
     document.getSelection()?.removeAllRanges();
-    clear();
+    text = '';
     onask(prompt);
   };
 
@@ -65,53 +61,68 @@
       });
     };
     document.addEventListener('selectionchange', schedule);
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    return () => {
-      document.removeEventListener('selectionchange', schedule);
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
-    };
+    return () => document.removeEventListener('selectionchange', schedule);
   });
 </script>
 
-{#if spot}
+{#if text}
   <button
     class="pill"
-    class:below={spot.below}
-    style:left="{spot.x}px"
-    style:top="{spot.y}px"
     title="Ask about the selected text"
     onmousedown={(e) => e.preventDefault()}
-    onclick={ask}>✦ ask about this</button
+    onclick={ask}><span class="lead">✦ ask about</span><q>{snippet}</q></button
   >
 {/if}
 
 <style>
   .pill {
     position: fixed;
+    right: 16px;
+    bottom: max(16px, calc(env(safe-area-inset-bottom) + 16px));
     /* Over the sticky header, which sits at 30. */
     z-index: 40;
-    transform: translate(-50%, -100%);
-    white-space: nowrap;
+    max-width: min(320px, calc(100vw - 32px));
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
     background: var(--panel);
-    border: 1px solid var(--line);
+    border: 1px solid var(--accent);
     border-radius: 999px;
-    padding: 6px 12px;
+    padding: 9px 16px;
     color: var(--fg);
     font:
-      12px 'DM Sans',
+      12.5px 'DM Sans',
       sans-serif;
     cursor: pointer;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    animation: rise 0.18s ease;
   }
-  .pill.below {
-    transform: translate(-50%, 0);
+  .pill .lead {
+    flex: none;
+    white-space: nowrap;
+  }
+  .pill q {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--accent);
   }
   .pill:hover {
-    color: var(--accent);
-    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pill {
+      animation: none;
+    }
   }
 </style>
