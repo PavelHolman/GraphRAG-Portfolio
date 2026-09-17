@@ -1,25 +1,25 @@
 <script lang="ts">
-	// PROTOTYPE iteration 4: chat panel × Scene. Three panel relationships, switchable via ?variant=A|B|C,
-	// over the winning Ember Scene. A fake stream shaped like ADR 0003 drives progressive highlight.
+	// PROTOTYPE iteration 5: card vs strip over the Ember Scene, with idle "attract" hints that auto-play,
+	// hover-to-preview, faint cited neighbours after a Turn. ?variant=A|B|C.
 	import { Canvas } from '@threlte/core';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import VariantA from '$lib/proto/VariantA.svelte';
 	import Switcher from '$lib/proto/Switcher.svelte';
-	import ChatA from '$lib/proto/ChatA.svelte';
-	import ChatB from '$lib/proto/ChatB.svelte';
-	import ChatC from '$lib/proto/ChatC.svelte';
+	import ChatCard from '$lib/proto/ChatCard.svelte';
+	import ChatStrip from '$lib/proto/ChatStrip.svelte';
 	import { makeGraph, type Subgraph } from '$lib/proto/graph';
 	import { fakeTurn, emptySubgraph, type TurnEvent } from '$lib/proto/stream';
 	import type { Message } from '$lib/proto/chat';
 
 	const variants = [
-		{ key: 'A', name: 'Side panel / bottom sheet' },
-		{ key: 'B', name: 'Floating card + bar' },
-		{ key: 'C', name: 'Scene-first strip' }
+		{ key: 'A', name: 'Card, underlined citations' },
+		{ key: 'B', name: 'Card + citation chips' },
+		{ key: 'C', name: 'Strip + citation chips' }
 	];
-	const variant = $derived(page.url.searchParams.get('variant') ?? 'A');
+	const variant = $derived(page.url.searchParams.get('variant') ?? 'B');
 	const ember = { name: 'Ember', pointScale: 1, seedGlow: 1.8, citedGlow: 0.7, haloK: 2.6, ring: 0, edgeHi: '#8a5f54', edgeRest: '#242220', dustCount: 700, dustOpacity: 0.55, upperLabels: false };
+	const HINTS = ['Tell me about your Effect work', 'Does he fit a lead role with Kubernetes and Kafka?', 'Where did you study?', 'What are you strongest at?'];
 
 	const graph = makeGraph();
 	let subgraph = $state<Subgraph | null>(null);
@@ -28,25 +28,30 @@
 	let streaming = $state(false);
 	let focused = $state<number | null>(null);
 	let picked = $state<number | null>(null);
+	let typing = $state(false);       // input focused or non-empty
+	let committed = $state(false);    // visitor has sent a real Prompt at least once
+	let attract = $state(false);
 	let abort: AbortController | null = null;
 
-	function onsend(prompt: string) {
+	const suggestions = $derived(followups.length && !attract ? followups : HINTS);
+
+	function run(prompt: string, suggested: boolean) {
 		abort?.abort(); // new Prompt mid-stream: interrupt, keep previous highlight until the new subgraph arrives
 		if (messages.at(-1)?.streaming) messages.at(-1)!.streaming = false;
 		abort = new AbortController();
 		followups = []; focused = null;
-		messages.push({ role: 'visitor', parts: [{ kind: 'text', text: prompt }], streaming: false });
-		const answer: Message = { role: 'answer', parts: [], streaming: true };
-		messages.push(answer);
+		messages.push({ role: 'visitor', suggested, parts: [{ kind: 'text', text: prompt }], streaming: false });
+		messages.push({ role: 'answer', parts: [], streaming: true });
 		streaming = true;
 		let live: Subgraph = emptySubgraph();
+		let candidate = new Set<number>();
 		fakeTurn(graph, prompt, abort.signal, (e: TurnEvent) => {
 			const a = messages.at(-1)!;
 			switch (e.type) {
 				case 'subgraph':
-					live = { name: '', seeds: new Set(), nodes: new Set(e.nodeIds), edges: new Set(e.edgeIds) };
-					subgraph = live; // candidate: pre-dim everything else
-					break;
+					candidate = new Set(e.nodeIds);
+					live = { name: '', seeds: new Set(), nodes: candidate, edges: new Set(e.edgeIds) };
+					subgraph = live; break;
 				case 'text': {
 					const last = a.parts.at(-1);
 					if (last?.kind === 'text') last.text += e.delta; else a.parts.push({ kind: 'text', text: e.delta });
@@ -55,17 +60,42 @@
 				case 'citation':
 					a.parts.push({ kind: 'cite', nodeId: e.nodeId, ordinal: e.ordinal, title: graph.nodes[e.nodeId].title });
 					live = { ...live, seeds: new Set([...live.seeds, e.nodeId]) };
-					subgraph = live; // progressive highlight
-					break;
+					subgraph = live; break;
 				case 'followups': followups = e.prompts; break;
-				case 'turn-finished':
-					subgraph = { name: '', seeds: new Set(e.usedNodeIds), nodes: new Set([...e.usedNodeIds, 0]), edges: new Set(e.usedEdgeIds) };
+				case 'turn-finished': {
+					// used Nodes stay bright; their candidate neighbours stay faintly lit
+					const used = new Set(e.usedNodeIds);
+					const keep = new Set<number>([...used, 0]);
+					graph.edges.forEach((ed) => {
+						if (used.has(ed.src) && candidate.has(ed.dst)) keep.add(ed.dst);
+						if (used.has(ed.dst) && candidate.has(ed.src)) keep.add(ed.src);
+					});
+					const edges = new Set<number>();
+					graph.edges.forEach((ed, ei) => { if (keep.has(ed.src) && keep.has(ed.dst) && (used.has(ed.src) || used.has(ed.dst))) edges.add(ei); });
+					subgraph = { name: '', seeds: used, nodes: keep, edges };
 					a.streaming = false; streaming = false; break;
+				}
 				case 'error': a.error = e.message; a.streaming = false; streaming = false; break;
 			}
 		});
 	}
-	function oncite(nodeId: number) { focused = nodeId; }
+	const onsend = (p: string) => { committed = true; attract = false; run(p, false); };
+	const onpreview = (p: string) => { if (streaming || committed) return; attract = false; run(p, true); };
+	const oncite = (nodeId: number) => { focused = nodeId; };
+	const oninput = (active: boolean) => { typing = active; if (active) attract = false; };
+
+	// attract loop: while nobody has committed and nobody is typing, auto-play a hint every 9 s
+	onMount(() => {
+		let i = 0;
+		const tick = () => {
+			if (committed || typing || streaming) return;
+			attract = true;
+			run(HINTS[i++ % HINTS.length], true);
+		};
+		const first = setTimeout(tick, 2500);
+		const loop = setInterval(tick, 11000);
+		return () => { clearTimeout(first); clearInterval(loop); };
+	});
 
 	let fps = $state(0), dpr = $state(1), zoom = $state(1);
 	onMount(() => {
@@ -85,23 +115,22 @@
 	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Azeret+Mono:wght@400&family=Bricolage+Grotesque:wght@600&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<div class="stage" class:withPanel={variant === 'A'}>
+<div class="stage">
 	<Canvas dpr={[1, 2]} renderMode="on-demand" shadows={false}>
 		<VariantA {graph} {subgraph} {zoom} pull={0.45} style={ember} focus={focused} onpick={(i) => (picked = i)} />
 	</Canvas>
 </div>
 
 <header class="hud">
-	<div class="stats"><span class="dot"></span>{fps} fps · dpr {dpr} · {graph.nodes.length} nodes · {streaming ? 'streaming' : 'idle'}</div>
+	<div class="stats"><span class="dot"></span>{fps} fps · {streaming ? 'streaming' : attract ? 'attract' : 'idle'}</div>
 </header>
 
-{#if picked != null && variant !== 'A'}
+{#if picked != null}
 	<aside class="pick"><span class="type">{graph.nodes[picked].type}</span><b>{graph.nodes[picked].title}</b></aside>
 {/if}
 
-{#if variant === 'B'}<ChatB {messages} {followups} {streaming} {onsend} {oncite} {focused} />
-{:else if variant === 'C'}<ChatC {messages} {followups} {streaming} {onsend} {oncite} {focused} />
-{:else}<ChatA {messages} {followups} {streaming} {onsend} {oncite} {focused} />{/if}
+{#if variant === 'C'}<ChatStrip {messages} {suggestions} {attract} {streaming} {onsend} {onpreview} {oncite} {oninput} {focused} chips />
+{:else}<ChatCard {messages} {suggestions} {attract} {streaming} {onsend} {onpreview} {oncite} {oninput} {focused} chips={variant === 'B'} />{/if}
 
 <Switcher {variants} current={variant} />
 
@@ -113,8 +142,6 @@
 		-webkit-font-smoothing: antialiased;
 	}
 	.stage { position: fixed; inset: 0; touch-action: none; }
-	.stage.withPanel { right: min(400px, 100vw); }
-	@media (max-width: 700px) { .stage.withPanel { right: 0; bottom: 112px; } }
 	.hud { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; pointer-events: none; }
 	.stats { font: 11px/1 "Azeret Mono", monospace; letter-spacing: .12em; text-transform: uppercase; color: #9d9a92; display: flex; align-items: center; gap: 8px; }
 	.dot { width: 6px; height: 6px; border-radius: 50%; background: #ff8a72; box-shadow: 0 0 10px #ff8a72; }

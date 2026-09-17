@@ -40,6 +40,7 @@
 	const PERSON_C = new THREE.Color('#f1efe9');
 	const SEED_C = new THREE.Color('#ff8a72');
 	const CITED_C = new THREE.Color('#f1efe9');
+	const FAINT_C = new THREE.Color('#8f8b83');
 
 	// ---- node points ----
 	const geo = new THREE.BufferGeometry();
@@ -132,7 +133,8 @@
 			} else if (sg.seeds.has(i)) {
 				tmp.copy(SEED_C); size = 3.0; glow = style.seedGlow; ring = style.ring;
 			} else if (sg.nodes.has(i)) {
-				tmp.copy(t === 'person' ? PERSON_C : CITED_C); size = t === 'person' ? 2.6 : 1.7; glow = style.citedGlow; ring = style.ring * 0.35;
+				// faint tier: candidate while streaming, cited neighbours after the Turn
+				tmp.copy(t === 'person' ? PERSON_C : FAINT_C); size = t === 'person' ? 2.2 : 1.05; glow = t === 'person' ? 0.6 : 0.25; ring = 0;
 			} else {
 				tmp.copy(DIM); size = 0.55; glow = 0;
 			}

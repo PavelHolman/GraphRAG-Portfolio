@@ -4,17 +4,22 @@ export interface Cite { kind: 'cite'; nodeId: number; ordinal: number; title: st
 export type Part = Segment | Cite;
 export interface Message {
 	role: 'visitor' | 'answer';
+	suggested?: boolean;
 	parts: Part[];
 	streaming: boolean;
 	error?: string;
 }
 export interface ChatProps {
 	messages: Message[];
-	followups: string[];
+	suggestions: string[];     // followups after a Turn, idle hints otherwise
+	attract: boolean;          // true while the idle loop is auto-playing hints
 	streaming: boolean;
 	onsend: (prompt: string) => void;
+	onpreview: (prompt: string) => void;   // hover/focus on a hint: play it without committing
 	oncite: (nodeId: number) => void;
+	oninput: (active: boolean) => void;    // visitor is typing or focused the input
 	focused: number | null;
+	chips?: boolean;           // show the numbered citation chip row
 }
 
 // Split streamed markdown-ish text into lines so tables render as rows in the prototype.
