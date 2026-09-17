@@ -115,6 +115,12 @@
     z-index: 20;
     color: var(--fg);
     min-width: 0;
+    pointer-events: none;
+  }
+  .caption,
+  .field,
+  .follow > * {
+    pointer-events: auto;
   }
   /* Phones: a sheet pinned to the bottom of the Hero. */
   @media (max-width: 760px) {

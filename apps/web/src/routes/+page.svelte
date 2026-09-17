@@ -233,6 +233,9 @@
     display: grid;
     gap: 10px;
     z-index: 5;
+    /* The column is transparent to the pointer so stars behind it stay hoverable and clickable;
+       only the controls take events back. */
+    pointer-events: none;
   }
   /* With a question open the column is anchored at the top, so the streaming answer only grows
      downward and the text already read never moves. */
@@ -242,6 +245,10 @@
   }
   .intro {
     transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .actions > * {
+    pointer-events: auto;
   }
   .intro.aside {
     display: none;
