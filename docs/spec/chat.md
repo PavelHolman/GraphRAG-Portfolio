@@ -14,6 +14,7 @@ Decisions from the chat-panel prototype ([ticket](https://github.com/PavelHolman
 - The field shows a **ghost hint** (a suggested Prompt) as placeholder text, cycling every 6 s with a short fade, paused while streaming. Hints are authored, not generated.
 - **No auto-play.** Submitting an empty field (Enter or the button) sends the hint currently shown as a suggested Prompt. The button shows ▶ when the field is empty and ↵ when it has text.
 - Typing hides the ghost text.
+- **Hint preview in the Scene**: while a ghost hint is showing and no Turn is streaming, the Scene faintly lights that hint's related Nodes (the faint tier, no seeds, no Answer). Each hint carries its precomputed candidate Node ids in the static artifact, so the preview needs no request. When the hint cycles, the preview cross-fades to the next set; typing or a real Prompt clears it.
 
 ## Citations
 
