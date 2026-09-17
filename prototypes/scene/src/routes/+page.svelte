@@ -17,7 +17,7 @@
 		{ key: 'B', name: 'Caption above bottom field', layout: 'bottom' as const },
 		{ key: 'C', name: 'Middle column', layout: 'middle' as const }
 	];
-	const variant = $derived(page.url.searchParams.get('variant') ?? 'A');
+	const variant = $derived(page.url.searchParams.get('variant') ?? 'B');
 	const layout = $derived(variants.find((v) => v.key === variant)?.layout ?? 'top');
 	const ember = { name: 'Ember', pointScale: 1, seedGlow: 1.8, citedGlow: 0.7, haloK: 2.6, ring: 0, edgeHi: '#8a5f54', edgeRest: '#242220', dustCount: 700, dustOpacity: 0.55, upperLabels: false };
 	const HINTS = ['Tell me about your Effect work', 'Does he fit a lead role with Kubernetes and Kafka?', 'Where did you study?', 'What are you strongest at?'];
@@ -86,18 +86,10 @@
 	const oncite = (nodeId: number) => { focused = nodeId; };
 	const oninput = (active: boolean) => { typing = active; if (active) attract = false; };
 
-	// ghost hint cycles every 6 s. Attract loop: until the visitor commits a real Prompt or types, the hint
-	// shown in the field auto-plays every 11 s (first one after 2.5 s). Stays off after a real Prompt.
+	// ghost hint cycles every 6 s. No auto-play (rejected in round 3): an empty submit plays the shown hint.
 	onMount(() => {
-		const cycle = setInterval(() => { if (!streaming || !attract) hintIndex++; }, 6000);
-		const tick = () => {
-			if (committed || typing || streaming) return;
-			attract = true;
-			run(hint, true);
-		};
-		const first = setTimeout(tick, 2500);
-		const loop = setInterval(tick, 11000);
-		return () => { clearInterval(cycle); clearTimeout(first); clearInterval(loop); };
+		const cycle = setInterval(() => { if (!streaming) hintIndex++; }, 6000);
+		return () => clearInterval(cycle);
 	});
 
 	let fps = $state(0), dpr = $state(1), zoom = $state(1);
