@@ -29,7 +29,13 @@ export const SkillCategory = Schema.Literals([
 ]);
 export type SkillCategory = typeof SkillCategory.Type;
 
-export const Employment = Schema.Literals(['full-time', 'contract', 'freelance', 'founder']);
+export const Employment = Schema.Literals([
+  'full-time',
+  'part-time',
+  'contract',
+  'freelance',
+  'founder',
+]);
 export const OrganizationKind = Schema.Literals(['company', 'university', 'client', 'community']);
 
 export const PersonFrontmatter = Schema.Struct({
@@ -40,6 +46,8 @@ export const PersonFrontmatter = Schema.Struct({
   lede: Schema.optionalKey(Schema.String),
   location: Schema.optionalKey(Schema.String),
   links: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+  /** Spoken languages, label to proficiency, e.g. `English: professional (FCE, B2)`. */
+  languages: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
 });
 
 export const SkillFrontmatter = Schema.Struct({
@@ -85,6 +93,8 @@ export const EducationFrontmatter = Schema.Struct({
   field: Schema.optionalKey(Schema.String),
   at: EdgeList,
   taught: EdgeList,
+  /** A thesis or a course project the studies produced. */
+  delivered: EdgeList,
 });
 
 export const OrganizationFrontmatter = Schema.Struct({

@@ -1,0 +1,11 @@
+id: entity-thesis
+mode: hybrid
+prompt: What was your bachelor's thesis about?
+retrieval:
+  must_seed: [education/ctu-fit-bachelor]
+  must_include: [project/energy-price-forecasting, skill/time-series-forecasting]
+  max_nodes: 40
+answer:
+  must_cite: [project/energy-price-forecasting]
+  decline: false
+  shape: prose

@@ -1,0 +1,16 @@
+id: match-ai-engineer
+mode: match
+prompt: |
+  AI Engineer, remote or Prague.
+  - Build agentic developer tooling: harnesses, guardrails and evaluations for coding agents
+  - Strong TypeScript; SvelteKit and Effect a plus
+  - Retrieval-augmented generation over structured data
+  - Lead a small team end to end
+retrieval:
+  must_seed: [skill/agentic-engineering, skill/typescript]
+  must_include: [experience/poqet, skill/retrieval-augmented-generation]
+  max_nodes: 40
+answer:
+  must_cite: [skill/agentic-engineering]
+  decline: false
+  shape: table

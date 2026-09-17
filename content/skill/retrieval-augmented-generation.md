@@ -5,4 +5,4 @@ category: practice
 aliases: [RAG, GraphRAG, vector search, embeddings]
 ---
 
-Retrieval-augmented generation done GraphRAG-style: embed nodes and edges of a typed knowledge graph, seed by vector similarity, expand over weighted edges, budget the context, and make one streamed LLM call whose inline citations are validated server-side.
+Retrieval-augmented generation done GraphRAG-style on this portfolio: embed nodes and edges of a typed knowledge graph, seed by vector similarity, expand over weighted edges, budget the context, and make one streamed LLM call whose inline citations are validated server-side.

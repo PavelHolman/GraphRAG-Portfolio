@@ -25,6 +25,19 @@ export interface EducationItem {
   readonly organization: string | undefined;
   readonly range: string;
   readonly body: string;
+  /** A thesis or course project the studies `delivered`. */
+  readonly projects: ReadonlyArray<{ id: string; title: string; summary: string | undefined }>;
+}
+/** A Project no Experience or Education owns: it gets its own card. */
+export interface ProjectItem {
+  readonly id: string;
+  readonly title: string;
+  readonly summary: string | undefined;
+  readonly range: string;
+  readonly body: string;
+  readonly url: string | undefined;
+  readonly repo: string | undefined;
+  readonly skills: ReadonlyArray<string>;
 }
 export interface SkillGroup {
   readonly category: string;
@@ -43,9 +56,11 @@ export interface PageModel {
     body: string;
     location: string | undefined;
     links: Record<string, string>;
+    languages: Record<string, string>;
   };
   readonly experience: ReadonlyArray<ExperienceItem>;
   readonly education: ReadonlyArray<EducationItem>;
+  readonly projects: ReadonlyArray<ProjectItem>;
   readonly skills: ReadonlyArray<SkillGroup>;
 }
 
@@ -53,6 +68,11 @@ const fmt = (t: ArtifactNode['start']): string => (t ? t.toString() : '');
 const range = (n: ArtifactNode): string => {
   if (!n.start) return '';
   return `${fmt(n.start)} – ${n.end ? fmt(n.end) : 'present'}`;
+};
+// Most recent first; Nodes without a start (undated coursework) sink to the end.
+const byStartDesc = (a: ArtifactNode, b: ArtifactNode): number => {
+  if (a.start && b.start) return -compareStart(a.start, b.start);
+  return (a.start ? 0 : 1) - (b.start ? 0 : 1);
 };
 const field = (n: ArtifactNode, k: string): string | undefined => {
   const v = n.fields[k];
@@ -71,7 +91,7 @@ export const buildPageModel = (
 
   const experience = visible
     .filter((n) => n.type === 'experience')
-    .sort((a, b) => (a.start && b.start ? -compareStart(a.start, b.start) : 0))
+    .sort(byStartDesc)
     .map((n): ExperienceItem => ({
       id: n.id,
       title: n.title,
@@ -101,7 +121,7 @@ export const buildPageModel = (
 
   const education = visible
     .filter((n) => n.type === 'education')
-    .sort((a, b) => (a.start && b.start ? -compareStart(a.start, b.start) : 0))
+    .sort(byStartDesc)
     .map((n): EducationItem => ({
       id: n.id,
       title: n.title,
@@ -110,6 +130,28 @@ export const buildPageModel = (
       organization: byId.get(out(n.id, 'at')[0]?.target ?? '')?.title,
       range: range(n),
       body: n.body,
+      projects: out(n.id, 'delivered')
+        .map((e) => byId.get(e.target))
+        .filter((p): p is ArtifactNode => p !== undefined && !p.hidden)
+        .map((p) => ({ id: p.id, title: p.title, summary: p.summary })),
+    }));
+
+  // Projects nobody `delivered` or `led` stand on their own (this site, contest results).
+  const owned = new Set(
+    edges.filter((e) => e.type === 'delivered' || e.type === 'led').map((e) => e.target),
+  );
+  const projects = visible
+    .filter((n) => n.type === 'project' && !owned.has(n.id))
+    .sort(byStartDesc)
+    .map((n): ProjectItem => ({
+      id: n.id,
+      title: n.title,
+      summary: n.summary,
+      range: range(n),
+      body: n.body,
+      url: field(n, 'url'),
+      repo: field(n, 'repo'),
+      skills: out(n.id, 'uses').map((e) => byId.get(e.target)?.title ?? e.target),
     }));
 
   const groups = new Map<string, Array<ArtifactNode>>();
@@ -143,9 +185,11 @@ export const buildPageModel = (
       body: person?.body ?? '',
       location: person ? field(person, 'location') : undefined,
       links: person?.links ?? {},
+      languages: person?.languages ?? {},
     },
     experience,
     education,
+    projects,
     skills,
   };
 };

@@ -1,0 +1,11 @@
+id: entity-deels
+mode: entity
+prompt: What did you build at Deels?
+retrieval:
+  must_seed: [project/deels]
+  must_include: [experience/deelscorp, skill/kotlin]
+  max_nodes: 40
+answer:
+  must_cite: [project/deels]
+  decline: false
+  shape: prose

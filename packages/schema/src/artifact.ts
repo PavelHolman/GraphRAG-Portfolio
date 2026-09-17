@@ -21,6 +21,7 @@ export const ArtifactNode = Schema.Struct({
     Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
   ),
   links: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+  languages: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
   start: Schema.optionalKey(PlainTime),
   end: Schema.optionalKey(PlainTime),
   /** Derived Span for Skills; never authored. ADR 0001. */

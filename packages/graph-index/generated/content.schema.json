@@ -35,6 +35,12 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "languages": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -272,6 +278,7 @@
             "type": "string",
             "enum": [
               "full-time",
+              "part-time",
               "contract",
               "freelance",
               "founder"
@@ -491,6 +498,35 @@
             }
           },
           "taught": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "delivered": {
             "type": "array",
             "items": {
               "anyOf": [
