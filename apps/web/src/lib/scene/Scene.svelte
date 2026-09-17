@@ -106,6 +106,7 @@
   // is therefore always fully used up before the page moves.
   let wheelDistance = 30 * zoom;
   const WHEEL_RATE = 0.0012;
+  const ARRIVAL = 0.5;
   const gateWheel = (e: WheelEvent) => {
     if (!controls || e.deltaY === 0) return;
     e.stopPropagation();
@@ -118,9 +119,10 @@
     // Hand the wheel to the page only once the camera has actually arrived at the limit, not merely
     // been sent there: the zoom finishes visibly before the page starts moving.
     const targetAtLimit = outward ? wheelDistance >= max - 0.01 : wheelDistance <= min + 0.01;
+    // Close enough counts as arrived, so the hand-off does not wait out the easing tail.
     const cameraAtLimit = outward
-      ? controls.distance >= max - 0.05
-      : controls.distance <= min + 0.05;
+      ? controls.distance >= max - ARRIVAL
+      : controls.distance <= min + ARRIVAL;
     if (targetAtLimit && cameraAtLimit) return;
     e.preventDefault();
     if (targetAtLimit) return;
@@ -145,7 +147,7 @@
 
 <T.PerspectiveCamera makeDefault position={[0, 6 * zoom, 30 * zoom]} fov={50}>
   <CameraControls
-    smoothTime={0.3}
+    smoothTime={0.15}
     minDistance={MIN_DISTANCE * zoom}
     maxDistance={MAX_DISTANCE * zoom}
     dollySpeed={0.6}
