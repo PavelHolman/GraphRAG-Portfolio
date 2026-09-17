@@ -325,3 +325,25 @@ export function makeTurns(g: Graph): Subgraph[] {
 	c.name = 'Turn 3: "Where did you study?"';
 	return [a, b, c];
 }
+
+// ---------- answer-time relayout: pull the Subgraph together and recentre on it ----------
+// strength 0 = static layout; 0.45 = mild; 0.75 = strong.
+export function relayout(base: Float32Array, sg: Subgraph | null, strength: number): Float32Array {
+	if (!sg || strength <= 0) return base;
+	const out = new Float32Array(base);
+	const n = base.length / 3;
+	let cx = 0, cy = 0, cz = 0, k = 0;
+	for (const i of sg.nodes) { cx += base[i * 3]; cy += base[i * 3 + 1]; cz += base[i * 3 + 2]; k++; }
+	if (!k) return base;
+	cx /= k; cy /= k; cz /= k;
+	for (let i = 0; i < n; i++) {
+		const inSg = sg.nodes.has(i);
+		const seed = sg.seeds.has(i);
+		// pull cited nodes toward their centroid, push the rest gently outward
+		const f = seed ? 1 - strength * 0.75 : inSg ? 1 - strength * 0.5 : 1 + strength * 0.35;
+		out[i * 3] = cx + (base[i * 3] - cx) * f - cx;
+		out[i * 3 + 1] = cy + (base[i * 3 + 1] - cy) * f - cy;
+		out[i * 3 + 2] = cz + (base[i * 3 + 2] - cz) * f - cz;
+	}
+	return out;
+}
