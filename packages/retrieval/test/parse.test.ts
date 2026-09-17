@@ -43,6 +43,10 @@ describe('AnswerParser', () => {
     expect(text(parts)).toBe('Done.\n');
     expect(parts.at(-1)).toEqual({ type: 'followups', prompts: ['one', 'two', 'three'] });
   });
+  test('markers inside follow-ups are stripped', () => {
+    const parts = feed(['Done.\n```followups\n- How was [[skill/effect]] used?\n```']);
+    expect(parts.at(-1)).toEqual({ type: 'followups', prompts: ['How was used?'] });
+  });
   test('an unterminated marker is released as text once it is too long', () => {
     const parts = feed(['[[' + 'x'.repeat(200)]);
     expect(text(parts)).toBe('[[' + 'x'.repeat(200));

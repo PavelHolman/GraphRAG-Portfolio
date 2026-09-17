@@ -127,7 +127,7 @@
             {preview}
             focus={turn.focusNodeIndex()}
             {portrait}
-            lift={conversing}
+            lift={conversing && portrait}
             {onpick}
           />
         </Canvas>
@@ -137,19 +137,34 @@
     {/if}
   </div>
 
-  <div class="intro" class:aside={conversing}>
-    <h1>{data.model.person.name}</h1>
-    {#if data.model.person.headline}<p class="headline">{data.model.person.headline}</p>{/if}
-    {#if data.model.person.lede}<p class="lede">{data.model.person.lede}</p>{/if}
-    <div class="actions">
-      <button class="primary" onclick={askIntro}>✦ Ask about me</button>
-      {#if data.model.person.links.email}<a class="secondary" href={data.model.person.links.email}
-          >Contact me</a
-        >{/if}
-      {#if data.model.person.links.cv}<a class="secondary" href={data.model.person.links.cv}
-          >Download CV</a
-        >{/if}
+  <!-- Left column: the intro copy, replaced by the conversation once a question is asked. -->
+  <div class="lead">
+    <div class="intro" class:aside={conversing}>
+      <h1>{data.model.person.name}</h1>
+      {#if data.model.person.headline}<p class="headline">{data.model.person.headline}</p>{/if}
+      {#if data.model.person.lede}<p class="lede">{data.model.person.lede}</p>{/if}
+      <div class="actions">
+        <button class="primary" onclick={askIntro}>✦ Ask about me</button>
+        {#if data.model.person.links.email}<a class="secondary" href={data.model.person.links.email}
+            >Contact me</a
+          >{/if}
+        {#if data.model.person.links.cv}<a class="secondary" href={data.model.person.links.cv}
+            >Download CV</a
+          >{/if}
+      </div>
     </div>
+
+    <Chat
+      messages={turn.messages}
+      followups={turn.followups}
+      hint={hint?.prompt ?? ''}
+      streaming={turn.streaming}
+      focused={turn.focused}
+      onsend={onsendOrFollowup}
+      {onplayhint}
+      {oncite}
+      {oninput}
+    />
   </div>
 
   {#if picked != null}
@@ -162,17 +177,6 @@
       artifact built with the local embedder; run content:index with a Workers AI token
     </div>
   {/if}
-  <Chat
-    messages={turn.messages}
-    followups={turn.followups}
-    hint={hint?.prompt ?? ''}
-    streaming={turn.streaming}
-    focused={turn.focused}
-    onsend={onsendOrFollowup}
-    {onplayhint}
-    {oncite}
-    {oninput}
-  />
 </section>
 
 <main>
@@ -201,34 +205,43 @@
     inset: 0;
     background: radial-gradient(40% 40% at 50% 45%, rgba(255, 138, 114, 0.12), transparent);
   }
-  /* Side by side with the constellation: vertically centred on the same line as the star cluster. */
-  .intro {
+  /* The left column: intro copy with the prompt field under it, beside the constellation.
+     Once a question is asked the answer takes the intro's place; the stars stay uncovered. */
+  .lead {
     position: absolute;
     left: max(20px, calc((100% - 1024px) / 2 + 16px));
     top: 50%;
-    transform: translateY(-54%);
-    max-width: 520px;
-    pointer-events: none;
-    transition:
-      opacity 0.5s ease,
-      transform 0.5s ease;
+    transform: translateY(-50%);
+    width: min(520px, 46vw);
+    display: grid;
+    gap: 22px;
     z-index: 5;
   }
-  .intro > * {
-    pointer-events: auto;
+  .intro {
+    transition: opacity 0.3s ease;
   }
-  /* With a question open the caption takes the lower part of the Hero; the intro moves up. */
   .intro.aside {
-    transform: translateY(calc(-54% - 8vh));
+    display: none;
   }
   @media (max-width: 760px) {
-    .intro.aside {
-      opacity: 0;
-      transform: translateY(-12px);
-      pointer-events: none;
+    /* Phones: the intro sits at the top, the chat sheet at the bottom of the Hero. */
+    .lead {
+      position: static;
+      transform: none;
+      width: auto;
+      display: block;
     }
     .intro {
-      transform: none;
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 14vh;
+      z-index: 5;
+    }
+    .intro.aside {
+      display: block;
+      opacity: 0;
+      pointer-events: none;
     }
     .intro.aside > * {
       pointer-events: none;
@@ -329,12 +342,6 @@
     position: relative;
   }
   @media (max-width: 760px) {
-    .intro {
-      left: 16px;
-      right: 16px;
-      top: 14vh;
-      max-width: none;
-    }
     .lede {
       font-size: 15px;
     }

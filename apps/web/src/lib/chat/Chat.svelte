@@ -98,16 +98,20 @@
 
 <style>
   .col {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: max(24px, calc(env(safe-area-inset-bottom) + 24px));
-    margin: 0 auto;
-    max-width: 680px;
     display: grid;
     gap: 10px;
     z-index: 20;
     color: var(--fg);
+    min-width: 0;
+  }
+  /* Phones: a sheet pinned to the bottom of the Hero. */
+  @media (max-width: 760px) {
+    .col {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: max(24px, calc(env(safe-area-inset-bottom) + 24px));
+    }
   }
   .field {
     display: flex;
