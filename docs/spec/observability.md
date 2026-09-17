@@ -19,7 +19,7 @@ Decisions from [Decide: observability and analytics event model](https://github.
 
 ## Browser (OpenTelemetry web SDK)
 
-- `@opentelemetry/sdk-trace-web` + OTLP/HTTP exporters for traces and logs, batched, flushed on `visibilitychange`. Resource: `service.name=graphrag-browser`, `session.id`, `device.class` ∈ phone|tablet|desktop (viewport plus touch), `webgl.available`, `prefers_reduced_motion`.
+- `@opentelemetry/sdk-trace-web` + OTLP/HTTP exporters for traces and logs, batched, flushed on `visibilitychange`, **pointed at the site's own `/api/telemetry` route**, which validates origin and `event.name`, rate-limits per IP, and forwards to the backend with the server-side credential. The browser never holds a backend credential or address. Resource: `service.name=graphrag-browser`, `session.id`, `device.class` ∈ phone|tablet|desktop (viewport plus touch), `webgl.available`, `prefers_reduced_motion`.
 - The Turn fetch carries `traceparent`, so browser and server spans join on one trace.
 - **Analytics events** are OTel log records with `event.name` and attributes:
 
@@ -44,7 +44,7 @@ Decisions from [Decide: observability and analytics event model](https://github.
 
 ## Backend
 
-Decided in [Decide: observability backend (self-hosted or Grafana Cloud)](https://github.com/PavelHolman/GraphRAG/issues/24) after the self-hosted research. Grafana Cloud Free is the known-good stopgap; nothing above depends on it.
+Self-hosted OpenObserve, with Grafana Cloud Free as the stopgap until the VPS exists; endpoint values, VPS layout and migration steps in `docs/spec/observability-backend.md`. Nothing above depends on the choice.
 
 ## Rejected
 
