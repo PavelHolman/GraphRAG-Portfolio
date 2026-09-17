@@ -1,8 +1,8 @@
 ---
-title: Grafana
-summary: 'Grafana dashboards over the Deels infrastructure.'
+title: Grafana LGTM
+summary: 'Grafana LGTM stack (Loki, Grafana, Tempo, Mimir) observing the Deels infrastructure.'
 category: platform
-aliases: [dashboards, monitoring]
+aliases: [Grafana, Loki, Tempo, Mimir, dashboards, monitoring]
 ---
 
-Grafana dashboards for monitoring the Deels backend and infrastructure at DeelsCorp.
+The Grafana LGTM stack (Loki for logs, Grafana dashboards, Tempo for traces, Mimir for metrics) observing the Deels backend and infrastructure at DeelsCorp.
