@@ -115,9 +115,15 @@
     const min = MIN_DISTANCE * zoom;
     const max = MAX_DISTANCE * zoom;
     const outward = e.deltaY > 0;
-    if ((outward && wheelDistance >= max - 0.01) || (!outward && wheelDistance <= min + 0.01))
-      return;
+    // Hand the wheel to the page only once the camera has actually arrived at the limit, not merely
+    // been sent there: the zoom finishes visibly before the page starts moving.
+    const targetAtLimit = outward ? wheelDistance >= max - 0.01 : wheelDistance <= min + 0.01;
+    const cameraAtLimit = outward
+      ? controls.distance >= max - 0.05
+      : controls.distance <= min + 0.05;
+    if (targetAtLimit && cameraAtLimit) return;
     e.preventDefault();
+    if (targetAtLimit) return;
     wheelDistance = Math.min(max, Math.max(min, wheelDistance * Math.exp(e.deltaY * WHEEL_RATE)));
     controls.dollyTo(wheelDistance, true);
     stopIdle();
