@@ -211,7 +211,8 @@
   let sparks: Array<Spark> = [];
   let sparkClock = 0;
   let sparkNext = 1.2;
-  let sparkLabels = $state<Array<number>>([]);
+  /** Sparkling Nodes with their label opacity, following the same envelope as the glow. */
+  let sparkLabels = $state<Array<{ i: number; opacity: number }>>([]);
   const envelope = (age: number): number => {
     if (age < 0.5) return age / 0.5;
     if (age < 1.8) return 1;
@@ -270,10 +271,10 @@
       else restore(sp.i);
     }
     sparks = next;
-    const shown = sparks.filter((sp) => envelope(sp.age) > 0.35).map((sp) => sp.i);
-    if (shown.length !== sparkLabels.length || shown.some((i, k) => sparkLabels[k] !== i)) {
-      sparkLabels = shown;
-    }
+    sparkLabels = sparks.map((sp) => ({
+      i: sp.i,
+      opacity: Math.round(envelope(sp.age) * 40) / 40,
+    }));
     invalidate();
   });
 
@@ -335,13 +336,15 @@
     points.raycast(r, hits);
   }
 
-  const seedLabels = $derived(subgraph ? [...subgraph.seeds].slice(0, 12) : []);
+  const seedLabels = $derived(
+    subgraph ? [...subgraph.seeds].slice(0, 12).map((i) => ({ i, opacity: 1 })) : [],
+  );
   const labels = $derived(subgraph ? seedLabels : sparkLabels);
   let labelPos = $state<Record<number, [number, number, number]>>({});
   useTask(() => {
     if (!labels.length) return;
     const next: Record<number, [number, number, number]> = {};
-    for (const i of labels) {
+    for (const { i } of labels) {
       next[i] = [cur[i * 3] ?? 0, (cur[i * 3 + 1] ?? 0) + 1.1, cur[i * 3 + 2] ?? 0];
     }
     labelPos = next;
@@ -358,7 +361,7 @@
 <T.LineSegments geometry={edgeGeo} material={edgeMat} />
 <T is={points} onclick={pick} {raycast} />
 
-{#each labels as i (i)}
+{#each labels as { i, opacity } (i)}
   <Billboard position={labelAt(i)}>
     <Text
       text={nodes[i]?.title ?? ''}
@@ -366,10 +369,10 @@
       color={PALETTE.person}
       anchorX="center"
       anchorY="bottom"
-      fillOpacity={0.9}
+      fillOpacity={0.9 * opacity}
       outlineWidth={0.015}
       outlineColor={PALETTE.bg}
-      outlineOpacity={0.8}
+      outlineOpacity={0.8 * opacity}
     />
   </Billboard>
 {/each}

@@ -5,7 +5,7 @@
   import type CC from 'camera-controls';
   import { onMount } from 'svelte';
   import GraphMesh from './GraphMesh.svelte';
-  import { relayout } from './relayout.ts';
+  import { centroid, relayout } from './relayout.ts';
   import type { SceneGraph, Subgraph } from './types.ts';
 
   interface Props {
@@ -42,6 +42,14 @@
       controls.azimuthAngle += dt * DRIFT;
       invalidate();
     }
+  });
+
+  // The camera glides to the Subgraph's centre when a Turn lands; the Nodes only contract in place.
+  $effect(() => {
+    if (!controls) return;
+    const [cx, cy, cz] = centroid(positions, subgraph);
+    controls.moveTo(cx, cy, cz, true);
+    invalidate();
   });
 
   $effect(() => {

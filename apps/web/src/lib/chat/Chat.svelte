@@ -254,7 +254,6 @@
   .text {
     max-height: 34vh;
     overflow-y: auto;
-    overscroll-behavior: contain;
     padding-right: 6px;
   }
   .caption.open .text {
