@@ -200,10 +200,12 @@
     inset: 0;
     background: radial-gradient(40% 40% at 50% 45%, rgba(255, 138, 114, 0.12), transparent);
   }
+  /* Side by side with the constellation: vertically centred on the same line as the star cluster. */
   .intro {
     position: absolute;
     left: max(20px, calc((100% - 1024px) / 2 + 16px));
-    top: 22vh;
+    top: 50%;
+    transform: translateY(-54%);
     max-width: 520px;
     pointer-events: none;
     transition:
@@ -219,6 +221,9 @@
       opacity: 0;
       transform: translateY(-12px);
       pointer-events: none;
+    }
+    .intro {
+      transform: none;
     }
     .intro.aside > * {
       pointer-events: none;

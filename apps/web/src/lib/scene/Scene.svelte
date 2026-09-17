@@ -23,7 +23,7 @@
   const zoom = $derived(portrait ? 1.9 : 1);
   // On wide screens the constellation sits right of centre, beside the intro copy. The canvas stays
   // full width and the graph keeps orbiting its own centre: only the projection is shifted.
-  const VIEW_SHIFT = 0.16;
+  const VIEW_SHIFT = 0.2;
   const { invalidate, renderer, camera, size } = useThrelte();
   $effect(() => {
     const cam = $camera;
