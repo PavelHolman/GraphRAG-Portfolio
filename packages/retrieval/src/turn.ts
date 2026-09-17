@@ -109,10 +109,10 @@ export const turn = (request: TurnRequest): Stream.Stream<TurnEvent, never, Turn
               (isNodeId(id) && candidateNodeIds.has(id)) ||
               (isEdgeId(id) && candidateEdgeIds.has(id));
             if (!valid) {
-              const title = isNodeId(id)
-                ? graph.nodes[graph.nodeIndex.get(id as NodeId) ?? -1]?.title
+              const node = isNodeId(id)
+                ? graph.nodes[graph.nodeIndex.get(id as NodeId) ?? -1]
                 : undefined;
-              if (title) out.push({ type: 'text', delta: title });
+              if (node && !node.hidden) out.push({ type: 'text', delta: node.title });
               continue;
             }
             let ordinal = ordinals.get(id as GraphId);

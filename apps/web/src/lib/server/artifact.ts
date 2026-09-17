@@ -40,6 +40,10 @@ export const loadGraphIndex = (event: RequestEvent): Effect.Effect<GraphIndex> =
       };
       const [nv, ev] = await Promise.all([fetchAsset(nodeVectorsUrl), fetchAsset(edgeVectorsUrl)]);
       return makeGraphIndex(artifact, nv, ev);
-    })();
+    })().catch((err: unknown) => {
+      // Do not poison the isolate: the next request retries the fetch.
+      cached = undefined;
+      return Promise.reject(err);
+    });
     return cached;
   });

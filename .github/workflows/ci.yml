@@ -46,7 +46,9 @@ jobs:
       - run: bun test
       - run: bun eval
       - if: github.event_name == 'pull_request'
-        run: echo "${{ github.event.pull_request.title }}" | bunx commitlint
+        run: printf '%s\n' "$PR_TITLE" | bunx commitlint
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
       # content:render (cv.pdf, hero.png) is not implemented yet; docs/spec/page.md.
       # - if: steps.filter.outputs.render == 'true'
       #   run: bun run build && bunx playwright install --with-deps chromium && bun content:render --verify
@@ -91,7 +93,8 @@ jobs:
 
   deploy:
     needs: [check, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # e2e is skipped for content-only pushes; deploy must still run.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && always() && needs.check.result == 'success' && (needs.e2e.result == 'success' || needs.e2e.result == 'skipped')
     runs-on: ubuntu-latest
     environment: production
     steps:

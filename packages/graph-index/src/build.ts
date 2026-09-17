@@ -265,7 +265,10 @@ export const readCache = (cacheFile: string) =>
   Effect.gen(function* () {
     const text = yield* readTextIfExists(cacheFile);
     if (text === undefined) return {} as EmbeddingCache;
-    return yield* Schema.decodeUnknownEffect(EmbeddingCache)(JSON.parse(text) as unknown).pipe(
+    // A corrupt cache is not fatal: it is rebuilt from the embedder.
+    return yield* Schema.fromJsonString(EmbeddingCache).pipe(
+      Schema.decodeUnknownEffect,
+      (decode) => decode(text),
       Effect.catchTag('SchemaError', () => Effect.succeed({} as EmbeddingCache)),
     );
   });
@@ -280,11 +283,8 @@ export const diffGenerated = (generatedDir: string, r: BuildResult) =>
     const committedText = yield* readTextIfExists(pathJoin(generatedDir, GENERATED_FILES.graph));
     if (committedText === undefined) problems.push(`${GENERATED_FILES.graph} is missing`);
     else {
-      const strip = (t: string) => {
-        const o = JSON.parse(t) as { meta: { generatedAt?: string } };
-        delete o.meta.generatedAt;
-        return JSON.stringify(o);
-      };
+      // generatedAt is the only field allowed to differ between a rebuild and the committed file.
+      const strip = (t: string) => t.replace(/"generatedAt":"[^"]*"/, '"generatedAt":""');
       if (strip(committedText) !== strip(stringifyArtifact(r.artifact))) {
         problems.push(`${GENERATED_FILES.graph} differs from a rebuild`);
       }
@@ -309,5 +309,4 @@ export const diffGenerated = (generatedDir: string, r: BuildResult) =>
   });
 
 export { CacheMiss, Embedder, type LoadedContent };
-export const decodeArtifactJson = (text: string) =>
-  Schema.decodeUnknownEffect(ArtifactSchema)(JSON.parse(text) as unknown);
+export const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(ArtifactSchema));

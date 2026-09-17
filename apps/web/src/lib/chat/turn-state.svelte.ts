@@ -12,6 +12,7 @@ export class TurnState {
   focused = $state<string | null>(null);
   subgraph = $state<Subgraph | null>(null);
   private abort: AbortController | null = null;
+  private runCounter = 0;
   private previousUsedIds: string[] = [];
   private readonly nodeIndex: Map<string, number>;
   private readonly edgeIndex: Map<string, number>;
@@ -44,6 +45,8 @@ export class TurnState {
     const last = this.messages.at(-1);
     if (last?.streaming) last.streaming = false;
     this.abort = new AbortController();
+    const runId = ++this.runCounter;
+    const history = this.history();
     this.followups = [];
     this.focused = null;
     this.messages.push({
@@ -61,17 +64,21 @@ export class TurnState {
     const request: TurnRequest = {
       prompt,
       source,
-      history: this.history(),
+      history,
       ...(this.previousUsedIds.length ? { previousUsedIds: this.previousUsedIds } : {}),
     };
+    let terminal = false;
     const finish = () => {
       const a = this.messages.at(-1);
       if (a) a.streaming = false;
       this.streaming = false;
     };
     streamTurn(request, this.abort.signal, (e: TurnEvent) => {
+      // Events from an aborted run may still be in flight; only the current run may touch state.
+      if (runId !== this.runCounter) return;
       const a = this.messages.at(-1);
       if (!a) return;
+      if (e.type === 'turn-finished' || e.type === 'error') terminal = true;
       switch (e.type) {
         case 'turn-started':
           break;
@@ -153,12 +160,19 @@ export class TurnState {
           finish();
           break;
       }
-    }).catch((err: unknown) => {
-      if ((err as { name?: string }).name === 'AbortError') return;
-      const a = this.messages.at(-1);
-      if (a) a.error = String(err);
-      finish();
-    });
+    })
+      .then(() => {
+        if (runId !== this.runCounter || terminal) return;
+        const a = this.messages.at(-1);
+        if (a) a.error = 'The answer ended early. Try again.';
+        finish();
+      })
+      .catch((err: unknown) => {
+        if (runId !== this.runCounter || (err as { name?: string }).name === 'AbortError') return;
+        const a = this.messages.at(-1);
+        if (a) a.error = String(err);
+        finish();
+      });
   }
 
   private edgeTitle(ei: number | undefined): string | undefined {

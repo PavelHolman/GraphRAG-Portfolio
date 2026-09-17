@@ -12,12 +12,13 @@ export const streamTurn = async (
     body: JSON.stringify(request),
     signal,
   });
-  if (!res.body) {
+  const ndjson = (res.headers.get('content-type') ?? '').includes('ndjson');
+  if (!res.body || (!res.ok && !ndjson)) {
     onEvent({
       type: 'error',
-      tag: 'internal',
-      message: `empty response (${res.status})`,
-      retryable: true,
+      tag: res.status === 429 ? 'rate-limited' : 'internal',
+      message: `the server answered ${res.status}`,
+      retryable: res.status === 429 || res.status >= 500,
     });
     return;
   }

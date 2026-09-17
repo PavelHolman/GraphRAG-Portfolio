@@ -58,12 +58,12 @@ export const expand = (seeds: Seeds, mode: TurnMode, graph: GraphIndex): Candida
     .filter(([i]) => !seeds.nodes.has(i))
     .sort((a, b) => b[1] - a[1])
     .map(([i]) => i);
-  const keep = new Set<number>(seedList.slice(0, BUDGET.nodes));
+  // Person is always present at neighbour level and counts toward the budget.
+  const keep = new Set<number>([graph.person, ...seedList].slice(0, BUDGET.nodes));
   for (const i of ranked) {
-    if (keep.size >= BUDGET.nodes - 1) break;
+    if (keep.size >= BUDGET.nodes) break;
     keep.add(i);
   }
-  keep.add(graph.person);
 
   const edges = new Set<number>();
   const edgeScore = (ei: number): number => {
@@ -78,8 +78,8 @@ export const expand = (seeds: Seeds, mode: TurnMode, graph: GraphIndex): Candida
     const s = graph.nodeIndex.get(e.source);
     const t = graph.nodeIndex.get(e.target);
     if (s === undefined || t === undefined) return;
+    // Any Edge between two kept Nodes is a candidate, so second-hop Nodes arrive connected.
     if (!keep.has(s) || !keep.has(t)) return;
-    if (!(seeds.nodes.has(s) || seeds.nodes.has(t))) return;
     candidateEdges.push(ei);
   });
   candidateEdges.sort((a, b) => edgeScore(b) - edgeScore(a));

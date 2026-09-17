@@ -39,10 +39,10 @@
   "lint-staged": {
     "*.{ts,js,svelte}": [
       "oxlint",
-      "oxfmt"
+      "oxfmt --no-error-on-unmatched-pattern"
     ],
     "*.{json,md,yaml}": [
-      "oxfmt"
+      "oxfmt --no-error-on-unmatched-pattern"
     ],
     "content/**/*.md": [
       "bun content:check"
