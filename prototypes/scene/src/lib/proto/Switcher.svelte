@@ -40,4 +40,5 @@
 		z-index: 50; white-space: nowrap;
 	}
 	button { background: #fff2; border: 0; color: #fff; border-radius: 999px; width: 32px; height: 32px; font-size: 14px; }
+	@media (max-width: 700px) { .bar { bottom: auto; top: max(40px, calc(env(safe-area-inset-top) + 28px)); padding: 5px 8px; font-size: 11px; } button { width: 26px; height: 26px; } }
 </style>
