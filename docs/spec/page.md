@@ -17,7 +17,7 @@ Every section renders from the committed Knowledge Graph artifact. Nothing is au
 | 3   | Experience | Experience Nodes by `start` desc: `role`, Organization title, date range, body, top Skills by Edge notes, Projects it `delivered` or `led` as a compact list |
 | 4   | Education  | Education Nodes: `degree`, `field`, Organization, date range, body, Projects it `delivered` (a thesis)                                                       |
 | 5   | Projects   | only Projects no Experience or Education `delivered` or `led` (this site, contest results): title, date range, `url`, `repo`, body, Skills it `uses`         |
-| 6   | Skills     | grouped by `category`, sorted by Derived Span desc; aliases not shown                                                                                        |
+| 6   | Skills     | grouped by `category` in columns, sorted by Derived Span desc; spans and aliases not shown                                                                   |
 | 7   | Contact    | Person `links` (email as `mailto:`, LinkedIn, GitHub) and the CV download; `languages` appear in the About facts                                             |
 
 Projects owned by an Experience or Education appear under it, never twice. No contact form.

@@ -193,7 +193,7 @@
 <section id="skills" class="section">
   <div class="container">
     <h2>Skills</h2>
-    <div class="stack">
+    <div class="grid">
       {#each model.skills as g (g.category)}
         <article class="card">
           <h3 class="cat">{g.category}</h3>
@@ -204,8 +204,7 @@
                   class="chip"
                   title={s.summary ?? ''}
                   onclick={ask(`Tell me about your ${s.title} work`)}
-                  ><span class="title">{s.title}</span>{#if s.span}<span class="span">{s.span}</span
-                    >{/if}</button
+                  ><span class="title">{s.title}</span></button
                 >
               </li>
             {/each}
@@ -432,17 +431,10 @@
     gap: 8px;
     align-items: baseline;
   }
-  .chip .span {
-    font:
-      9px/1 'Azeret Mono',
-      monospace;
-    letter-spacing: 0.06em;
-    color: var(--fg-muted);
-  }
   /* Skills: every chip the same size, one per grid cell, titles wrapping to at most two lines. */
   .chips.uniform {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: 1fr;
     gap: 8px;
   }
   .chips.uniform li {
@@ -451,8 +443,8 @@
   }
   .chips.uniform .chip {
     width: 100%;
-    min-height: 62px;
-    padding: 8px 12px;
+    min-height: 44px;
+    padding: 6px 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
