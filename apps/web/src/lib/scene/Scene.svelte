@@ -66,6 +66,8 @@
       resync();
       scheduleResume();
     });
+    // Programmatic moves (focus, the pan to an answer) end with `rest`; the wheel picks up from there.
+    c.addEventListener('rest', resync);
   };
   useTask((dt) => {
     if (idle && controls) {
@@ -89,7 +91,8 @@
     scheduleResume();
     const p = positions;
     controls.moveTo(p[focus * 3] ?? 0, p[focus * 3 + 1] ?? 0, p[focus * 3 + 2] ?? 0, true);
-    controls.dollyTo(Math.min(controls.distance, 14), true);
+    // Focus zooms in, but never past the same range the wheel respects.
+    controls.dollyTo(Math.max(MIN_DISTANCE * zoom, Math.min(controls.distance, 14)), true);
     invalidate();
   });
 
