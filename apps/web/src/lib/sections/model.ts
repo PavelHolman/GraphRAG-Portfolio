@@ -88,6 +88,10 @@ export const buildPageModel = (
   const out = (id: string, type: ArtifactEdge['type']) =>
     edges.filter((e) => e.source === id && e.type === type);
   const person = visible.find((n) => n.type === 'person');
+  // A Project renders under exactly one owner: the first Experience or Education (in section
+  // order) that `led` or `delivered` it. The schema allows several owners; the page never shows twice.
+  const placed = new Set<string>();
+  const claim = (id: string): boolean => !placed.has(id) && Boolean(placed.add(id));
 
   const experience = visible
     .filter((n) => n.type === 'experience')
@@ -107,16 +111,13 @@ export const buildPageModel = (
         ...out(n.id, 'led').map((e) => ({ e, led: true })),
         ...out(n.id, 'delivered').map((e) => ({ e, led: false })),
       ]
-        .map(
-          ({ e, led }) =>
-            byId.get(e.target) && {
-              id: e.target,
-              title: byId.get(e.target)!.title,
-              summary: byId.get(e.target)!.summary,
-              led,
-            },
-        )
-        .filter((p): p is NonNullable<typeof p> => Boolean(p)),
+        .filter(({ e }) => byId.get(e.target) !== undefined && claim(e.target))
+        .map(({ e, led }) => ({
+          id: e.target,
+          title: byId.get(e.target)!.title,
+          summary: byId.get(e.target)!.summary,
+          led,
+        })),
     }));
 
   const education = visible
@@ -132,16 +133,13 @@ export const buildPageModel = (
       body: n.body,
       projects: out(n.id, 'delivered')
         .map((e) => byId.get(e.target))
-        .filter((p): p is ArtifactNode => p !== undefined && !p.hidden)
+        .filter((p): p is ArtifactNode => p !== undefined && !p.hidden && claim(p.id))
         .map((p) => ({ id: p.id, title: p.title, summary: p.summary })),
     }));
 
   // Projects nobody `delivered` or `led` stand on their own (this site, contest results).
-  const owned = new Set(
-    edges.filter((e) => e.type === 'delivered' || e.type === 'led').map((e) => e.target),
-  );
   const projects = visible
-    .filter((n) => n.type === 'project' && !owned.has(n.id))
+    .filter((n) => n.type === 'project' && !placed.has(n.id))
     .sort(byStartDesc)
     .map((n): ProjectItem => ({
       id: n.id,
