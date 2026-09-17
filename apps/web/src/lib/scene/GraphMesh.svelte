@@ -13,9 +13,11 @@
     subgraph: Subgraph | null;
     /** Faint tier without seeds: the hint preview. */
     preview: ReadonlySet<number> | null;
+    /** The star a clicked Citation points at: emphasised like a hover, until the next Turn. */
+    focus: number | null;
     onpick?: ((index: number) => void) | undefined;
   }
-  let { graph, positions, subgraph, preview, onpick }: Props = $props();
+  let { graph, positions, subgraph, preview, focus, onpick }: Props = $props();
 
   const { invalidate, scene, renderer } = useThrelte();
   scene.fog = new THREE.FogExp2(PALETTE.bg, 0.016);
@@ -196,19 +198,27 @@
   // title shows. Applied on top of whatever Highlight state the base targets carry.
   let hovered = $state<number | null>(null);
   const HOVER_EDGE = new THREE.Color(PALETTE.seed).lerp(EDGE_HI, 0.35);
+  const mix = (from: number | undefined, to: number, t: number): number =>
+    from === undefined ? to : from + (to - from) * t;
   function applyHover() {
-    const i = hovered;
-    if (i === null) return;
+    // The focused star is emphasised gently (about 1.5x); the hovered one more strongly.
+    if (focus !== null) emphasise(focus, 0.5);
+    if (hovered !== null) emphasise(hovered, 1);
+  }
+  function emphasise(i: number, strength: number) {
     tgtColor[i * 3] = SEED_C.r;
     tgtColor[i * 3 + 1] = SEED_C.g;
     tgtColor[i * 3 + 2] = SEED_C.b;
-    tgtSize[i] = (baseSize[i] ?? 0) + 1.3;
-    tgtGlow[i] = (baseGlow[i] ?? 0) + 1.2;
+    tgtSize[i] = (baseSize[i] ?? 0) + 1.3 * strength;
+    tgtGlow[i] = (baseGlow[i] ?? 0) + 1.2 * strength;
+    // The Edges move from whatever tier they are in toward the hover colour by the same factor, so
+    // a focused star's Edges stay gentler than a hovered one's.
     for (const ei of incident[i] ?? []) {
       for (const k of [0, 3]) {
-        edgeTgt[ei * 6 + k] = HOVER_EDGE.r;
-        edgeTgt[ei * 6 + k + 1] = HOVER_EDGE.g;
-        edgeTgt[ei * 6 + k + 2] = HOVER_EDGE.b;
+        const j = ei * 6 + k;
+        edgeTgt[j] = mix(edgeTgt[j], HOVER_EDGE.r, strength);
+        edgeTgt[j + 1] = mix(edgeTgt[j + 1], HOVER_EDGE.g, strength);
+        edgeTgt[j + 2] = mix(edgeTgt[j + 2], HOVER_EDGE.b, strength);
       }
     }
   }
@@ -221,6 +231,7 @@
   };
   $effect(() => {
     void hovered;
+    void focus;
     retarget(subgraph, preview);
     applyHover();
     renderer.domElement.style.cursor = hovered === null ? '' : 'pointer';
@@ -388,10 +399,17 @@
     subgraph ? [...subgraph.seeds].slice(0, 12).map((i) => ({ i, opacity: 1 })) : [],
   );
   const labels = $derived.by(() => {
-    const base = subgraph ? seedLabels : sparkLabels;
-    if (hovered === null) return base;
-    const h = hovered;
-    return [{ i: h, opacity: 1 }, ...base.filter((l) => l.i !== h)];
+    const base: Array<{ i: number; opacity: number; strong?: boolean }> = subgraph
+      ? seedLabels
+      : sparkLabels;
+    let out = base;
+    if (focus !== null)
+      out = [{ i: focus, opacity: 1, strong: true }, ...out.filter((l) => l.i !== focus)];
+    if (hovered !== null && hovered !== focus) {
+      const h = hovered;
+      out = [{ i: h, opacity: 1 }, ...out.filter((l) => l.i !== h)];
+    }
+    return out;
   });
   let labelPos = $state<Record<number, [number, number, number]>>({});
   useTask(() => {
@@ -423,15 +441,15 @@
 <T.LineSegments geometry={edgeGeo} material={edgeMat} />
 <T is={points} onclick={pick} onpointermove={hover} onpointerleave={unhover} {raycast} />
 
-{#each labels as { i, opacity } (i)}
+{#each labels as { i, opacity, strong } (i)}
   <Billboard position={labelAt(i)}>
     <Text
       text={nodes[i]?.title ?? ''}
-      fontSize={0.38}
+      fontSize={strong ? 0.56 : 0.38}
       color={PALETTE.person}
       anchorX="center"
       anchorY="bottom"
-      fillOpacity={0.9 * opacity}
+      fillOpacity={(strong ? 1 : 0.6) * opacity}
       outlineWidth={0.015}
       outlineColor={PALETTE.bg}
       outlineOpacity={0.8 * opacity}

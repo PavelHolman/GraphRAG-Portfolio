@@ -55,6 +55,7 @@ const SCALAR_FIELDS = [
   'location',
   'kind',
   'lede',
+  'availability',
 ] as const;
 
 const toArtifactNode = (

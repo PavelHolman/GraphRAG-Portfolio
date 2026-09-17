@@ -3,47 +3,16 @@
 import type { HistoryTurn, TurnEvent, TurnRequest } from '@graphrag/schema';
 import type { SceneGraph, Subgraph } from '$lib/scene/types.ts';
 import { streamTurn } from './client.ts';
-import type { CitePart, Message } from './types.ts';
-
-/** How far back in the streamed text a Citation may reach to underline its mention. */
-const MENTION_WINDOW = 240;
-
-/**
- * Places a Citation on the nearest preceding mention of one of `names` in the Answer text, so the
- * existing words get underlined instead of a second name being appended. Without a mention the
- * Citation is appended bare (superscript only).
- */
-export const attachCitation = (a: Message, cite: CitePart, names: ReadonlyArray<string>): void => {
-  const last = a.parts.at(-1);
-  if (last?.kind === 'text') {
-    const hay = last.text.toLowerCase();
-    let best: { at: number; len: number } | undefined;
-    for (const name of names) {
-      const needle = name.trim().toLowerCase();
-      if (needle.length < 2) continue;
-      const at = hay.lastIndexOf(needle);
-      if (at === -1 || hay.length - at > MENTION_WINDOW) continue;
-      if (!best || at > best.at) best = { at, len: needle.length };
-    }
-    if (best) {
-      const before = last.text.slice(0, best.at);
-      const label = last.text.slice(best.at, best.at + best.len);
-      const after = last.text.slice(best.at + best.len);
-      a.parts.pop();
-      if (before) a.parts.push({ kind: 'text', text: before });
-      a.parts.push({ ...cite, label });
-      if (after) a.parts.push({ kind: 'text', text: after });
-      return;
-    }
-  }
-  a.parts.push(cite);
-};
+import { attachCitation } from './mention.ts';
+import type { Message } from './types.ts';
 
 export class TurnState {
   messages = $state<Message[]>([]);
   followups = $state<string[]>([]);
   streaming = $state(false);
   focused = $state<string | null>(null);
+  /** The words the focused Citation underlined; picks the end of an Edge to focus. */
+  focusedLabel = $state('');
   /** Bumped on every citation click, so focusing the same star twice still moves the camera. */
   focusTick = $state(0);
   subgraph = $state<Subgraph | null>(null);
@@ -66,12 +35,22 @@ export class TurnState {
     this.followups = [];
     this.streaming = false;
     this.focused = null;
+    this.focusedLabel = '';
     this.subgraph = null;
     this.previousUsedIds = [];
   }
 
+  /** The star a Citation focuses: the Node itself, or for an Edge the end whose title was underlined (else the target). */
   focusNodeIndex(): number | null {
-    return this.focused === null ? null : (this.nodeIndex.get(this.focused) ?? null);
+    if (this.focused === null) return null;
+    const ni = this.nodeIndex.get(this.focused);
+    if (ni !== undefined) return ni;
+    const ei = this.edgeIndex.get(this.focused);
+    const edge = ei === undefined ? undefined : this.graph.edges[ei];
+    if (!edge) return null;
+    const label = this.focusedLabel.trim().toLowerCase();
+    const sourceTitle = this.graph.nodes[edge.source]?.title.toLowerCase();
+    return label && label === sourceTitle ? edge.source : edge.target;
   }
 
   private history(): HistoryTurn[] {
@@ -97,6 +76,7 @@ export class TurnState {
     const history = this.history();
     this.followups = [];
     this.focused = null;
+    this.focusedLabel = '';
     this.messages.push({
       role: 'visitor',
       suggested: source === 'hint',

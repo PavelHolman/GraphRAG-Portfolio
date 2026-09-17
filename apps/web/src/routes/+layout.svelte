@@ -29,6 +29,12 @@
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
   }
+  /* The selection is part of the design: a warm tint, not the browser's blue. `SelectionAsk` marks
+     each end of a selection with an accent bar and offers to ask about it. */
+  :global(::selection) {
+    background: rgba(255, 138, 114, 0.26);
+    color: var(--fg);
+  }
   :global(*) {
     box-sizing: border-box;
     scrollbar-width: thin;

@@ -14,7 +14,13 @@ export const load: PageServerLoad = () => {
     );
   return {
     scene: {
-      nodes: nodes.map((n) => ({ id: n.id, type: n.type, title: n.title, degree: n.degree })),
+      nodes: nodes.map((n) => ({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        summary: n.summary,
+        degree: n.degree,
+      })),
       edges,
       positions: nodes.flatMap((n) => n.position),
       person: Math.max(

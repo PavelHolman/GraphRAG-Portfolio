@@ -5,7 +5,7 @@ start: 2020-03
 role: Software Developer
 employment: part-time
 at: [organization/merica]
-delivered: [project/employee-rostering]
+delivered: [project/ferp, project/employee-rostering]
 uses:
   - { to: skill/csharp, note: 'C# business software including an ERP system' }
   - { to: skill/dotnet, note: 'modernised a product from .NET Framework to .NET Core' }
@@ -16,4 +16,4 @@ uses:
 in-domain: [domain/business-software]
 ---
 
-Part-time software developer at Merica s.r.o. since March 2020, with occasional project work alongside studies: workload varied from months of substantial work to months with none. Developed C# business software including an ERP system, worked in a two-person team on an employee rostering project using constraint programming, and modernised a technology stack from .NET Framework to .NET Core.
+Part-time software developer at Merica since March 2020, occasional project work alongside studies. Developed features and data loaders for FERP, Merica's ERP system; worked in a two-person team on an employee rostering solver built with Google OR-Tools and OptalCP, leading the constraint modelling; and modernised a technology stack from .NET Framework to .NET Core.

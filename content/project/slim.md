@@ -2,7 +2,7 @@
 title: SLIM
 summary: Lab operations platform for academic laboratories; samples, inventory, equipment, notebooks, multi-lab access control.
 start: 2026-06
-url: https://poqet.cz
+url: https://slim.poqet.cz
 uses:
   - { to: skill/sveltekit, note: 'full-stack SvelteKit application' }
   - { to: skill/effect, note: 'Effect for services, typed errors and validation' }

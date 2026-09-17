@@ -1,4 +1,4 @@
-import type { ArtifactEdge, ArtifactNode } from '@graphrag/schema';
+import type { ArtifactEdge, ArtifactNode, PlainTime } from '@graphrag/schema';
 import { compareStart, startOf } from '@graphrag/schema';
 
 /** Section view models built server-side from the artifact. `docs/spec/page.md`. */
@@ -7,6 +7,7 @@ export interface ExperienceItem {
   readonly title: string;
   readonly role: string | undefined;
   readonly organization: string | undefined;
+  readonly organizationUrl: string | undefined;
   readonly range: string;
   readonly body: string;
   readonly skills: ReadonlyArray<{ title: string; note: string | undefined }>;
@@ -14,6 +15,7 @@ export interface ExperienceItem {
     id: string;
     title: string;
     summary: string | undefined;
+    url: string | undefined;
     led: boolean;
   }>;
 }
@@ -26,7 +28,12 @@ export interface EducationItem {
   readonly range: string;
   readonly body: string;
   /** A thesis or course project the studies `delivered`. */
-  readonly projects: ReadonlyArray<{ id: string; title: string; summary: string | undefined }>;
+  readonly projects: ReadonlyArray<{
+    id: string;
+    title: string;
+    summary: string | undefined;
+    url: string | undefined;
+  }>;
 }
 /** A Project no Experience or Education owns: it gets its own card. */
 export interface ProjectItem {
@@ -55,6 +62,9 @@ export interface PageModel {
     lede: string | undefined;
     body: string;
     location: string | undefined;
+    availability: string | undefined;
+    /** The year of the earliest Experience, e.g. "2020". */
+    workingSince: string | undefined;
     links: Record<string, string>;
     languages: Record<string, string>;
   };
@@ -78,6 +88,22 @@ const field = (n: ArtifactNode, k: string): string | undefined => {
   const v = n.fields[k];
   return typeof v === 'string' ? v : undefined;
 };
+/**
+ * The year of the earliest Experience, for "Working since 2020". Derived, never authored (ADR
+ * 0001). A year rather than a count of years: the count reads as a claim to be compared, the year
+ * is a fact, and nothing has to be recomputed as time passes.
+ */
+export const sinceYear = (starts: ReadonlyArray<PlainTime>): string | undefined => {
+  const first = starts
+    .map(startOf)
+    .reduce<Temporal.PlainDate | undefined>(
+      (a, b) => (a && Temporal.PlainDate.compare(a, b) <= 0 ? a : b),
+      undefined,
+    );
+  return first ? String(first.year) : undefined;
+};
+const urlOf = (n: ArtifactNode | undefined): string | undefined =>
+  n ? field(n, 'url') : undefined;
 
 export const buildPageModel = (
   nodes: ReadonlyArray<ArtifactNode>,
@@ -101,6 +127,7 @@ export const buildPageModel = (
       title: n.title,
       role: field(n, 'role'),
       organization: byId.get(out(n.id, 'at')[0]?.target ?? '')?.title,
+      organizationUrl: urlOf(byId.get(out(n.id, 'at')[0]?.target ?? '')),
       range: range(n),
       body: n.body,
       skills: out(n.id, 'uses')
@@ -116,6 +143,7 @@ export const buildPageModel = (
           id: e.target,
           title: byId.get(e.target)!.title,
           summary: byId.get(e.target)!.summary,
+          url: urlOf(byId.get(e.target)),
           led,
         })),
     }));
@@ -134,7 +162,7 @@ export const buildPageModel = (
       projects: out(n.id, 'delivered')
         .map((e) => byId.get(e.target))
         .filter((p): p is ArtifactNode => p !== undefined && !p.hidden && claim(p.id))
-        .map((p) => ({ id: p.id, title: p.title, summary: p.summary })),
+        .map((p) => ({ id: p.id, title: p.title, summary: p.summary, url: urlOf(p) })),
     }));
 
   // Projects nobody `delivered` or `led` stand on their own (this site, contest results).
@@ -182,6 +210,10 @@ export const buildPageModel = (
       lede: person ? field(person, 'lede') : undefined,
       body: person?.body ?? '',
       location: person ? field(person, 'location') : undefined,
+      availability: person ? field(person, 'availability') : undefined,
+      workingSince: sinceYear(
+        visible.flatMap((n) => (n.type === 'experience' && n.start ? [n.start] : [])),
+      ),
       links: person?.links ?? {},
       languages: person?.languages ?? {},
     },

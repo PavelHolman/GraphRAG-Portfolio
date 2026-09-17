@@ -1,6 +1,7 @@
 <script lang="ts">
-  // Sticky header: name left, anchors centre, links and the CV button right; translucent over the
-  // Hero, opaque once scrolled past it. docs/spec/page.md.
+  // Sticky header: name left, anchors centre, links and the CV button right. Frosted glass the
+  // whole way down, deepening once the Hero is scrolled past. docs/spec/page.md.
+  import Icon from './Icon.svelte';
   interface Props {
     name: string;
     links: Record<string, string>;
@@ -8,7 +9,6 @@
   }
   let { name, links, scrolled }: Props = $props();
   const anchors = ['about', 'experience', 'education', 'projects', 'skills', 'contact'];
-  const icon: Record<string, string> = { github: 'GH', linkedin: 'in', email: '@' };
   const initials = $derived(
     name
       .split(/\s+/)
@@ -33,7 +33,7 @@
         {href}
         target={href.startsWith('mailto:') ? undefined : '_blank'}
         rel="me noopener"
-        aria-label={k}>{icon[k] ?? k}</a
+        aria-label={k}><Icon name={k} size={15} /></a
       >
     {/each}
     {#if links.cv}<a class="cta" href={links.cv} target="_blank" rel="noopener">Download CV</a>{/if}
@@ -52,15 +52,18 @@
     align-items: center;
     gap: 12px;
     padding: max(12px, env(safe-area-inset-top)) 20px 12px;
+    /* Glass over the Hero too: the stars and the intro copy stay visible through it, but the
+       anchors and icons keep their contrast. */
+    background: rgba(15, 14, 13, 0.5);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid rgba(241, 239, 233, 0.07);
     transition:
       background 0.3s,
       border-color 0.3s;
-    border-bottom: 1px solid transparent;
   }
   .top.scrolled {
-    background: rgba(15, 14, 13, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(15, 14, 13, 0.8);
     border-bottom-color: var(--line);
   }
   .name {
@@ -96,25 +99,26 @@
     gap: 6px;
   }
   .links a {
-    font:
-      10px/1 'Azeret Mono',
-      monospace;
-    letter-spacing: 0.08em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
     color: var(--fg);
     text-decoration: none;
     border: 1px solid var(--line);
     border-radius: 999px;
-    padding: 8px 10px;
   }
   .links a:hover {
     border-color: var(--accent);
     color: var(--accent);
   }
   .links .cta {
+    width: auto;
+    height: auto;
     font:
       500 12px 'DM Sans',
       sans-serif;
-    letter-spacing: 0;
     background: var(--accent);
     border-color: var(--accent);
     color: var(--bg);

@@ -18,6 +18,18 @@ uses:
       to: skill/surrealdb,
       note: 'SLIM stores samples, inventory, projects and permissions in SurrealDB',
     }
+  - { to: skill/langchain, note: 'LangChain and LangGraph for internal LLM workflows' }
+  - { to: skill/langfuse, note: 'Langfuse tracing of the internal workflows' }
+  - {
+      to: skill/retrieval-augmented-generation,
+      note: 'RAG, vector databases and semantic search in internal workflows',
+    }
+  - { to: skill/openobserve, note: 'OpenObserve for logs and metrics' }
+  - { to: skill/coolify, note: 'Coolify for self-hosted deployments of internal tooling' }
+  - {
+      to: skill/engineering-process-design,
+      note: 'designed the agent-assisted workflow the team develops SLIM with',
+    }
   - {
       to: skill/technical-leadership,
       note: 'leads the three-person development team as principal engineer',
@@ -25,4 +37,4 @@ uses:
 in-domain: [domain/lab-operations, domain/developer-tooling]
 ---
 
-Co-founder and principal engineer of poqet since June 2026, leading a three-person team building SLIM, a lab operations platform for academic laboratories. Main responsibility: the agentic development tooling the team works with, a Claude Code harness with TypeScript automation, architectural rules and guardrails, and evaluations, alongside application development in SvelteKit, Effect and SurrealDB. Does not own infrastructure at poqet.
+Co-founder and principal engineer of poqet since June 2026, leading a three-person team building SLIM, a lab operations platform for academic laboratories. Main responsibility: the agentic development tooling the team works with, a Claude Code harness with TypeScript automation, architectural rules and guardrails, and evaluations, alongside application development in SvelteKit, Effect and SurrealDB. Also builds poqet's internal LLM workflows with LangChain, LangGraph, retrieval-augmented generation over vector databases and semantic search, traced with Langfuse, deployed with Coolify and observed with OpenObserve.

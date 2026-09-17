@@ -17,18 +17,20 @@ Every section renders from the committed Knowledge Graph artifact. Nothing is au
 | 3   | Experience | Experience Nodes by `start` desc: `role`, Organization title, date range, body, top Skills by Edge notes, Projects it `delivered` or `led` as a compact list |
 | 4   | Education  | Education Nodes: `degree`, `field`, Organization, date range, body, Projects it `delivered` (a thesis)                                                       |
 | 5   | Projects   | only Projects no Experience or Education `delivered` or `led` (this site, contest results): title, date range, `url`, `repo`, body, Skills it `uses`         |
-| 6   | Skills     | grouped by `category`, sorted by Derived Span desc; aliases not shown                                                                                        |
+| 6   | Skills     | grouped by `category` in columns, sorted by Derived Span desc; spans and aliases not shown                                                                   |
 | 7   | Contact    | Person `links` (email as `mailto:`, LinkedIn, GitHub) and the CV download; `languages` appear in the About facts                                             |
 
 Projects owned by an Experience or Education appear under it, never twice. No contact form.
 
 ## Ask about this
 
-Each Experience, Education and Skill item carries a small "ask about this" affordance. It scrolls to the Hero and submits a canned Prompt marked ✦ (for example "Tell me about your time at Acme Bank"), reusing the normal Turn pipeline. No cross-scroll hover highlighting.
+Every Experience, Education, Project and Skill item carries its Node id as an anchor, so the Scene's pick card links straight to it, and a small "ask about this" affordance. It scrolls to the Hero and submits a canned Prompt marked ✦ (for example "Tell me about your time at Acme Bank"), reusing the normal Turn pipeline. No cross-scroll hover highlighting.
+
+Selecting text anywhere in the Hero or the Sections raises the same affordance as a pill just below and right of the selection's last line, clear of the browser's own selection menu and clamped to the viewport; it sends the phrase verbatim (whitespace collapsed, 3 to 200 characters) as a **typed** Prompt. Selections inside the header, the pick card or a form field are ignored.
 
 ## Navigation
 
-Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. Translucent over the Hero, opaque `--panel` once scrolled past it. On phones the anchors collapse into a menu; the three links stay as icons.
+Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. Frosted glass throughout (translucent panel plus `backdrop-filter`), deepening once the Hero is scrolled past. On phones the anchors collapse into a menu; the three links stay as icons.
 
 ## Generated files
 

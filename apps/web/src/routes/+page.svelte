@@ -5,6 +5,7 @@
   import Scene from '$lib/scene/Scene.svelte';
   import type { SceneGraph } from '$lib/scene/types.ts';
   import Chat from '$lib/chat/Chat.svelte';
+  import SelectionAsk from '$lib/chat/SelectionAsk.svelte';
   import { TurnState } from '$lib/chat/turn-state.svelte.ts';
   import Sections from '$lib/sections/Sections.svelte';
   import Header from '$lib/sections/Header.svelte';
@@ -55,8 +56,9 @@
   };
   const onfollowup = (p: string) => turn.run(p, 'followup');
   const onsendOrFollowup = (p: string) => (turn.followups.includes(p) ? onfollowup(p) : onsend(p));
-  const oncite = (id: string) => {
+  const oncite = (id: string, label: string) => {
     turn.focused = id;
+    turn.focusedLabel = label;
     turn.focusTick++;
   };
   const oninput = (active: boolean) => {
@@ -70,7 +72,33 @@
   const onpick = (i: number) => {
     picked = i;
   };
+  // The pick card links to the Node's card in the Sections (or the About section for the Person).
+  const SECTIONED = new Set(['experience', 'education', 'project', 'skill']);
+  const pickedNode = $derived(picked == null ? null : (graph.nodes[picked] ?? null));
+  const pickHref = $derived(
+    pickedNode === null
+      ? null
+      : pickedNode.type === 'person'
+        ? '#about'
+        : SECTIONED.has(pickedNode.type)
+          ? `#${pickedNode.id}`
+          : null,
+  );
+  const askPicked = () => {
+    if (!pickedNode) return;
+    const p =
+      pickedNode.type === 'person'
+        ? 'Give me a short overview of your career'
+        : `Tell me about ${pickedNode.title}`;
+    picked = null;
+    onask(p);
+  };
   const askIntro = () => onask('What are you strongest at?');
+  // A selected phrase is the visitor's own words, so it counts as typed, not as a suggestion.
+  const askSelected = (prompt: string) => {
+    document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
+    turn.run(prompt, 'typed');
+  };
 
   // JSON-LD Person for crawlers. The tag is assembled from pieces so linters that extract
   // <script> blocks from Svelte files do not mistake it for one.
@@ -186,9 +214,18 @@
     />
   </div>
 
-  {#if picked != null}
+  {#if pickedNode}
     <aside class="pick">
-      <span class="type">{graph.nodes[picked]?.type}</span><b>{graph.nodes[picked]?.title}</b>
+      <button class="close" aria-label="close" onclick={() => (picked = null)}>×</button>
+      <span class="type">{pickedNode.type}</span>
+      <b>{pickedNode.title}</b>
+      {#if pickedNode.summary}<p>{pickedNode.summary}</p>{/if}
+      <div class="pick-actions">
+        <button class="act" onclick={askPicked}>✦ ask about this</button>
+        {#if pickHref}<a class="act" href={pickHref} onclick={() => (picked = null)}
+            >→ in the resume</a
+          >{/if}
+      </div>
     </aside>
   {/if}
   {#if data.embeddingModel.startsWith('local-')}
@@ -201,6 +238,8 @@
 <main>
   <Sections model={data.model} {onask} />
 </main>
+
+<SelectionAsk onask={askSelected} />
 
 <style>
   .hero {
@@ -336,13 +375,59 @@
     position: absolute;
     right: 12px;
     top: max(64px, calc(env(safe-area-inset-top) + 64px));
+    width: min(300px, calc(100vw - 24px));
     display: grid;
-    gap: 2px;
-    padding: 10px 14px;
+    gap: 6px;
+    padding: 14px 16px;
     border-radius: 12px;
     background: var(--panel);
     border: 1px solid var(--line);
-    z-index: 5;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    z-index: 6;
+  }
+  .pick .close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: none;
+    border: 0;
+    color: var(--fg-muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+  .pick .close:hover {
+    color: var(--accent);
+  }
+  .pick p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--fg-muted);
+  }
+  .pick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .pick .act {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font:
+      12px 'DM Sans',
+      sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .pick .act:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
   }
   .pick .type {
     font:
