@@ -195,12 +195,6 @@
     inset: 0;
     touch-action: none;
   }
-  /* On wide screens the constellation sits to the right of the intro copy. */
-  @media (min-width: 1000px) {
-    .stage {
-      left: 26%;
-    }
-  }
   .fallback {
     position: absolute;
     inset: 0;

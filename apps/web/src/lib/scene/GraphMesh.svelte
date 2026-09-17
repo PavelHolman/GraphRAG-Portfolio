@@ -331,11 +331,14 @@
   function pick(e: { index?: number }) {
     if (onpick && e.index != null) onpick(e.index);
   }
+  // Threlte installs this as `points.raycast`, so the prototype is called explicitly.
   function raycast(r: THREE.Raycaster, hits: THREE.Intersection[]) {
     r.params.Points = { threshold: 0.6 };
-    points.raycast(r, hits);
+    THREE.Points.prototype.raycast.call(points, r, hits);
   }
 
+  /** How far above a Node its title floats. */
+  const LABEL_LIFT = 0.7;
   const seedLabels = $derived(
     subgraph ? [...subgraph.seeds].slice(0, 12).map((i) => ({ i, opacity: 1 })) : [],
   );
@@ -345,12 +348,12 @@
     if (!labels.length) return;
     const next: Record<number, [number, number, number]> = {};
     for (const { i } of labels) {
-      next[i] = [cur[i * 3] ?? 0, (cur[i * 3 + 1] ?? 0) + 1.1, cur[i * 3 + 2] ?? 0];
+      next[i] = [cur[i * 3] ?? 0, (cur[i * 3 + 1] ?? 0) + LABEL_LIFT, cur[i * 3 + 2] ?? 0];
     }
     labelPos = next;
   });
   const labelAt = (i: number): [number, number, number] =>
-    labelPos[i] ?? [cur[i * 3] ?? 0, (cur[i * 3 + 1] ?? 0) + 1.1, cur[i * 3 + 2] ?? 0];
+    labelPos[i] ?? [cur[i * 3] ?? 0, (cur[i * 3 + 1] ?? 0) + LABEL_LIFT, cur[i * 3 + 2] ?? 0];
 
   $effect(() => {
     mat.uniforms.uDpr!.value = Math.min(window.devicePixelRatio, 2);

@@ -3,6 +3,7 @@
   import { T, useTask, useThrelte } from '@threlte/core';
   import { CameraControls, interactivity } from '@threlte/extras';
   import type CC from 'camera-controls';
+  import { PerspectiveCamera } from 'three';
   import { onMount } from 'svelte';
   import GraphMesh from './GraphMesh.svelte';
   import { centroid, relayout } from './relayout.ts';
@@ -20,6 +21,18 @@
   interactivity();
   const positions = $derived(relayout(graph.positions, subgraph));
   const zoom = $derived(portrait ? 1.9 : 1);
+  // On wide screens the constellation sits right of centre, beside the intro copy. The canvas stays
+  // full width and the graph keeps orbiting its own centre: only the projection is shifted.
+  const VIEW_SHIFT = 0.16;
+  const { invalidate, renderer, camera, size } = useThrelte();
+  $effect(() => {
+    const cam = $camera;
+    const { width, height } = $size;
+    if (!(cam instanceof PerspectiveCamera)) return;
+    if (portrait) cam.clearViewOffset();
+    else cam.setViewOffset(width, height, -width * VIEW_SHIFT, 0, width, height);
+    invalidate();
+  });
 
   // The wheel zooms only a little; at either end of the range the page scrolls instead.
   const MIN_DISTANCE = 18;
@@ -29,7 +42,10 @@
   let controls = $state<CC | undefined>();
   let idle = true;
   // The drift pauses while the visitor holds the camera and resumes a few seconds after they let go.
-  const RESUME_AFTER_MS = 4000;
+  const RESUME_AFTER_MS = 1000;
+  /** Seconds the drift takes to ease back up to full speed after resuming. */
+  const RESUME_RAMP_S = 1;
+  let driftRamp = 1;
   let resumeTimer: ReturnType<typeof setTimeout> | undefined;
   const stopIdle = () => {
     idle = false;
@@ -39,6 +55,7 @@
     clearTimeout(resumeTimer);
     resumeTimer = setTimeout(() => {
       idle = true;
+      driftRamp = 0;
       invalidate();
     }, RESUME_AFTER_MS);
   };
@@ -50,10 +67,10 @@
       scheduleResume();
     });
   };
-  const { invalidate, renderer } = useThrelte();
   useTask((dt) => {
     if (idle && controls) {
-      controls.azimuthAngle += dt * DRIFT;
+      driftRamp = Math.min(1, driftRamp + dt / RESUME_RAMP_S);
+      controls.azimuthAngle += dt * DRIFT * driftRamp * driftRamp;
       invalidate();
     }
   });
