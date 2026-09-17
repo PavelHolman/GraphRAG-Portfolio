@@ -2,7 +2,7 @@
 title: Pavel Holman
 summary: AI engineer and co-founder writing software professionally since 2020; leads small teams that ship products; three-time ICPC finalist. Open to remote work and thesis-linked collaboration.
 headline: AI engineer and co-founder
-lede: AI master's student at CTU and co-founder of two shipped products. I lead small teams end to end, from Kotlin backends and multiplatform apps at Deels to a SvelteKit and Effect lab platform at poqet, with agentic development tooling that keeps both honest. ICPC finalist, three times.
+lede: AI master's student at CTU and co-founder of two shipped products. Leads small teams end to end, from Kotlin backends and multiplatform apps at Deels to a SvelteKit and Effect lab platform at poqet, with agentic development tooling that keeps both honest. ICPC finalist, three times.
 location: Prague, Czechia
 links:
   email: mailto:pavelholman@email.cz
