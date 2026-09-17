@@ -7,8 +7,8 @@
 	import GraphMesh from './GraphMesh.svelte';
 	import { layerLayout, TYPE_COLOR, type Graph, type Subgraph, type NodeType } from './graph';
 
-	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void }
-	let { graph, subgraph, onpick }: Props = $props();
+	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void; zoom?: number }
+	let { graph, subgraph, onpick, zoom = 1 }: Props = $props();
 	interactivity();
 	const positions = layerLayout(graph);
 	const layers: [NodeType, number, string][] = [
@@ -17,7 +17,7 @@
 	];
 </script>
 
-<T.PerspectiveCamera makeDefault position={[0, 22, 34]} fov={40}>
+<T.PerspectiveCamera makeDefault position={[0 * zoom, 22 * zoom, 34 * zoom]} fov={40}>
 	<CameraControls smoothTime={0.2} minDistance={10} maxDistance={70}
 		minPolarAngle={Math.PI * 0.3} maxPolarAngle={Math.PI * 0.3}
 		minAzimuthAngle={0} maxAzimuthAngle={0}

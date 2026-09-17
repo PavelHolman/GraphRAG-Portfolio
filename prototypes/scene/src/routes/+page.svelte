@@ -25,8 +25,10 @@
 	let fps = $state(0);
 	let lost = $state(false);
 	let dpr = $state(1);
+	let zoom = $state(1);
 	onMount(() => {
 		dpr = Math.min(window.devicePixelRatio, 2);
+		zoom = window.innerWidth < window.innerHeight ? 1.9 : 1;
 		let frames = 0, last = performance.now();
 		let raf = 0;
 		const tick = (t: number) => {
@@ -47,11 +49,11 @@
 <div class="stage">
 	<Canvas dpr={[1, 2]} renderMode="on-demand" shadows={false}>
 		{#if variant === 'B'}
-			<VariantB {graph} {subgraph} onpick={(i) => (picked = i)} />
+			<VariantB {graph} {subgraph} {zoom} onpick={(i) => (picked = i)} />
 		{:else if variant === 'C'}
-			<VariantC {graph} {subgraph} onpick={(i) => (picked = i)} />
+			<VariantC {graph} {subgraph} {zoom} onpick={(i) => (picked = i)} />
 		{:else}
-			<VariantA {graph} {subgraph} onpick={(i) => (picked = i)} />
+			<VariantA {graph} {subgraph} {zoom} onpick={(i) => (picked = i)} />
 		{/if}
 	</Canvas>
 </div>

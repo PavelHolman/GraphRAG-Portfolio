@@ -7,14 +7,14 @@
 	import GraphMesh from './GraphMesh.svelte';
 	import { shellLayout, type Graph, type Subgraph } from './graph';
 
-	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void }
-	let { graph, subgraph, onpick }: Props = $props();
+	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void; zoom?: number }
+	let { graph, subgraph, onpick, zoom = 1 }: Props = $props();
 	interactivity();
 	const positions = shellLayout(graph);
 	const rings = [4, 6, 8.5, 11, 13];
 </script>
 
-<T.PerspectiveCamera makeDefault position={[0, 18, 30]} fov={45}>
+<T.PerspectiveCamera makeDefault position={[0 * zoom, 18 * zoom, 30 * zoom]} fov={45}>
 	<CameraControls smoothTime={0.25} minDistance={8} maxDistance={60}
 		minPolarAngle={Math.PI * 0.15} maxPolarAngle={Math.PI * 0.5} />
 </T.PerspectiveCamera>

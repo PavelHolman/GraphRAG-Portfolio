@@ -5,13 +5,13 @@
 	import GraphMesh from './GraphMesh.svelte';
 	import { forceLayout, type Graph, type Subgraph } from './graph';
 
-	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void }
-	let { graph, subgraph, onpick }: Props = $props();
+	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void; zoom?: number }
+	let { graph, subgraph, onpick, zoom = 1 }: Props = $props();
 	interactivity();
 	const positions = forceLayout(graph);
 </script>
 
-<T.PerspectiveCamera makeDefault position={[0, 8, 34]} fov={50}>
+<T.PerspectiveCamera makeDefault position={[0 * zoom, 8 * zoom, 34 * zoom]} fov={50}>
 	<CameraControls smoothTime={0.25} minDistance={6} maxDistance={70} />
 </T.PerspectiveCamera>
 <T.AmbientLight intensity={0.8} />
