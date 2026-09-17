@@ -85,8 +85,10 @@ export function fakeTurn(g: Graph, prompt: string, signal: AbortSignal, onEvent:
 				const m = tok.match(/^\[\[(.+)\]\]$/);
 				if (m) {
 					const id = byTitle.get(m[1]);
+					// ADR 0003: the marker is stripped from the text; the citation chip carries the display text.
+					// A marker that fails validation degrades to plain text.
 					if (id != null && candSet.has(id)) { used.add(id); onEvent({ type: 'citation', nodeId: id, ordinal: ordinal++ }); }
-					onEvent({ type: 'text', delta: m[1] });
+					else onEvent({ type: 'text', delta: m[1] });
 				} else {
 					onEvent({ type: 'text', delta: tok });
 				}
