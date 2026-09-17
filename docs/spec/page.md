@@ -24,7 +24,9 @@ Projects owned by an Experience or Education appear under it, never twice. No co
 
 ## Ask about this
 
-Each Experience, Education and Skill item carries a small "ask about this" affordance. It scrolls to the Hero and submits a canned Prompt marked ✦ (for example "Tell me about your time at Acme Bank"), reusing the normal Turn pipeline. No cross-scroll hover highlighting.
+Every Experience, Education, Project and Skill item carries its Node id as an anchor, so the Scene's pick card links straight to it, and a small "ask about this" affordance. It scrolls to the Hero and submits a canned Prompt marked ✦ (for example "Tell me about your time at Acme Bank"), reusing the normal Turn pipeline. No cross-scroll hover highlighting.
+
+Selecting text anywhere in the Hero or the Sections raises the same affordance as a pill over the selection; it sends the selected phrase verbatim (whitespace collapsed, 3 to 200 characters) as a **typed** Prompt. Selections inside the header, the pick card or a form field are ignored.
 
 ## Navigation
 

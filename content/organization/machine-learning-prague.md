@@ -6,4 +6,4 @@ url: https://www.mlprague.com
 location: Prague, Czechia
 ---
 
-Machine Learning Prague is an annual machine learning conference with talks and workshops. Pavel attended the 2026 edition, funded by DeelsCorp's CzechInvest Technology Incubation grant.
+Machine Learning Prague is an annual machine learning conference with talks and workshops. Pavel attended the 2026 edition.

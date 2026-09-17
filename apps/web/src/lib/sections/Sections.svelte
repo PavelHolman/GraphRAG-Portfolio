@@ -40,8 +40,8 @@
           <dd>{model.person.name}</dd>
           {#if model.person.headline}<dt>Role</dt>
             <dd>{model.person.headline}</dd>{/if}
-          {#if model.person.experience}<dt>Experience</dt>
-            <dd>{model.person.experience}</dd>{/if}
+          {#if model.person.workingSince}<dt>Working since</dt>
+            <dd>{model.person.workingSince}</dd>{/if}
           {#if model.person.location}<dt>Location</dt>
             <dd>{model.person.location}</dd>{/if}
           {#if email}<dt>Email</dt>
@@ -85,7 +85,7 @@
           {#if x.projects.length}
             <ul class="projects">
               {#each x.projects as p (p.id)}
-                <li>
+                <li id={p.id}>
                   {#if p.url}<a class="ext" href={p.url} target="_blank" rel="noopener"
                       ><b>{p.title}</b><Icon name="link" size={11} /></a
                     >{:else}<b>{p.title}</b>{/if}{#if p.led}<span class="tag">led</span>{/if}
@@ -130,7 +130,7 @@
             {#if e.projects.length}
               <ul class="projects">
                 {#each e.projects as p (p.id)}
-                  <li>
+                  <li id={p.id}>
                     {#if p.url}<a class="ext" href={p.url} target="_blank" rel="noopener"
                         ><b>{p.title}</b><Icon name="link" size={11} /></a
                       >{:else}<b>{p.title}</b>{/if}
@@ -271,14 +271,20 @@
     margin-bottom: 14px;
   }
   .card,
-  .chips li {
-    scroll-margin-top: 80px;
+  .chips li,
+  .projects li {
+    scroll-margin-top: 90px;
   }
-  /* The card or chip a Scene pick linked to. */
+  /* The card, chip or Project row a Scene pick linked to. */
   .card:target,
   .chips li:target {
     border-color: var(--accent);
     box-shadow: 0 0 0 1px var(--accent);
+  }
+  .projects li:target {
+    border-top-color: var(--accent);
+    box-shadow: inset 2px 0 0 var(--accent);
+    padding-left: 10px;
   }
   .card {
     position: relative;

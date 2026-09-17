@@ -8,4 +8,4 @@ at: [organization/machine-learning-prague]
 taught: [skill/aws]
 ---
 
-Machine Learning Prague 2026 conference and workshop, 5 to 7 May 2026, where Pavel learned AWS and Amazon SageMaker hands-on. Attendance was funded by the CZK 1 million CzechInvest Technology Incubation grant DeelsCorp won for Deels.
+Machine Learning Prague 2026 conference and workshop, 5 to 7 May 2026, where Pavel learned AWS and Amazon SageMaker hands-on.

@@ -1,10 +1,9 @@
-import type { ArtifactEdge, ArtifactNode } from '@graphrag/schema';
+import type { ArtifactEdge, ArtifactNode, PlainTime } from '@graphrag/schema';
 import { compareStart, startOf } from '@graphrag/schema';
 
 /** Section view models built server-side from the artifact. `docs/spec/page.md`. */
 export interface ExperienceItem {
   readonly id: string;
-  readonly startYear: number | undefined;
   readonly title: string;
   readonly role: string | undefined;
   readonly organization: string | undefined;
@@ -64,8 +63,8 @@ export interface PageModel {
     body: string;
     location: string | undefined;
     availability: string | undefined;
-    /** Derived from the earliest Experience start, e.g. "6 years, since 2020". */
-    experience: string | undefined;
+    /** The year of the earliest Experience, e.g. "2020". */
+    workingSince: string | undefined;
     links: Record<string, string>;
     languages: Record<string, string>;
   };
@@ -89,13 +88,19 @@ const field = (n: ArtifactNode, k: string): string | undefined => {
   const v = n.fields[k];
   return typeof v === 'string' ? v : undefined;
 };
-/** "6 years, since 2020": whole years from the earliest start to today. Never authored. ADR 0001. */
-const yearsOfExperience = (years: ReadonlyArray<number | undefined>): string | undefined => {
-  const starts = years.filter((y): y is number => y !== undefined);
-  if (!starts.length) return undefined;
-  const since = Math.min(...starts);
-  const n = Temporal.Now.plainDateISO().year - since;
-  return `${n} year${n === 1 ? '' : 's'}, since ${since}`;
+/**
+ * The year of the earliest Experience, for "Working since 2020". Derived, never authored (ADR
+ * 0001). A year rather than a count of years: the count reads as a claim to be compared, the year
+ * is a fact, and nothing has to be recomputed as time passes.
+ */
+export const sinceYear = (starts: ReadonlyArray<PlainTime>): string | undefined => {
+  const first = starts
+    .map(startOf)
+    .reduce<Temporal.PlainDate | undefined>(
+      (a, b) => (a && Temporal.PlainDate.compare(a, b) <= 0 ? a : b),
+      undefined,
+    );
+  return first ? String(first.year) : undefined;
 };
 const urlOf = (n: ArtifactNode | undefined): string | undefined =>
   n ? field(n, 'url') : undefined;
@@ -119,7 +124,6 @@ export const buildPageModel = (
     .sort(byStartDesc)
     .map((n): ExperienceItem => ({
       id: n.id,
-      startYear: n.start ? startOf(n.start).year : undefined,
       title: n.title,
       role: field(n, 'role'),
       organization: byId.get(out(n.id, 'at')[0]?.target ?? '')?.title,
@@ -207,7 +211,9 @@ export const buildPageModel = (
       body: person?.body ?? '',
       location: person ? field(person, 'location') : undefined,
       availability: person ? field(person, 'availability') : undefined,
-      experience: yearsOfExperience(experience.map((x) => x.startYear)),
+      workingSince: sinceYear(
+        visible.flatMap((n) => (n.type === 'experience' && n.start ? [n.start] : [])),
+      ),
       links: person?.links ?? {},
       languages: person?.languages ?? {},
     },

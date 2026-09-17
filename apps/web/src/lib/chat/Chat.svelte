@@ -53,7 +53,6 @@
   const focusIn = () => oninput(true);
   const focusOut = () => oninput(draft.length > 0);
   const send = (p: string) => () => onsend(p);
-  const cite = (id: string) => () => oncite(id, '');
   $effect(() => {
     oninput(draft.length > 0);
   });

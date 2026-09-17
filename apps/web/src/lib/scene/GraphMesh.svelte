@@ -198,6 +198,8 @@
   // title shows. Applied on top of whatever Highlight state the base targets carry.
   let hovered = $state<number | null>(null);
   const HOVER_EDGE = new THREE.Color(PALETTE.seed).lerp(EDGE_HI, 0.35);
+  const mix = (from: number | undefined, to: number, t: number): number =>
+    from === undefined ? to : from + (to - from) * t;
   function applyHover() {
     // The focused star is emphasised gently (about 1.5x); the hovered one more strongly.
     if (focus !== null) emphasise(focus, 0.5);
@@ -209,11 +211,14 @@
     tgtColor[i * 3 + 2] = SEED_C.b;
     tgtSize[i] = (baseSize[i] ?? 0) + 1.3 * strength;
     tgtGlow[i] = (baseGlow[i] ?? 0) + 1.2 * strength;
+    // The Edges move from whatever tier they are in toward the hover colour by the same factor, so
+    // a focused star's Edges stay gentler than a hovered one's.
     for (const ei of incident[i] ?? []) {
       for (const k of [0, 3]) {
-        edgeTgt[ei * 6 + k] = HOVER_EDGE.r;
-        edgeTgt[ei * 6 + k + 1] = HOVER_EDGE.g;
-        edgeTgt[ei * 6 + k + 2] = HOVER_EDGE.b;
+        const j = ei * 6 + k;
+        edgeTgt[j] = mix(edgeTgt[j], HOVER_EDGE.r, strength);
+        edgeTgt[j + 1] = mix(edgeTgt[j + 1], HOVER_EDGE.g, strength);
+        edgeTgt[j + 2] = mix(edgeTgt[j + 2], HOVER_EDGE.b, strength);
       }
     }
   }

@@ -5,6 +5,7 @@
   import Scene from '$lib/scene/Scene.svelte';
   import type { SceneGraph } from '$lib/scene/types.ts';
   import Chat from '$lib/chat/Chat.svelte';
+  import SelectionAsk from '$lib/chat/SelectionAsk.svelte';
   import { TurnState } from '$lib/chat/turn-state.svelte.ts';
   import Sections from '$lib/sections/Sections.svelte';
   import Header from '$lib/sections/Header.svelte';
@@ -93,6 +94,11 @@
     onask(p);
   };
   const askIntro = () => onask('What are you strongest at?');
+  // A selected phrase is the visitor's own words, so it counts as typed, not as a suggestion.
+  const askSelected = (prompt: string) => {
+    document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
+    turn.run(prompt, 'typed');
+  };
 
   // JSON-LD Person for crawlers. The tag is assembled from pieces so linters that extract
   // <script> blocks from Svelte files do not mistake it for one.
@@ -232,6 +238,8 @@
 <main>
   <Sections model={data.model} {onask} />
 </main>
+
+<SelectionAsk onask={askSelected} />
 
 <style>
   .hero {
