@@ -27,6 +27,18 @@
   let webgl = $state(true);
   let reducedMotion = $state(false);
   let picked = $state<number | null>(null);
+  // The intro's box and the column's landing position, measured while the intro is visible, so the
+  // answer can take the intro's exact place and the prompt field never moves.
+  let lead = $state<HTMLDivElement | undefined>();
+  let introEl = $state<HTMLDivElement | undefined>();
+  let introSlot = $state(0);
+  let leadTop = $state(0);
+  const measure = () => {
+    const hero = document.getElementById('top');
+    if (!lead || !introEl || !hero) return;
+    if (introEl.offsetHeight > 0) introSlot = introEl.offsetHeight;
+    leadTop = lead.getBoundingClientRect().top - hero.getBoundingClientRect().top;
+  };
   const hint = $derived(data.hints[hintIndex % Math.max(1, data.hints.length)]);
   // Hint preview: faint tier while a ghost hint shows and nothing streams or is typed.
   const preview = $derived(
@@ -85,8 +97,10 @@
     reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const resize = () => {
       portrait = window.innerWidth < window.innerHeight;
+      if (turn.messages.length === 0) measure();
     };
     resize();
+    requestAnimationFrame(measure);
     window.addEventListener('resize', resize);
     const cycle = setInterval(() => {
       if (!turn.streaming && !typing) hintIndex++;
@@ -139,8 +153,8 @@
   </div>
 
   <!-- Left column: the intro copy, replaced by the conversation once a question is asked. -->
-  <div class="lead" class:conversing>
-    <div class="intro" class:aside={conversing}>
+  <div class="lead" class:conversing bind:this={lead} style:--lead-top="{leadTop}px">
+    <div class="intro" class:aside={conversing} bind:this={introEl}>
       <h1>{data.model.person.name}</h1>
       {#if data.model.person.headline}<p class="headline">{data.model.person.headline}</p>{/if}
       {#if data.model.person.lede}<p class="lede">{data.model.person.lede}</p>{/if}
@@ -166,6 +180,7 @@
       {oncite}
       {oninput}
       {onclose}
+      slotHeight={introSlot}
     />
   </div>
 
@@ -216,13 +231,13 @@
     transform: translateY(-50%);
     width: min(520px, 46vw);
     display: grid;
-    gap: 22px;
+    gap: 10px;
     z-index: 5;
   }
   /* With a question open the column is anchored at the top, so the streaming answer only grows
      downward and the text already read never moves. */
   .lead.conversing {
-    top: 12vh;
+    top: var(--lead-top);
     transform: none;
   }
   .intro {

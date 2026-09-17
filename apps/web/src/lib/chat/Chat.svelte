@@ -15,6 +15,8 @@
     oncite: (id: string) => void;
     oninput: (active: boolean) => void;
     onclose: () => void;
+    /** Desktop: the answer box takes exactly the intro's height so the field never moves. */
+    slotHeight: number;
   }
   let {
     messages,
@@ -27,6 +29,7 @@
     oncite,
     oninput,
     onclose,
+    slotHeight,
   }: Props = $props();
   let draft = $state('');
   const current = $derived(messages.filter((m) => m.role === 'answer').at(-1));
@@ -58,7 +61,12 @@
 
 <div class="col">
   {#if current}
-    <section class="caption" class:suggested={lastPrompt?.suggested} aria-live="polite">
+    <section
+      class="caption"
+      class:suggested={lastPrompt?.suggested}
+      style:--slot="{slotHeight}px"
+      aria-live="polite"
+    >
       <div class="q">
         <span>{lastPrompt?.suggested ? '✦ ' : ''}{question}</span>
         <button class="close" onclick={onclose} aria-label="close the answer">×</button>
@@ -68,11 +76,6 @@
         {#if current.streaming}<span class="caret"></span>{/if}
         {#if current.error}<p class="error">{current.error}</p>{/if}
       </div>
-      {#if followups.length && !streaming}
-        <div class="follow">
-          {#each followups as f (f)}<button onclick={send(f)}>{f}</button>{/each}
-        </div>
-      {/if}
     </section>
   {/if}
 
@@ -97,6 +100,12 @@
       >{draft ? '↵' : '▶'}</button
     >
   </form>
+
+  {#if followups.length && !streaming}
+    <div class="follow">
+      {#each followups as f (f)}<button onclick={send(f)}>{f}</button>{/each}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -194,6 +203,8 @@
   }
   .caption {
     min-width: 0;
+    height: var(--slot);
+    grid-template-rows: auto 1fr;
     background: rgba(15, 14, 13, 0.82);
     border: 1px solid rgba(241, 239, 233, 0.1);
     border-radius: 14px;
@@ -253,7 +264,7 @@
   /* The whole Answer stays reachable: the text scrolls inside the caption, never behind the chips. */
   .text {
     min-width: 0;
-    max-height: 34vh;
+    min-height: 0;
     overflow-y: auto;
     padding-right: 6px;
   }
@@ -281,6 +292,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    animation: fadein 0.6s ease 0.2s both;
   }
   .follow button {
     flex: none;
@@ -310,6 +322,9 @@
     .caption {
       padding: 10px 12px;
       gap: 6px;
+    }
+    .caption {
+      height: auto;
     }
     .text {
       max-height: 18vh;
