@@ -3,7 +3,41 @@
 import type { HistoryTurn, TurnEvent, TurnRequest } from '@graphrag/schema';
 import type { SceneGraph, Subgraph } from '$lib/scene/types.ts';
 import { streamTurn } from './client.ts';
-import type { Message } from './types.ts';
+import type { CitePart, Message } from './types.ts';
+
+/** How far back in the streamed text a Citation may reach to underline its mention. */
+const MENTION_WINDOW = 240;
+
+/**
+ * Places a Citation on the nearest preceding mention of one of `names` in the Answer text, so the
+ * existing words get underlined instead of a second name being appended. Without a mention the
+ * Citation is appended bare (superscript only).
+ */
+export const attachCitation = (a: Message, cite: CitePart, names: ReadonlyArray<string>): void => {
+  const last = a.parts.at(-1);
+  if (last?.kind === 'text') {
+    const hay = last.text.toLowerCase();
+    let best: { at: number; len: number } | undefined;
+    for (const name of names) {
+      const needle = name.trim().toLowerCase();
+      if (needle.length < 2) continue;
+      const at = hay.lastIndexOf(needle);
+      if (at === -1 || hay.length - at > MENTION_WINDOW) continue;
+      if (!best || at > best.at) best = { at, len: needle.length };
+    }
+    if (best) {
+      const before = last.text.slice(0, best.at);
+      const label = last.text.slice(best.at, best.at + best.len);
+      const after = last.text.slice(best.at + best.len);
+      a.parts.pop();
+      if (before) a.parts.push({ kind: 'text', text: before });
+      a.parts.push({ ...cite, label });
+      if (after) a.parts.push({ kind: 'text', text: after });
+      return;
+    }
+  }
+  a.parts.push(cite);
+};
 
 export class TurnState {
   messages = $state<Message[]>([]);
@@ -106,9 +140,21 @@ export class TurnState {
         case 'citation': {
           const ni = this.nodeIndex.get(e.id);
           const ei = this.edgeIndex.get(e.id);
+          const edge = ei !== undefined ? this.graph.edges[ei] : undefined;
           const title =
             ni !== undefined ? (this.graph.nodes[ni]?.title ?? e.id) : (this.edgeTitle(ei) ?? e.id);
-          a.parts.push({ kind: 'cite', id: e.id, ordinal: e.ordinal, title });
+          const names =
+            ni !== undefined
+              ? [this.graph.nodes[ni]?.title ?? '']
+              : [
+                  this.graph.nodes[edge?.target ?? -1]?.title ?? '',
+                  this.graph.nodes[edge?.source ?? -1]?.title ?? '',
+                ];
+          attachCitation(
+            a,
+            { kind: 'cite', id: e.id, ordinal: e.ordinal, title, label: '' },
+            names,
+          );
           const seeds = new Set(live.seeds);
           if (ni !== undefined) seeds.add(ni);
           if (ei !== undefined) {

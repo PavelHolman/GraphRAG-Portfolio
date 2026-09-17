@@ -19,18 +19,24 @@ describe('AnswerParser', () => {
       'skill/effect',
       'organization/acme',
     ]);
-    expect(text(parts)).toBe('I used  at .');
+    expect(text(parts)).toBe('I used at.');
   });
   test('markers split across deltas still parse', () => {
     const parts = feed(['I used [', '[skill/ef', 'fect]', '] here']);
     expect(parts.filter((p) => p.type === 'marker')).toEqual([
       { type: 'marker', id: 'skill/effect' },
     ]);
-    expect(text(parts)).toBe('I used  here');
+    expect(text(parts)).toBe('I used here');
   });
   test('edge ids with arrows survive', () => {
     const parts = feed(['see [[project/ingestion--uses-->skill/effect]].']);
     expect(parts[1]).toEqual({ type: 'marker', id: 'project/ingestion--uses-->skill/effect' });
+  });
+  test('the space before a marker is kept when words follow, dropped before punctuation', () => {
+    expect(
+      text(feed(['built on Effect [[skill/effect]] for years, at [[organization/acme]].'])),
+    ).toBe('built on Effect for years, at.');
+    expect(text(feed(['Effect [[skill/effect]]', ', then']))).toBe('Effect, then');
   });
   test('followups block is captured and removed from the text, even when split', () => {
     const parts = feed(['Done.\n``', '`followups\n- one\n- two\n', '- three\n```']);

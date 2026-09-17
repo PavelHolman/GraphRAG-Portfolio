@@ -28,13 +28,27 @@
 
   let controls = $state<CC | undefined>();
   let idle = true;
+  // The drift pauses while the visitor holds the camera and resumes a few seconds after they let go.
+  const RESUME_AFTER_MS = 4000;
+  let resumeTimer: ReturnType<typeof setTimeout> | undefined;
   const stopIdle = () => {
     idle = false;
+    clearTimeout(resumeTimer);
+  };
+  const scheduleResume = () => {
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => {
+      idle = true;
+      invalidate();
+    }, RESUME_AFTER_MS);
   };
   const created = (c: CC) => {
     controls = c;
     c.addEventListener('controlstart', stopIdle);
-    c.addEventListener('controlend', resync);
+    c.addEventListener('controlend', () => {
+      resync();
+      scheduleResume();
+    });
   };
   const { invalidate, renderer } = useThrelte();
   useTask((dt) => {
@@ -54,7 +68,8 @@
 
   $effect(() => {
     if (focus == null || !controls) return;
-    idle = false;
+    stopIdle();
+    scheduleResume();
     const p = positions;
     controls.moveTo(p[focus * 3] ?? 0, p[focus * 3 + 1] ?? 0, p[focus * 3 + 2] ?? 0, true);
     controls.dollyTo(Math.min(controls.distance, 14), true);
@@ -87,7 +102,10 @@
   onMount(() => {
     const el = renderer.domElement.parentElement;
     el?.addEventListener('wheel', gateWheel, { capture: true, passive: true });
-    return () => el?.removeEventListener('wheel', gateWheel, { capture: true });
+    return () => {
+      el?.removeEventListener('wheel', gateWheel, { capture: true });
+      clearTimeout(resumeTimer);
+    };
   });
 </script>
 

@@ -6,7 +6,10 @@ export interface CitePart {
   readonly kind: 'cite';
   readonly id: string;
   readonly ordinal: number;
+  /** The cited Node's title (chips). */
   readonly title: string;
+  /** The words in the Answer this Citation underlines; empty when only the superscript shows. */
+  readonly label: string;
 }
 export type Part = TextPart | CitePart;
 

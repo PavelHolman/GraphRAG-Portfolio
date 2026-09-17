@@ -22,9 +22,12 @@
         <div class="row" class:head={ri === 0 || !isTableRow(lines[ri - 1] ?? [])}>
           {#each row as p, pi (pi)}
             {#if p.kind === 'cite'}
-              <button class="cite" class:focused={focused === p.id} onclick={cite(p.id)}>
-                {p.title}<sup>{p.ordinal + 1}</sup>
-              </button>
+              <button
+                class="cite"
+                class:bare={!p.label}
+                class:focused={focused === p.id}
+                onclick={cite(p.id)}>{p.label}<sup>{p.ordinal + 1}</sup></button
+              >
             {:else}
               {#each cells(p.text) as cell, ci (ci)}<span class="cell">{cell.trim()}</span>{/each}
             {/if}
@@ -34,11 +37,13 @@
     {:else}
       <p>
         {#each row as p, pi (pi)}
-          {#if p.kind === 'cite'}
-            <button class="cite" class:focused={focused === p.id} onclick={cite(p.id)}>
-              {p.title}<sup>{p.ordinal + 1}</sup>
-            </button>
-          {:else}{p.text}{/if}
+          {#if p.kind === 'cite'}<button
+              class="cite"
+              class:bare={!p.label}
+              class:focused={focused === p.id}
+              title={p.title}
+              onclick={cite(p.id)}>{p.label}<sup>{p.ordinal + 1}</sup></button
+            >{:else}{p.text}{/if}
         {/each}
       </p>
     {/if}
@@ -94,6 +99,10 @@
     background: var(--accent-soft);
     border-bottom-color: var(--accent);
     border-radius: 3px;
+  }
+  .cite.bare {
+    border-bottom: 0;
+    padding: 0;
   }
   .cite sup {
     font:

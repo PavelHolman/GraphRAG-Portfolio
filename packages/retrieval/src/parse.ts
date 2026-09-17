@@ -31,6 +31,17 @@ export class AnswerParser {
   private buf = '';
   private inFollowups = false;
   private followupsBuf = '';
+  /** A space that preceded a stripped marker; dropped if punctuation follows, re-emitted otherwise. */
+  private heldSpace = false;
+
+  private text(delta: string, out: Array<ParsedPart>) {
+    if (!delta) return;
+    if (this.heldSpace) {
+      this.heldSpace = false;
+      if (!/^[\s.,;:!?)\]]/.test(delta)) delta = ` ${delta}`;
+    }
+    out.push({ type: 'text', delta });
+  }
 
   push(delta: string): Array<ParsedPart> {
     if (this.inFollowups) {
@@ -44,7 +55,7 @@ export class AnswerParser {
       const open = this.buf.indexOf(MARKER_OPEN);
       if (fence !== -1 && (open === -1 || fence < open)) {
         const before = this.buf.slice(0, fence);
-        if (before) out.push({ type: 'text', delta: before });
+        this.text(before, out);
         this.inFollowups = true;
         this.followupsBuf = this.buf.slice(fence + FENCE.length);
         this.buf = '';
@@ -56,25 +67,31 @@ export class AnswerParser {
         if (this.buf.length - open > MAX_MARKER) {
           // Not a marker after all; release the literal text.
           const upTo = open + MARKER_OPEN.length;
-          out.push({ type: 'text', delta: this.buf.slice(0, upTo) });
+          this.text(this.buf.slice(0, upTo), out);
           this.buf = this.buf.slice(upTo);
           continue;
         }
         break;
       }
       const before = this.buf.slice(0, open);
-      if (before) out.push({ type: 'text', delta: before });
+      if (before.endsWith(' ')) {
+        this.text(before.slice(0, -1), out);
+        this.heldSpace = true;
+      } else this.text(before, out);
       out.push({ type: 'marker', id: this.buf.slice(open + MARKER_OPEN.length, close).trim() });
       this.buf = this.buf.slice(close + MARKER_CLOSE.length);
     }
     // Hold back only what could still become a marker or a fence.
-    const hold = Math.max(
+    let hold = Math.max(
       this.buf.includes(MARKER_OPEN) ? this.buf.length - this.buf.lastIndexOf(MARKER_OPEN) : 0,
       longestSuffixThatPrefixes(this.buf, FENCE),
       longestSuffixThatPrefixes(this.buf, MARKER_OPEN),
     );
+    // A space right before a possible marker is held back with it, so it can still be dropped.
+    if (hold > 0 && hold < this.buf.length && this.buf[this.buf.length - hold - 1] === ' ')
+      hold += 1;
     const release = this.buf.slice(0, this.buf.length - hold);
-    if (release) out.push({ type: 'text', delta: release });
+    this.text(release, out);
     this.buf = this.buf.slice(this.buf.length - hold);
     return out;
   }
@@ -90,8 +107,9 @@ export class AnswerParser {
       this.inFollowups = false;
       return out;
     }
-    if (this.buf) out.push({ type: 'text', delta: this.buf });
+    this.text(this.buf, out);
     this.buf = '';
+    this.heldSpace = false;
     return out;
   }
 }
