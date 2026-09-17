@@ -32,6 +32,7 @@
 	});
 	const halo = new THREE.InstancedMesh(geometry, haloMat, n);
 	halo.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
+	halo.renderOrder = -1; // labels and core nodes draw over the glow
 
 	const cur = new Float32Array(positions);
 	const curScale = new Float32Array(n).fill(1);
