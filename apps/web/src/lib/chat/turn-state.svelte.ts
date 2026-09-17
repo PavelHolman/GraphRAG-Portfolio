@@ -44,6 +44,8 @@ export class TurnState {
   followups = $state<string[]>([]);
   streaming = $state(false);
   focused = $state<string | null>(null);
+  /** The words the focused Citation underlined; picks the end of an Edge to focus. */
+  focusedLabel = $state('');
   /** Bumped on every citation click, so focusing the same star twice still moves the camera. */
   focusTick = $state(0);
   subgraph = $state<Subgraph | null>(null);
@@ -66,12 +68,22 @@ export class TurnState {
     this.followups = [];
     this.streaming = false;
     this.focused = null;
+    this.focusedLabel = '';
     this.subgraph = null;
     this.previousUsedIds = [];
   }
 
+  /** The star a Citation focuses: the Node itself, or for an Edge the end whose title was underlined (else the target). */
   focusNodeIndex(): number | null {
-    return this.focused === null ? null : (this.nodeIndex.get(this.focused) ?? null);
+    if (this.focused === null) return null;
+    const ni = this.nodeIndex.get(this.focused);
+    if (ni !== undefined) return ni;
+    const ei = this.edgeIndex.get(this.focused);
+    const edge = ei === undefined ? undefined : this.graph.edges[ei];
+    if (!edge) return null;
+    const label = this.focusedLabel.trim().toLowerCase();
+    const sourceTitle = this.graph.nodes[edge.source]?.title.toLowerCase();
+    return label && label === sourceTitle ? edge.source : edge.target;
   }
 
   private history(): HistoryTurn[] {
@@ -97,6 +109,7 @@ export class TurnState {
     const history = this.history();
     this.followups = [];
     this.focused = null;
+    this.focusedLabel = '';
     this.messages.push({
       role: 'visitor',
       suggested: source === 'hint',

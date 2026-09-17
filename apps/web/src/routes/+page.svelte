@@ -55,8 +55,9 @@
   };
   const onfollowup = (p: string) => turn.run(p, 'followup');
   const onsendOrFollowup = (p: string) => (turn.followups.includes(p) ? onfollowup(p) : onsend(p));
-  const oncite = (id: string) => {
+  const oncite = (id: string, label: string) => {
     turn.focused = id;
+    turn.focusedLabel = label;
     turn.focusTick++;
   };
   const oninput = (active: boolean) => {

@@ -4,14 +4,14 @@
   interface Props {
     parts: Part[];
     focused: string | null;
-    oncite: (id: string) => void;
+    oncite: (id: string, label: string) => void;
   }
   let { parts, focused, oncite }: Props = $props();
   const lines = $derived(rows(parts));
   const isTableRow = (r: Part[]) => r[0]?.kind === 'text' && r[0].text.trimStart().startsWith('|');
   const isSeparator = (r: Part[]) =>
     r.some((p) => p.kind === 'text' && /^\|\s*-{3}/.test(p.text.trim()));
-  const cite = (id: string) => () => oncite(id);
+  const cite = (id: string, label: string) => () => oncite(id, label);
 </script>
 
 <div class="answer">
@@ -32,7 +32,7 @@
                     class:bare={!p.label}
                     class:focused={focused === p.id}
                     title={p.title}
-                    onclick={cite(p.id)}>{p.label}<sup>{p.ordinal + 1}</sup></button
+                    onclick={cite(p.id, p.label)}>{p.label}<sup>{p.ordinal + 1}</sup></button
                   >{:else}{p.text}{/if}
               {/each}
             </span>
@@ -47,7 +47,7 @@
               class:bare={!p.label}
               class:focused={focused === p.id}
               title={p.title}
-              onclick={cite(p.id)}>{p.label}<sup>{p.ordinal + 1}</sup></button
+              onclick={cite(p.id, p.label)}>{p.label}<sup>{p.ordinal + 1}</sup></button
             >{:else}{p.text}{/if}
         {/each}
       </p>

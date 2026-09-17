@@ -12,7 +12,7 @@
     focused: string | null;
     onsend: (prompt: string) => void;
     onplayhint: () => void;
-    oncite: (id: string) => void;
+    oncite: (id: string, label: string) => void;
     oninput: (active: boolean) => void;
     onclose: () => void;
     /** Desktop: the answer box takes exactly the intro's height so the field never moves. */
@@ -53,7 +53,7 @@
   const focusIn = () => oninput(true);
   const focusOut = () => oninput(draft.length > 0);
   const send = (p: string) => () => onsend(p);
-  const cite = (id: string) => () => oncite(id);
+  const cite = (id: string) => () => oncite(id, '');
   $effect(() => {
     oninput(draft.length > 0);
   });
