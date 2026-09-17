@@ -1,0 +1,17 @@
+{
+  "name": "@graphrag/retrieval",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./adapters": "./src/adapters/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@graphrag/schema": "workspace:*",
+    "effect": "4.0.0-rc.115",
+    "temporal-polyfill": "^1.0.5"
+  }
+}
