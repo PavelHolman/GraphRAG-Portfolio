@@ -439,10 +439,10 @@
     <Text
       text={nodes[i]?.title ?? ''}
       fontSize={strong ? 0.52 : 0.38}
-      color={strong ? PALETTE.seed : PALETTE.person}
+      color={PALETTE.person}
       anchorX="center"
       anchorY="bottom"
-      fillOpacity={(strong ? 1 : 0.9) * opacity}
+      fillOpacity={(strong ? 1 : 0.75) * opacity}
       outlineWidth={0.015}
       outlineColor={PALETTE.bg}
       outlineOpacity={0.8 * opacity}
