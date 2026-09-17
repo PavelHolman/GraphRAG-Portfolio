@@ -326,6 +326,7 @@
   .meta {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
     font:
       11px/1.6 'Azeret Mono',
@@ -346,8 +347,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
+    margin: -3px 0;
     border: 1px solid var(--line);
     border-radius: 999px;
     color: var(--fg);
