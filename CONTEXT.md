@@ -118,6 +118,14 @@ _Avoid_: Suggestion, chip, next question
 The 3D rendering of the Knowledge Graph the Visitor sees.
 _Avoid_: Canvas, visualization, view
 
+**Hero**:
+The first viewport of the page: the Scene with the prompt field over it.
+_Avoid_: Landing, above the fold, banner
+
+**Section**:
+One of the scrolling parts of the page below the Hero (About, Experience, Education, Skills, Contact), rendered from the Knowledge Graph.
+_Avoid_: Block, panel, page
+
 **Layout**:
 The precomputed position of every Node in the Scene.
 _Avoid_: Positions, arrangement, embedding (which means the vector)
