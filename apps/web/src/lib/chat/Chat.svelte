@@ -255,11 +255,15 @@
     color: var(--accent);
     border-color: var(--accent);
   }
+  /* The question wraps; a pasted job description is clamped to three lines. */
   .q span {
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    line-height: 1.5;
   }
   /* The whole Answer stays reachable: the text scrolls inside the caption, never behind the chips. */
   .text {
