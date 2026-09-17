@@ -9,6 +9,6 @@ Charting settled on Cloudflare Pages, but research showed that Cloudflare's plat
 - **Workers AI**: the `AI` binding at runtime (embeddings via a binding-backed Effect service; the language model through `@effect/ai-openai-compat` over the account REST endpoint until a binding-backed adapter is written). The Bun indexer, which has no binding, uses the REST endpoint with an API token.
 - **CI and deploys**: GitHub Actions runs indexer, lint, typecheck and tests, then `wrangler versions upload` for a preview URL on pull requests and `wrangler deploy` on the default branch. Workers Builds' GitHub integration is not used because the pipeline must run the indexer first.
 - **State**: the Workers Rate Limiting binding for per-IP limits and a single Durable Object for the daily cost counter. No KV. The endpoint hardening ticket sets the numbers.
-- **Secrets** (Anthropic key, Workers AI token for build, OTLP credentials) live in wrangler secrets and GitHub Actions secrets; `wrangler.jsonc` sits in `apps/web`.
+- **Secrets**: runtime `WORKERS_AI_TOKEN` (REST LLM calls until a binding adapter exists) and OTLP endpoint/headers in wrangler secrets; `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in GitHub Actions; the Workers AI token for indexing stays local (CI never embeds). No Anthropic key unless the paid path is adopted. `wrangler.jsonc` sits in `apps/web`.
 
 Rejected: staying on Pages (loses platform telemetry and is the legacy path); Workers Builds (cannot run the indexer before deploy); KV for counters (eventually consistent).
