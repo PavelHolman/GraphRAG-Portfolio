@@ -39,8 +39,8 @@
   });
 
   // The wheel zooms only a little; at either end of the range the page scrolls instead.
-  const MIN_DISTANCE = 22;
-  const MAX_DISTANCE = 38;
+  const MIN_DISTANCE = 28;
+  const MAX_DISTANCE = 32;
   const DRIFT = 0.09;
 
   let controls = $state<CC | undefined>();
