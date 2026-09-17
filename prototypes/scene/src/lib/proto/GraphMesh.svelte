@@ -48,9 +48,9 @@
 			#include <fog_pars_vertex>
 			void main() {
 				vColor = aColor; vGlow = aGlow;
-				vec4 mv = modelViewMatrix * vec4(position, 1.0);
-				gl_PointSize = aSize * uDpr * (220.0 / -mv.z);
-				gl_Position = projectionMatrix * mv;
+				vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+				gl_PointSize = aSize * uDpr * (220.0 / -mvPosition.z);
+				gl_Position = projectionMatrix * mvPosition;
 				#include <fog_vertex>
 			}`,
 		fragmentShader: `
