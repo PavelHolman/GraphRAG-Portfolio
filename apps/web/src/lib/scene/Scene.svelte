@@ -39,8 +39,8 @@
   });
 
   // The wheel zooms only a little; at either end of the range the page scrolls instead.
-  const MIN_DISTANCE = 28;
-  const MAX_DISTANCE = 32;
+  const MIN_DISTANCE = 26;
+  const MAX_DISTANCE = 34;
   const DRIFT = 0.09;
 
   let controls = $state<CC | undefined>();
@@ -105,7 +105,7 @@
   // limit (or the inner one, scrolling up) is the event left alone, so the page scrolls. The zoom
   // is therefore always fully used up before the page moves.
   let wheelDistance = 30 * zoom;
-  const WHEEL_RATE = 0.0012;
+  const WHEEL_RATE = 0.002;
   const ARRIVAL = 0.5;
   const gateWheel = (e: WheelEvent) => {
     if (!controls || e.deltaY === 0) return;
