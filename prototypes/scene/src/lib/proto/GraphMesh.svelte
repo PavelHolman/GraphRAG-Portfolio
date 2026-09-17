@@ -28,7 +28,7 @@
 
 	// halo layer: larger, additive, back-side so it reads as a soft glow around cited nodes
 	const haloMat = new THREE.MeshBasicMaterial({
-		transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide, toneMapped: false
+		transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.BackSide, toneMapped: false, fog: false
 	});
 	const halo = new THREE.InstancedMesh(geometry, haloMat, n);
 	halo.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
