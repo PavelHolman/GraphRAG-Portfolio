@@ -102,6 +102,9 @@
   const gateWheel = (e: WheelEvent) => {
     if (!controls || e.deltaY === 0) return;
     e.stopPropagation();
+    // While the page is scrolled at all, the wheel belongs to the page: scrolling up first brings
+    // the Hero fully back into view, and only then does the same gesture start zooming in.
+    if (window.scrollY > 0) return;
     const min = MIN_DISTANCE * zoom;
     const max = MAX_DISTANCE * zoom;
     const outward = e.deltaY > 0;
