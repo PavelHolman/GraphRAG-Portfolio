@@ -10,11 +10,11 @@ The Scene must highlight progressively while the Answer streams, yet the retriev
 
 `POST /api/turn`, JSON body validated by `packages/schema`:
 
-| Field | Type | Notes |
-|---|---|---|
-| `prompt` | string | required |
-| `previousUsedIds` | Node and Edge ids | optional; extra seeds for multi-turn continuity |
-| `history` | last three Turns of Prompt and Answer text | optional; Retrieval enforces the token budget |
+| Field             | Type                                       | Notes                                           |
+| ----------------- | ------------------------------------------ | ----------------------------------------------- |
+| `prompt`          | string                                     | required                                        |
+| `previousUsedIds` | Node and Edge ids                          | optional; extra seeds for multi-turn continuity |
+| `history`         | last three Turns of Prompt and Answer text | optional; Retrieval enforces the token budget   |
 
 The endpoint is stateless. The client holds the conversation.
 
@@ -22,15 +22,15 @@ The endpoint is stateless. The client holds the conversation.
 
 One JSON object per line, a tagged union validated by `packages/schema`, in this order:
 
-| Event | Payload | When |
-|---|---|---|
-| `turn-started` | `turnId`, `mode` ∈ `match \| entity \| hybrid` | first |
-| `subgraph` | candidate Node ids and Edge ids, seeds flagged | second, before any text |
-| `text` | Markdown delta with Citation markers stripped | streaming |
-| `citation` | Node id or Edge id, ordinal index | streaming, ordered relative to `text` |
-| `followups` | suggested next Prompts | after text |
-| `turn-finished` | validated used Node and Edge ids, token usage | last |
-| `error` | tagged error, `retryable` flag | terminal, replaces `turn-finished` |
+| Event           | Payload                                        | When                                  |
+| --------------- | ---------------------------------------------- | ------------------------------------- |
+| `turn-started`  | `turnId`, `mode` ∈ `match \| entity \| hybrid` | first                                 |
+| `subgraph`      | candidate Node ids and Edge ids, seeds flagged | second, before any text               |
+| `text`          | Markdown delta with Citation markers stripped  | streaming                             |
+| `citation`      | Node id or Edge id, ordinal index              | streaming, ordered relative to `text` |
+| `followups`     | suggested next Prompts                         | after text                            |
+| `turn-finished` | validated used Node and Edge ids, token usage  | last                                  |
+| `error`         | tagged error, `retryable` flag                 | terminal, replaces `turn-finished`    |
 
 ## Citations
 

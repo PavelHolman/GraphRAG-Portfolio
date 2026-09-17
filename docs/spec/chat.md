@@ -24,15 +24,15 @@ Decisions from the chat-panel prototype ([ticket](https://github.com/PavelHolman
 
 ## Stream handling (client)
 
-| Event | Client behaviour |
-|---|---|
-| `turn-started` | push the visitor message and an empty streaming Answer; clear Followups and focus |
-| `subgraph` | set the Scene Subgraph to the candidate with **no seeds**, so candidates render in the faint tier |
-| `text` | append to the Answer's last text part |
-| `citation` | append a Citation part; add the Node to the Subgraph seeds (progressive Highlight) |
-| `followups` | show Followup chips |
+| Event           | Client behaviour                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `turn-started`  | push the visitor message and an empty streaming Answer; clear Followups and focus                                                          |
+| `subgraph`      | set the Scene Subgraph to the candidate with **no seeds**, so candidates render in the faint tier                                          |
+| `text`          | append to the Answer's last text part                                                                                                      |
+| `citation`      | append a Citation part; add the Node to the Subgraph seeds (progressive Highlight)                                                         |
+| `followups`     | show Followup chips                                                                                                                        |
 | `turn-finished` | seeds = used Nodes; nodes = used ∪ their candidate neighbours ∪ Person; edges = candidate edges touching a used Node; mark the Answer done |
-| `error` | show inline in the caption; keep the previous Highlight; no retry |
+| `error`         | show inline in the caption; keep the previous Highlight; no retry                                                                          |
 
 - **New Prompt mid-stream**: abort the fetch, mark the previous Answer done, keep the previous Highlight until the next `subgraph` event.
 - Followup click sends a real Prompt.

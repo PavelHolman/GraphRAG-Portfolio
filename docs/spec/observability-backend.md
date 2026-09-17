@@ -10,12 +10,12 @@ Decisions from [Decide: observability backend (self-hosted or Grafana Cloud)](ht
 
 ## Endpoint configuration (per environment)
 
-| Setting | Grafana Cloud (now) | OpenObserve (later) |
-|---|---|---|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `https://otlp-gateway-<eu-region>.grafana.net/otlp` | `https://o11y.<domain>/api/graphrag` |
-| `OTEL_EXPORTER_OTLP_HEADERS` | `Authorization=Basic <instanceId:token>` | `Authorization=Basic <ingest-user:password>` |
-| Cloudflare exporter destinations | traces → `<endpoint>/v1/traces`, logs → `<endpoint>/v1/logs`, same header | same shape, one destination per signal per project |
-| Resource | `service.namespace=graphrag`, `service.name` ∈ graphrag-web \| graphrag-index \| graphrag-browser | same |
+| Setting                          | Grafana Cloud (now)                                                                               | OpenObserve (later)                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`    | `https://otlp-gateway-<eu-region>.grafana.net/otlp`                                               | `https://o11y.<domain>/api/graphrag`               |
+| `OTEL_EXPORTER_OTLP_HEADERS`     | `Authorization=Basic <instanceId:token>`                                                          | `Authorization=Basic <ingest-user:password>`       |
+| Cloudflare exporter destinations | traces → `<endpoint>/v1/traces`, logs → `<endpoint>/v1/logs`, same header                         | same shape, one destination per signal per project |
+| Resource                         | `service.namespace=graphrag`, `service.name` ∈ graphrag-web \| graphrag-index \| graphrag-browser | same                                               |
 
 Secrets live in wrangler secrets (runtime) and GitHub Actions secrets (indexer run).
 

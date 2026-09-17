@@ -12,13 +12,13 @@ Decisions from [Decide: content authoring workflow and validation feedback](http
 
 ## Commands (repo root)
 
-| Command | Does | Network |
-|---|---|---|
-| `bun content:check` | parse every Node, validate frontmatter against the Effect Schema per Node Type, dangling `to` refs, Edge types not allowed for the source type, orphan Nodes, Nodes hidden with no path from Person, duplicate aliases | none |
-| `bun content:index` | `content:check`, then derive Skill spans, embed cache misses, compute the seeded force Layout, write the artifact and the JSON Schema | Workers AI REST for cache misses only |
-| `bun content:ask "<prompt>"` | classify, seed, expand and budget against the local artifact; print mode, seeds, candidate Nodes and Edges with scores, and the rendered prompt template | Workers AI for the query embedding |
-| `bun content:new <type> <slug>` | write a Node file from the type's template with required fields as placeholders | none |
-| `bun dev` | SvelteKit dev server against the committed artifact | none |
+| Command                         | Does                                                                                                                                                                                                                   | Network                               |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `bun content:check`             | parse every Node, validate frontmatter against the Effect Schema per Node Type, dangling `to` refs, Edge types not allowed for the source type, orphan Nodes, Nodes hidden with no path from Person, duplicate aliases | none                                  |
+| `bun content:index`             | `content:check`, then derive Skill spans, embed cache misses, compute the seeded force Layout, write the artifact and the JSON Schema                                                                                  | Workers AI REST for cache misses only |
+| `bun content:ask "<prompt>"`    | classify, seed, expand and budget against the local artifact; print mode, seeds, candidate Nodes and Edges with scores, and the rendered prompt template                                                               | Workers AI for the query embedding    |
+| `bun content:new <type> <slug>` | write a Node file from the type's template with required fields as placeholders                                                                                                                                        | none                                  |
+| `bun dev`                       | SvelteKit dev server against the committed artifact                                                                                                                                                                    | none                                  |
 
 Error output names the file, the field, the offending value and the allowed values, one line per problem, non-zero exit.
 

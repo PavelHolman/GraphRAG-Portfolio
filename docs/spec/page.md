@@ -10,14 +10,14 @@ One route, `/`. The **Hero** is the first viewport: the Scene with the centred c
 
 Every section renders from the committed Knowledge Graph artifact. Nothing is authored twice.
 
-| # | Section | Source |
-|---|---|---|
-| 1 | Hero | Scene + chat over the artifact; Turn endpoint |
-| 2 | About | Person `lede` (new frontmatter field, one or two sentences) and body as Markdown, `location` |
-| 3 | Experience | Experience Nodes by `start` desc: `role`, Organization title, date range, body, top Skills by Edge notes, Projects it `delivered` or `led` as a compact list |
-| 4 | Education | Education Nodes: `degree`, `field`, Organization, date range, body |
-| 5 | Skills | grouped by `category`, sorted by Derived Span desc; aliases not shown |
-| 6 | Contact | Person `links` (email as `mailto:`, LinkedIn, GitHub) and the CV download |
+| #   | Section    | Source                                                                                                                                                       |
+| --- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Hero       | Scene + chat over the artifact; Turn endpoint                                                                                                                |
+| 2   | About      | Person `lede` (new frontmatter field, one or two sentences) and body as Markdown, `location`                                                                 |
+| 3   | Experience | Experience Nodes by `start` desc: `role`, Organization title, date range, body, top Skills by Edge notes, Projects it `delivered` or `led` as a compact list |
+| 4   | Education  | Education Nodes: `degree`, `field`, Organization, date range, body                                                                                           |
+| 5   | Skills     | grouped by `category`, sorted by Derived Span desc; aliases not shown                                                                                        |
+| 6   | Contact    | Person `links` (email as `mailto:`, LinkedIn, GitHub) and the CV download                                                                                    |
 
 No Projects section: Projects appear under their Experience. No contact form.
 
@@ -32,6 +32,7 @@ Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. 
 ## Generated files
 
 `bun content:render` runs after a web build (separate from `content:index`, which stays free of the app) and uses Playwright to write, committed under `apps/web/static/`:
+
 - `cv.pdf`: the sections rendered through a print stylesheet on a `/print` route.
 - `hero.png` (two sizes): the Scene at rest, rendered from the artifact's Layout, used as the no-WebGL and reduced-motion fallback and as the social preview image.
 

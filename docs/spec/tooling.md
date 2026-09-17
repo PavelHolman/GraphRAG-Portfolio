@@ -24,25 +24,28 @@ Runtime: `temporal-polyfill@^1.0.5` in `apps/web` and `packages/retrieval`.
   "rules": {
     "no-restricted-globals": [
       "error",
-      { "name": "Date", "message": "Use Temporal for calendar time and the Clock service for now(). See ADR 0005." }
+      {
+        "name": "Date",
+        "message": "Use Temporal for calendar time and the Clock service for now(). See ADR 0005.",
+      },
     ],
     "no-restricted-properties": [
       "error",
-      { "object": "Date", "message": "Use the Clock service instead of Date.*. See ADR 0005." }
+      { "object": "Date", "message": "Use the Clock service instead of Date.*. See ADR 0005." },
     ],
     "eslint-js/no-restricted-syntax": [
       "error",
       {
         "selector": ":function[generator=true] ThrowStatement",
-        "message": "throw inside Effect.gen becomes a defect. Use yield* Effect.fail(...). See ADR 0005."
+        "message": "throw inside Effect.gen becomes a defect. Use yield* Effect.fail(...). See ADR 0005.",
       },
       {
         "selector": ":not(:function[generator=true]) ThrowStatement",
-        "message": "Do not throw. Return Effect.fail(...) or Effect.die(...). See ADR 0005."
-      }
-    ]
+        "message": "Do not throw. Return Effect.fail(...) or Effect.die(...). See ADR 0005.",
+      },
+    ],
   },
-  "ignorePatterns": [".svelte-kit/**", "build/**", "dist/**", "node_modules/**"]
+  "ignorePatterns": [".svelte-kit/**", "build/**", "dist/**", "node_modules/**"],
 }
 ```
 
@@ -58,9 +61,9 @@ Inline disables for these three rules are permitted only in files matching `*.ad
   "svelte": {
     "allowShorthand": true,
     "indentScriptAndStyle": true,
-    "sortOrder": "options-scripts-markup-styles"
+    "sortOrder": "options-scripts-markup-styles",
   },
-  "ignorePatterns": [".svelte-kit/", "build/", "dist/"]
+  "ignorePatterns": [".svelte-kit/", "build/", "dist/"],
 }
 ```
 
@@ -80,8 +83,8 @@ No Prettier; oxfmt formats `.svelte` via its bundled plugin.
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "plugins": [{ "name": "@effect/language-service" }]
-  }
+    "plugins": [{ "name": "@effect/language-service" }],
+  },
 }
 ```
 

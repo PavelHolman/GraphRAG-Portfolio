@@ -23,17 +23,17 @@ Decisions from [Decide: observability and analytics event model](https://github.
 - The Turn fetch carries `traceparent`, so browser and server spans join on one trace.
 - **Analytics events** are OTel log records with `event.name` and attributes:
 
-| `event.name` | Attributes |
-|---|---|
-| `visit` | device class, viewport class, webgl available, reduced motion, referrer host |
-| `hint_shown` | hint id |
-| `prompt_submitted` | source ∈ typed|hint|followup, length bucket ∈ short|medium|long|jd |
-| `turn_finished` | turn id, duration ms, citations count, mode |
-| `turn_error` | turn id, error tag |
-| `citation_clicked` | turn id, node type, via ∈ inline|chip |
-| `scene_interacted` | first orbit or pan, seconds since load |
-| `section_viewed` | section id, once per visit |
-| `link_clicked` | target ∈ cv|github|linkedin |
+| `event.name`       | Attributes                                                                   |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `visit`            | device class, viewport class, webgl available, reduced motion, referrer host |
+| `hint_shown`       | hint id                                                                      |
+| `prompt_submitted` | source ∈ typed                                                               | hint   | followup, length bucket ∈ short | medium | long | jd  |
+| `turn_finished`    | turn id, duration ms, citations count, mode                                  |
+| `turn_error`       | turn id, error tag                                                           |
+| `citation_clicked` | turn id, node type, via ∈ inline                                             | chip   |
+| `scene_interacted` | first orbit or pan, seconds since load                                       |
+| `section_viewed`   | section id, once per visit                                                   |
+| `link_clicked`     | target ∈ cv                                                                  | github | linkedin                        |
 
 - **Measurement**: `scene.fps` as a gauge (metrics OTLP) sampled every 10 s while the tab is visible, with `device.class`.
 - Browser logs: only errors and unhandled rejections. Lifecycle is covered by the events above.
