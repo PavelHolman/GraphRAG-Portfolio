@@ -1,0 +1,631 @@
+{
+  "dialect": "draft-2020-12",
+  "schema": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "person"
+            ]
+          },
+          "lede": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "links": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "skill"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "language",
+              "framework",
+              "platform",
+              "practice",
+              "leadership"
+            ]
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "part-of": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "related-to": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "category"
+        ],
+        "additionalProperties": true
+      },
+      {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "project"
+            ]
+          },
+          "start": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "repo": {
+            "type": "string"
+          },
+          "uses": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "in-domain": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "experience"
+            ]
+          },
+          "start": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "employment": {
+            "type": "string",
+            "enum": [
+              "full-time",
+              "contract",
+              "freelance",
+              "founder"
+            ]
+          },
+          "uses": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "at": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "delivered": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "led": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "in-domain": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "start"
+        ],
+        "additionalProperties": true
+      },
+      {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "education"
+            ]
+          },
+          "start": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "degree": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "at": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "taught": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "organization"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "company",
+              "university",
+              "client",
+              "community"
+            ]
+          },
+          "in-domain": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "to": {
+                      "type": "string",
+                      "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                      "description": "a Node id of the form <type>/<slug>"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "domain"
+            ]
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "type"
+        ],
+        "additionalProperties": true
+      }
+    ]
+  },
+  "definitions": {}
+}

@@ -1,0 +1,9 @@
+hints:
+  - id: effect
+    prompt: Tell me about your Effect work
+  - id: fit
+    prompt: Would you fit a senior TypeScript role on Cloudflare?
+  - id: portfolio
+    prompt: How does this portfolio work?
+  - id: strongest
+    prompt: What are you strongest at?
