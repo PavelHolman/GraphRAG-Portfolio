@@ -15,21 +15,22 @@
   /** Gap between the selection and the pill, and the smallest margin to a viewport edge. */
   const GAP = 8;
   const EDGE = 12;
+  /** The sticky header's height: nothing is drawn above this line. */
+  const HEADER = 58;
 
   let text = $state('');
   /** The selection's bottom-right corner, in viewport coordinates. */
   let corner = $state<{ x: number; y: number } | null>(null);
   /** An accent bar at each end of the selection, so its extent reads at a glance. */
-  let bars = $state<Array<{ x: number; y: number; h: number }>>([]);
+  let bars = $state<Array<{ id: 'start' | 'end'; x: number; y: number; h: number }>>([]);
   let pillWidth = $state(0);
   let pillHeight = $state(0);
   let viewportWidth = $state(0);
   let viewportHeight = $state(0);
   // Clamped so a selection at the edge of the window still shows the whole pill.
   const left = $derived(Math.max(EDGE, Math.min(corner?.x ?? 0, viewportWidth - pillWidth - EDGE)));
-  const top = $derived(
-    Math.max(EDGE, Math.min(corner?.y ?? 0, viewportHeight - pillHeight - EDGE)),
-  );
+  // Only ever lifted, for a selection on the last visible line; `read` keeps it off the header.
+  const top = $derived(Math.min(corner?.y ?? 0, viewportHeight - pillHeight - EDGE));
 
   /** Page content only: never the sticky header, the Scene's pick card or a form field. */
   const inContent = (n: Node | null): boolean => {
@@ -56,11 +57,20 @@
     const first = rects[0];
     const last = rects[rects.length - 1];
     if (!first || !last || (!last.width && !last.height)) return clear();
+    // Scrolled out of the band between the header and the bottom of the window: the selection is
+    // no longer in view, so the offer goes with it instead of parking at an edge.
+    if (last.bottom < HEADER || last.top > viewportHeight - EDGE) return clear();
     text = picked;
     corner = { x: last.right, y: last.bottom + GAP };
+    // Each bar shows only while its own line is fully in view, so none is drawn over the header.
+    const onScreen = (r: DOMRect) => r.top >= HEADER && r.bottom <= viewportHeight;
     bars = [
-      { x: first.left, y: first.top, h: first.height },
-      { x: last.right, y: last.top, h: last.height },
+      ...(onScreen(first)
+        ? [{ id: 'start' as const, x: first.left, y: first.top, h: first.height }]
+        : []),
+      ...(onScreen(last)
+        ? [{ id: 'end' as const, x: last.right, y: last.top, h: last.height }]
+        : []),
     ];
   };
 
@@ -88,7 +98,7 @@
   onresize={schedule}
 />
 
-{#each bars as b, i (i)}
+{#each bars as b (b.id)}
   <span
     class="bar"
     aria-hidden="true"
@@ -124,7 +134,8 @@
     background: var(--accent);
     box-shadow: 0 0 8px rgba(255, 138, 114, 0.6);
     pointer-events: none;
-    z-index: 39;
+    /* Above the cards, below the sticky header at 30. */
+    z-index: 29;
     will-change: transform;
     /* Follows the drag instead of snapping to each new rect. */
     transition:
