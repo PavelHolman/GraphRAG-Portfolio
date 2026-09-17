@@ -111,4 +111,10 @@
     color: var(--fg-muted);
     margin-left: 2px;
   }
+  @media (max-width: 700px) {
+    .answer {
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+  }
 </style>

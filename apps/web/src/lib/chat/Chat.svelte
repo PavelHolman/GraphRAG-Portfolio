@@ -186,6 +186,7 @@
     cursor: pointer;
   }
   .caption {
+    min-width: 0;
     background: rgba(15, 14, 13, 0.82);
     border: 1px solid rgba(241, 239, 233, 0.1);
     border-radius: 14px;
@@ -216,21 +217,21 @@
     text-transform: uppercase;
     color: var(--fg-muted);
   }
+  .q {
+    min-width: 0;
+  }
   .q span {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   /* The whole Answer stays reachable: the text scrolls inside the caption, never behind the chips. */
   .text {
+    min-width: 0;
     max-height: 34vh;
     overflow-y: auto;
     padding-right: 6px;
-  }
-  @media (max-width: 700px) {
-    .text {
-      max-height: 26vh;
-    }
   }
   .caret {
     display: inline-block;
@@ -275,5 +276,38 @@
   .follow button:hover {
     color: var(--accent);
     border-color: var(--accent);
+  }
+  /* Phones: a compact sheet. Shorter answer box, tighter type, follow-ups in one swipeable row. */
+  @media (max-width: 700px) {
+    .col {
+      bottom: max(12px, calc(env(safe-area-inset-bottom) + 12px));
+      gap: 8px;
+    }
+    .caption {
+      padding: 10px 12px;
+      gap: 6px;
+    }
+    .text {
+      max-height: 18vh;
+      font-size: 13.5px;
+    }
+    .follow {
+      /* A scrolling row inside a grid must not size the column to its full content width. */
+      min-width: 0;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      margin: 0 -12px;
+      padding: 0 12px;
+    }
+    .follow::-webkit-scrollbar {
+      display: none;
+    }
+    .follow button {
+      white-space: nowrap;
+      max-width: 80vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 </style>
