@@ -6,7 +6,8 @@ Decisions from [Decide: observability and analytics event model](https://github.
 
 - **Never log Prompt or Answer text.** A pasted job description can name people and companies. Node and Edge ids, counts, lengths and categories are fine: they are the owner's own content.
 - **No cookies, no user id.** The browser session id is a random value in `sessionStorage`, per tab, gone when the tab closes.
-- **One wire, any backend.** Server and browser both speak OTLP/HTTP JSON to a single `OTEL_EXPORTER_OTLP_ENDPOINT`; changing backend changes that value and the auth header.
+- **One wire, any backend.** Server and browser both speak OTLP/HTTP JSON to a single `OTEL_EXPORTER_OTLP_ENDPOINT`; changing backend changes that value and the auth header. The backend must accept **OTLP/HTTP JSON** (Cloudflare's exporter sends nothing else) and answer **CORS** for the browser exporter.
+- **Per-project separation.** Every resource carries `service.namespace=graphrag` alongside `service.name`; the backend gets one ingest-only credential per project. Sessions and funnels are dashboard queries joined on `session.id` and `turn.id`, not backend features.
 
 ## Server (Cloudflare Worker, Effect)
 
