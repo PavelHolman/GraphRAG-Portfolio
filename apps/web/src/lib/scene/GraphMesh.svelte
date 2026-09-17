@@ -199,14 +199,16 @@
   let hovered = $state<number | null>(null);
   const HOVER_EDGE = new THREE.Color(PALETTE.seed).lerp(EDGE_HI, 0.35);
   function applyHover() {
-    for (const i of [focus, hovered]) if (i !== null) emphasise(i);
+    // The focused star is emphasised gently (about 1.5x); the hovered one more strongly.
+    if (focus !== null) emphasise(focus, 0.5);
+    if (hovered !== null) emphasise(hovered, 1);
   }
-  function emphasise(i: number) {
+  function emphasise(i: number, strength: number) {
     tgtColor[i * 3] = SEED_C.r;
     tgtColor[i * 3 + 1] = SEED_C.g;
     tgtColor[i * 3 + 2] = SEED_C.b;
-    tgtSize[i] = (baseSize[i] ?? 0) + 1.3;
-    tgtGlow[i] = (baseGlow[i] ?? 0) + 1.2;
+    tgtSize[i] = (baseSize[i] ?? 0) + 1.3 * strength;
+    tgtGlow[i] = (baseGlow[i] ?? 0) + 1.2 * strength;
     for (const ei of incident[i] ?? []) {
       for (const k of [0, 3]) {
         edgeTgt[ei * 6 + k] = HOVER_EDGE.r;
@@ -438,11 +440,11 @@
   <Billboard position={labelAt(i)}>
     <Text
       text={nodes[i]?.title ?? ''}
-      fontSize={strong ? 0.52 : 0.38}
+      fontSize={strong ? 0.56 : 0.38}
       color={PALETTE.person}
       anchorX="center"
       anchorY="bottom"
-      fillOpacity={(strong ? 1 : 0.75) * opacity}
+      fillOpacity={(strong ? 1 : 0.6) * opacity}
       outlineWidth={0.015}
       outlineColor={PALETTE.bg}
       outlineOpacity={0.8 * opacity}
