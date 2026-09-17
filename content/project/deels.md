@@ -11,7 +11,10 @@ uses:
     }
   - { to: skill/swiftui, note: 'SwiftUI for native iOS screens' }
   - { to: skill/postgresql, note: 'PostgreSQL database' }
+  - { to: skill/postgraphile, note: 'GraphQL API generated from the Postgres schema' }
+  - { to: skill/graphql-hive, note: 'Hive and GraphQL Mesh gateway composing the API' }
+  - { to: skill/oracle-cloud-infrastructure, note: 'hosted on Oracle Cloud Infrastructure' }
 in-domain: [domain/consumer-marketplaces]
 ---
 
-Deels is a marketplace connecting gastro businesses and customers in Prague. Businesses reach customers through discounts and loyalty programmes, including discounted food that would otherwise go to waste; customers discover places at lower prices. Used by about 80 gastro partners in Prague. Built by a four-person team led by Pavel Holman: Kotlin backend with PostgreSQL and a GraphQL API, mobile apps in Kotlin Multiplatform, Compose Multiplatform and SwiftUI, services in Docker. Shipped; now in maintenance.
+Deels is a marketplace connecting gastro businesses and customers in Prague. Businesses reach customers through discounts and loyalty programmes, including discounted food that would otherwise go to waste; customers discover places at lower prices. Used by about 80 gastro partners in Prague. Built by a four-person team led by Pavel Holman: Kotlin backend with PostgreSQL and a GraphQL API, mobile apps in Kotlin Multiplatform, Compose Multiplatform and SwiftUI, services in Docker, hosted on Oracle Cloud Infrastructure. Backed by a CZK 1 million grant from CzechInvest's Technology Incubation programme. Shipped; now in maintenance.
