@@ -1,6 +1,6 @@
 <script lang="ts">
   // Renders one Answer's parts with inline Citations: coral, underlined, superscript ordinal.
-  import { rows, type Part } from './types.ts';
+  import { rows, tableCells, type Part } from './types.ts';
   interface Props {
     parts: Part[];
     focused: string | null;
@@ -11,7 +11,6 @@
   const isTableRow = (r: Part[]) => r[0]?.kind === 'text' && r[0].text.trimStart().startsWith('|');
   const isSeparator = (r: Part[]) =>
     r.some((p) => p.kind === 'text' && /^\|\s*-{3}/.test(p.text.trim()));
-  const cells = (text: string) => text.split('|').filter((_, i, a) => i > 0 && i < a.length - 1);
   const cite = (id: string) => () => oncite(id);
 </script>
 
@@ -19,18 +18,24 @@
   {#each lines as row, ri (ri)}
     {#if isTableRow(row)}
       {#if !isSeparator(row)}
-        <div class="row" class:head={ri === 0 || !isTableRow(lines[ri - 1] ?? [])}>
-          {#each row as p, pi (pi)}
-            {#if p.kind === 'cite'}
-              <button
-                class="cite"
-                class:bare={!p.label}
-                class:focused={focused === p.id}
-                onclick={cite(p.id)}>{p.label}<sup>{p.ordinal + 1}</sup></button
-              >
-            {:else}
-              {#each cells(p.text) as cell, ci (ci)}<span class="cell">{cell.trim()}</span>{/each}
-            {/if}
+        {@const cells = tableCells(row)}
+        <div
+          class="row"
+          class:head={ri === 0 || !isTableRow(lines[ri - 1] ?? [])}
+          class:two={cells.length === 2}
+        >
+          {#each cells as cell, ci (ci)}
+            <span class="cell">
+              {#each cell as p, pi (pi)}
+                {#if p.kind === 'cite'}<button
+                    class="cite"
+                    class:bare={!p.label}
+                    class:focused={focused === p.id}
+                    title={p.title}
+                    onclick={cite(p.id)}>{p.label}<sup>{p.ordinal + 1}</sup></button
+                  >{:else}{p.text}{/if}
+              {/each}
+            </span>
           {/each}
         </div>
       {/if}
@@ -66,11 +71,16 @@
   }
   .row {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: 6px 14px;
     padding: 6px 0;
     border-bottom: 1px solid rgba(241, 239, 233, 0.08);
     font-size: 13px;
+  }
+  .row.two {
+    grid-template-columns: 1fr 2fr;
+    grid-auto-flow: row;
   }
   .row.head {
     color: var(--fg-muted);

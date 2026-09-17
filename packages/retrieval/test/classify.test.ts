@@ -14,6 +14,17 @@ describe('classify', () => {
     const c = classify('any k8s experience?', graph);
     expect(c.matchedNodes.map((i) => graph.nodes[i]?.id)).toEqual(['skill/kubernetes']);
   });
+  test('a single-word title needs its own casing; multi-word names match loosely', () => {
+    expect(classify('what effect did your work have?', graph).mode).toBe('hybrid');
+    expect(
+      classify('Tell me about Effect', graph).matchedNodes.map((i) => graph.nodes[i]?.id),
+    ).toEqual(['skill/effect']);
+    expect(
+      classify('tell me about the streaming ingestion work', graph).matchedNodes.map(
+        (i) => graph.nodes[i]?.id,
+      ),
+    ).toEqual(['project/ingestion']);
+  });
   test('a Node Type name seeds every Node of that type', () => {
     const c = classify('where did you get your education?', graph);
     expect(c.mode).toBe('entity');

@@ -311,10 +311,15 @@
       else restore(sp.i);
     }
     sparks = next;
-    sparkLabels = sparks.map((sp) => ({
+    // Assign only on change: a fresh array every frame would re-render every label.
+    const shown = sparks.map((sp) => ({
       i: sp.i,
       opacity: Math.round(envelope(sp.age) * 40) / 40,
     }));
+    const same =
+      shown.length === sparkLabels.length &&
+      shown.every((l, k) => sparkLabels[k]?.i === l.i && sparkLabels[k]?.opacity === l.opacity);
+    if (!same) sparkLabels = shown;
     invalidate();
   });
 
@@ -391,11 +396,20 @@
   let labelPos = $state<Record<number, [number, number, number]>>({});
   useTask(() => {
     if (!labels.length) return;
+    // Assign only when a label moved; a fresh object every frame would re-render every Billboard.
+    let changed = Object.keys(labelPos).length !== labels.length;
     const next: Record<number, [number, number, number]> = {};
     for (const { i } of labels) {
-      next[i] = [cur[i * 3] ?? 0, (cur[i * 3 + 1] ?? 0) + LABEL_LIFT, cur[i * 3 + 2] ?? 0];
+      const p: [number, number, number] = [
+        cur[i * 3] ?? 0,
+        (cur[i * 3 + 1] ?? 0) + LABEL_LIFT,
+        cur[i * 3 + 2] ?? 0,
+      ];
+      next[i] = p;
+      const old = labelPos[i];
+      if (!old || old.some((v, k) => Math.abs(v - (p[k] ?? 0)) > 1e-3)) changed = true;
     }
-    labelPos = next;
+    if (changed) labelPos = next;
   });
   const labelAt = (i: number): [number, number, number] =>
     labelPos[i] ?? [cur[i * 3] ?? 0, (cur[i * 3 + 1] ?? 0) + LABEL_LIFT, cur[i * 3 + 2] ?? 0];

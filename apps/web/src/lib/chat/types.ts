@@ -21,6 +21,28 @@ export interface Message {
   error?: string;
 }
 
+/**
+ * Cells of one Markdown table row, each a list of parts, so a Citation stays inside the cell it was
+ * written in. The outer pipes produce empty edge cells, which are dropped.
+ */
+export const tableCells = (row: ReadonlyArray<Part>): Array<Array<Part>> => {
+  const cells: Array<Array<Part>> = [[]];
+  for (const p of row) {
+    if (p.kind === 'cite') {
+      cells[cells.length - 1]!.push(p);
+      continue;
+    }
+    p.text.split('|').forEach((seg, i) => {
+      if (i > 0) cells.push([]);
+      if (seg) cells[cells.length - 1]!.push({ kind: 'text', text: seg });
+    });
+  }
+  const blank = (c: Array<Part>) => c.every((p) => p.kind === 'text' && !p.text.trim());
+  while (cells.length && blank(cells[0]!)) cells.shift();
+  while (cells.length && blank(cells[cells.length - 1]!)) cells.pop();
+  return cells;
+};
+
 /** Split streamed Markdown-ish text into rows so tables render as rows without a Markdown library. */
 export const rows = (parts: ReadonlyArray<Part>): Array<Array<Part>> => {
   const out: Array<Array<Part>> = [[]];

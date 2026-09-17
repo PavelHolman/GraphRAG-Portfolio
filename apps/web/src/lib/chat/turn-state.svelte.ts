@@ -79,7 +79,7 @@ export class TurnState {
       const a = this.messages[i + 1];
       if (q?.role !== 'visitor' || a?.role !== 'answer') continue;
       const text = (m: Message) =>
-        m.parts.map((p) => (p.kind === 'text' ? p.text : p.title)).join('');
+        m.parts.map((p) => (p.kind === 'text' ? p.text : p.label)).join('');
       out.push({ prompt: text(q), answer: text(a) });
     }
     return out.slice(-3).filter((h) => h.prompt.length + h.answer.length < 1800);

@@ -20,12 +20,13 @@ const TYPE_WORDS: Record<NodeType, ReadonlyArray<string>> = {
   domain: ['domains', 'industries'],
 };
 
-export const normalizeText = (s: string): string =>
+const tokenize = (s: string): string =>
   ` ${s
-    .toLowerCase()
     .replace(/[^\p{L}\p{N}.+#]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()} `;
+
+export const normalizeText = (s: string): string => tokenize(s).toLowerCase();
 
 export const wordCount = (s: string): number => s.trim().split(/\s+/).filter(Boolean).length;
 
@@ -35,6 +36,7 @@ export const classify = (prompt: string, graph: GraphIndex): Classification => {
   const lineBreaks = (prompt.match(/\n/g) ?? []).length;
   const bullets = (prompt.match(/^\s*(?:[-*•]|\d+[.)])\s+/gm) ?? []).length;
   const text = normalizeText(prompt);
+  const textCased = tokenize(prompt);
 
   // A pasted job description names many titles; its shape decides before any title match does.
   if (words > 80 || lineBreaks >= 3 || bullets >= 3) {
@@ -45,10 +47,16 @@ export const classify = (prompt: string, graph: GraphIndex): Classification => {
   if (words <= 16) {
     graph.nodes.forEach((n, i) => {
       if (n.hidden || n.type === 'person') return;
-      const names = [n.title, ...(n.aliases ?? [])]
-        .map((t) => normalizeText(t).trim())
-        .filter((t) => t.length >= 2);
-      if (names.some((name) => text.includes(` ${name} `))) matchedNodes.push(i);
+      // A single-word name only counts when written with its own casing ("Effect", "DX"), so an
+      // ordinary word in a question does not hijack the Prompt; multi-word names match loosely.
+      const hit = [n.title, ...(n.aliases ?? [])].some((raw) => {
+        const cased = tokenize(raw).trim();
+        if (cased.length < 2) return false;
+        return cased.includes(' ')
+          ? text.includes(` ${cased.toLowerCase()} `)
+          : textCased.includes(` ${cased} `);
+      });
+      if (hit) matchedNodes.push(i);
     });
   }
   let matchedType: NodeType | undefined;

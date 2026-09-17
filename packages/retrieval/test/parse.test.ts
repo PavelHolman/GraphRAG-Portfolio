@@ -43,6 +43,10 @@ describe('AnswerParser', () => {
     expect(text(parts)).toBe('Done.\n');
     expect(parts.at(-1)).toEqual({ type: 'followups', prompts: ['one', 'two', 'three'] });
   });
+  test('duplicate follow-ups are dropped', () => {
+    const parts = feed(['Done.\n```followups\n- Same?\n- Same?\n- Other?\n```']);
+    expect(parts.at(-1)).toEqual({ type: 'followups', prompts: ['Same?', 'Other?'] });
+  });
   test('markers inside follow-ups are stripped', () => {
     const parts = feed(['Done.\n```followups\n- How was [[skill/effect]] used?\n```']);
     expect(parts.at(-1)).toEqual({ type: 'followups', prompts: ['How was used?'] });

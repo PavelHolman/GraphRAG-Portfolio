@@ -21,18 +21,21 @@ const longestSuffixThatPrefixes = (buf: string, token: string): number => {
 };
 
 export const parseFollowups = (block: string): Array<string> =>
-  block
-    .split('\n')
-    .map((l) =>
-      l
-        .replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '')
-        // Markers do not belong in a follow-up; the model sometimes cites there anyway.
-        .replace(/\[\[[^\]]*\]\]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim(),
-    )
-    .filter((l) => l.length > 0 && l !== '```')
-    .slice(0, 3);
+  [
+    ...new Set(
+      block
+        .split('\n')
+        .map((l) =>
+          l
+            .replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '')
+            // Markers do not belong in a follow-up; the model sometimes cites there anyway.
+            .replace(/\[\[[^\]]*\]\]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim(),
+        )
+        .filter((l) => l.length > 0 && l !== '```'),
+    ),
+  ].slice(0, 3);
 
 export class AnswerParser {
   private buf = '';

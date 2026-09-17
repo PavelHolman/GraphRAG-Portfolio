@@ -108,13 +108,9 @@ export const turn = (request: TurnRequest): Stream.Stream<TurnEvent, never, Turn
             const valid =
               (isNodeId(id) && candidateNodeIds.has(id)) ||
               (isEdgeId(id) && candidateEdgeIds.has(id));
-            if (!valid) {
-              const node = isNodeId(id)
-                ? graph.nodes[graph.nodeIndex.get(id as NodeId) ?? -1]
-                : undefined;
-              if (node && !node.hidden) out.push({ type: 'text', delta: node.title });
-              continue;
-            }
+            // A marker outside the candidate Subgraph is dropped: the prompt asks the model to
+            // name the item before the marker, so the text already carries the mention.
+            if (!valid) continue;
             let ordinal = ordinals.get(id as GraphId);
             if (ordinal === undefined) {
               ordinal = ordinals.size;

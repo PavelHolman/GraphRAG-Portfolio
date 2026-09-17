@@ -103,7 +103,7 @@
 
   {#if followups.length && !streaming}
     <div class="follow">
-      {#each followups as f (f)}<button onclick={send(f)}>{f}</button>{/each}
+      {#each followups as f, i (i)}<button onclick={send(f)}>{f}</button>{/each}
     </div>
   {/if}
 </div>

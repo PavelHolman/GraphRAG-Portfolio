@@ -1,5 +1,5 @@
 import type { ArtifactEdge, ArtifactNode } from '@graphrag/schema';
-import { compareStart } from '@graphrag/schema';
+import { compareStart, startOf } from '@graphrag/schema';
 
 /** Section view models built server-side from the artifact. `docs/spec/page.md`. */
 export interface ExperienceItem {
@@ -117,15 +117,10 @@ export const buildPageModel = (
     const c = field(n, 'category') ?? 'other';
     groups.set(c, [...(groups.get(c) ?? []), n]);
   }
-  const spanKey = (n: ArtifactNode) =>
-    n.span
-      ? -Temporal.PlainDate.compare(
-          n.span.start.toString().length === 7
-            ? Temporal.PlainYearMonth.from(n.span.start.toString()).toPlainDate({ day: 1 })
-            : Temporal.PlainDate.from(n.span.start.toString()),
-          Temporal.PlainDate.from('2100-01-01'),
-        )
-      : Number.POSITIVE_INFINITY;
+  // Most recent span first; Skills without a span go last.
+  const EPOCH = Temporal.PlainDate.from('1970-01-01');
+  const spanKey = (n: ArtifactNode): number =>
+    n.span ? -EPOCH.until(startOf(n.span.start)).total({ unit: 'days' }) : Number.POSITIVE_INFINITY;
   const skills = [...groups.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([category, list]): SkillGroup => ({
