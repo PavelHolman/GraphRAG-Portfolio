@@ -27,7 +27,6 @@
     oninput,
   }: Props = $props();
   let draft = $state('');
-  let open = $state(false);
   const current = $derived(messages.filter((m) => m.role === 'answer').at(-1));
   const lastPrompt = $derived([...messages].reverse().find((m) => m.role === 'visitor'));
   const question = $derived(lastPrompt?.parts[0]?.kind === 'text' ? lastPrompt.parts[0].text : '');
@@ -37,12 +36,8 @@
     if (text) {
       onsend(text);
       draft = '';
-      open = false;
     } else onplayhint();
   }
-  const toggle = () => {
-    open = !open;
-  };
   const focusIn = () => oninput(true);
   const focusOut = () => oninput(draft.length > 0);
   const send = (p: string) => () => onsend(p);
@@ -54,16 +49,9 @@
 
 <div class="col">
   {#if current}
-    <section class="caption" class:open class:suggested={lastPrompt?.suggested} aria-live="polite">
+    <section class="caption" class:suggested={lastPrompt?.suggested} aria-live="polite">
       <div class="q">
         <span>{lastPrompt?.suggested ? '✦ ' : ''}{question}</span>
-        <button
-          class="toggle"
-          onclick={toggle}
-          aria-label={open ? 'collapse answer' : 'expand answer'}
-        >
-          {open ? '−' : '+'}
-        </button>
       </div>
       <div class="text">
         <Answer parts={current.parts} {oncite} {focused} />
@@ -225,31 +213,15 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .toggle {
-    flex: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    border: 1px solid rgba(241, 239, 233, 0.14);
-    background: none;
-    color: var(--fg-muted);
-    cursor: pointer;
-  }
   /* The whole Answer stays reachable: the text scrolls inside the caption, never behind the chips. */
   .text {
     max-height: 34vh;
     overflow-y: auto;
     padding-right: 6px;
   }
-  .caption.open .text {
-    max-height: 62vh;
-  }
   @media (max-width: 700px) {
     .text {
       max-height: 26vh;
-    }
-    .caption.open .text {
-      max-height: 50vh;
     }
   }
   .caret {
