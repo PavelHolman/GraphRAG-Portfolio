@@ -11,6 +11,7 @@ import { build, check, diffGenerated, readCache, writeGenerated } from './build.
 import { CacheOnlyEmbedderLayer } from './embed.ts';
 import { exists, pathJoin, writeText } from './fs.ts';
 import { loadGraphIndex } from './load-artifact.ts';
+import { evalPrompts } from './eval-prompts.ts';
 
 const root = pathJoin(import.meta.dir, '..', '..', '..');
 const CONTENT_DIR = pathJoin(root, 'content');
@@ -61,7 +62,8 @@ const cmdIndex = (verify: boolean) =>
           first?.vector.length ?? 768,
         )
       : yield* pickEmbedder;
-    const result = yield* build(CONTENT_DIR, cache, { verify, generatedAt }).pipe(
+    const queries = yield* evalPrompts(pathJoin(root, 'evals', 'cases'));
+    const result = yield* build(CONTENT_DIR, cache, { verify, generatedAt, queries }).pipe(
       Effect.provide(layer),
     );
     if (verify) {

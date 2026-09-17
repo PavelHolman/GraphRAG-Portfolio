@@ -1,4 +1,4 @@
-import { Data, Effect, Layer, Schema } from 'effect';
+import { Data, Effect, Schema } from 'effect';
 import type {
   ArtifactEdge,
   ArtifactNode,
@@ -14,13 +14,14 @@ import {
   encodeArtifact,
 } from '@graphrag/schema';
 import {
-  EmbedError,
   Embedder,
   GraphArtifact,
   makeGraphIndex,
+  requirementLines,
   retrieve,
   type GraphIndex,
 } from '@graphrag/retrieval';
+import { CachedTextEmbedderLayer } from '@graphrag/retrieval/adapters';
 import { deriveSpans } from './derive.ts';
 import { CacheMiss, EmbeddingCache, edgeText, embedWithCache, nodeText, sha256 } from './embed.ts';
 import { ensureDir, pathJoin, readBytes, readTextIfExists, writeBytes, writeText } from './fs.ts';
@@ -100,7 +101,12 @@ export const check = (contentDir: string) =>
 export const build = (
   contentDir: string,
   cache: EmbeddingCache,
-  options: { readonly verify: boolean; readonly generatedAt: string },
+  options: {
+    readonly verify: boolean;
+    readonly generatedAt: string;
+    /** Prompts whose query vectors are cached too (eval cases), so `bun eval` runs offline. */
+    readonly queries?: ReadonlyArray<string>;
+  },
 ) =>
   Effect.gen(function* () {
     const { content, validated, issues } = yield* check(contentDir);
@@ -124,11 +130,20 @@ export const build = (
       }),
     ).pipe(Effect.withSpan('layout'));
 
-    // Hint prompts are embedded and cached too, so their candidate ids rebuild offline in CI.
+    // Hint prompts and eval-case queries (plus their requirement lines, which match mode embeds one
+    // by one) are cached as well, so hints rebuild and `bun eval` runs offline in CI.
+    const queryTexts = new Set<string>();
+    for (const q of [...content.hints.map((h) => h.prompt), ...(options.queries ?? [])]) {
+      queryTexts.add(q);
+      queryTexts.add(q.slice(0, 2000));
+      for (const line of requirementLines(q)) queryTexts.add(line);
+    }
+    const queryItems: Array<{ id: string; text: string }> = [];
+    for (const text of queryTexts) queryItems.push({ id: `query:${yield* sha256(text)}`, text });
     const items = [
       ...nodes.map((n) => ({ id: n.id, text: nodeText(n) })),
       ...edges.map((e) => ({ id: e.id, text: edgeText(e, titles) })),
-      ...content.hints.map((h) => ({ id: `hint:${h.id}`, text: h.prompt })),
+      ...queryItems,
     ];
     const embedded = yield* embedWithCache(items, cache, { verify: options.verify }).pipe(
       Effect.withSpan('embed'),
@@ -139,27 +154,12 @@ export const build = (
       nodes.length * dims,
       (nodes.length + edges.length) * dims,
     );
-    const hintVectors = new Map<string, Float32Array>();
-    content.hints.forEach((h, i) => {
+    const queryVectors = new Map<string, Float32Array>();
+    queryItems.forEach((q, i) => {
       const off = (nodes.length + edges.length + i) * dims;
-      hintVectors.set(h.prompt, embedded.vectors.slice(off, off + dims));
+      queryVectors.set(q.id.slice('query:'.length), embedded.vectors.slice(off, off + dims));
     });
-    const hintEmbedder = Layer.succeed(Embedder, {
-      model: embedded.model,
-      dimensions: dims,
-      embed: (texts) =>
-        Effect.forEach(texts, (t) => {
-          const v = hintVectors.get(t);
-          return v
-            ? Effect.succeed(v)
-            : Effect.fail(
-                new EmbedError({
-                  message: `no cached vector for hint ${JSON.stringify(t)}`,
-                  retryable: false,
-                }),
-              );
-        }),
-    });
+    const hintEmbedder = CachedTextEmbedderLayer(embedded.model, dims, queryVectors);
 
     const contentHash = yield* sha256(
       content.sources.map((s) => `${s.path}\n${s.text}`).join('\n=====\n'),

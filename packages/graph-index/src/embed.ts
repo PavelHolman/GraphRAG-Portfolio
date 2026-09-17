@@ -1,6 +1,7 @@
 import { Data, Effect, Layer, Schema } from 'effect';
 import type { NodeId } from '@graphrag/schema';
 import { Embedder, type EmbedderShape, EmbedError } from '@graphrag/retrieval';
+import { sha256 } from '@graphrag/retrieval/adapters';
 import type { LoadedNode } from './load.ts';
 import type { ResolvedEdge } from './validate.ts';
 
@@ -35,11 +36,7 @@ export const edgeText = (e: ResolvedEdge, titles: ReadonlyMap<NodeId, string>): 
   e.note ??
   `${titles.get(e.source) ?? e.source} ${EDGE_VERB[e.type]} ${titles.get(e.target) ?? e.target}`;
 
-export const sha256 = (text: string) =>
-  Effect.promise(async () => {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
-  });
+export { sha256 } from '@graphrag/retrieval/adapters';
 
 export class CacheMiss extends Data.TaggedError('CacheMiss')<{
   readonly ids: ReadonlyArray<string>;

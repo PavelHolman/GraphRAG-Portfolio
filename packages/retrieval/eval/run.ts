@@ -7,13 +7,11 @@ import YAML from 'yaml';
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { TurnEvent } from '@graphrag/schema';
-import { loadGraphIndex } from '@graphrag/graph-index';
+import { loadGraphIndex, readCache } from '@graphrag/graph-index';
 import { GraphArtifact, retrieve, turn } from '../src/index.ts';
 import {
-  LOCAL_HASHING_MODEL,
-  LocalHashingEmbedderLayer,
+  CachedTextEmbedderLayer,
   OpenAiCompatLanguageModelLayer,
-  WorkersAiRestEmbedderLayer,
   workersAiBaseUrl,
 } from '../src/adapters/index.ts';
 
@@ -21,6 +19,7 @@ const root = join(import.meta.dir, '..', '..', '..');
 const CASES = join(root, 'evals', 'cases');
 const RESULTS = join(root, 'evals', 'results');
 const GENERATED = join(root, 'packages', 'graph-index', 'generated');
+const CACHE_FILE = join(root, 'packages', 'graph-index', '.cache', 'embeddings.json');
 
 const Case = Schema.Struct({
   id: Schema.String,
@@ -76,19 +75,15 @@ const main = Effect.gen(function* () {
   const known = new Set([...index.nodes.map((n) => n.id), ...index.edges.map((e) => e.id)]);
   const token = process.env.WORKERS_AI_TOKEN;
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  // Query vectors come from the committed cache (content:index embeds eval prompts too), so this
+  // tier never needs a credential. A miss means a case changed without re-indexing.
   const model = index.artifact.meta.embedding.model;
-  const embedder =
-    model === LOCAL_HASHING_MODEL
-      ? LocalHashingEmbedderLayer
-      : token && accountId
-        ? WorkersAiRestEmbedderLayer({ accountId, token })
-        : undefined;
-  if (!embedder) {
-    console.error(
-      `artifact was embedded with ${model}; set WORKERS_AI_TOKEN and CLOUDFLARE_ACCOUNT_ID`,
-    );
-    return 1;
+  const cache = yield* readCache(CACHE_FILE);
+  const byHash = new Map<string, Float32Array>();
+  for (const entry of Object.values(cache)) {
+    if (entry.model === model) byHash.set(entry.hash, Float32Array.from(entry.vector));
   }
+  const embedder = CachedTextEmbedderLayer(model, index.dimensions, byHash);
   const base = Layer.merge(embedder, GraphArtifact.layer(index));
 
   const misses: Array<string> = [];
