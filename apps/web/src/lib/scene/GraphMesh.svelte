@@ -17,7 +17,7 @@
   }
   let { graph, positions, subgraph, preview, onpick }: Props = $props();
 
-  const { invalidate, scene } = useThrelte();
+  const { invalidate, scene, renderer } = useThrelte();
   scene.fog = new THREE.FogExp2(PALETTE.bg, 0.016);
   // The graph and its base Layout are fixed for the life of the component; captured once.
   const nodes = graph.nodes;
@@ -128,6 +128,12 @@
     fog: true,
   });
   const edgeTgt = new Float32Array(edges.length * 6);
+  /** Edge indices incident to each Node, for hover highlighting. */
+  const incident: Array<Array<number>> = nodes.map(() => []);
+  edges.forEach((e, ei) => {
+    incident[e.source]?.push(ei);
+    incident[e.target]?.push(ei);
+  });
   const EDGE_DIM = new THREE.Color(PALETTE.edgeDim);
   const EDGE_REST = new THREE.Color(PALETTE.edgeRest);
   const EDGE_HI = new THREE.Color(PALETTE.edgeHi);
@@ -186,15 +192,46 @@
     });
     invalidate();
   }
+  // Hover: the star under the pointer goes coral with a bigger glow, its Edges brighten and its
+  // title shows. Applied on top of whatever Highlight state the base targets carry.
+  let hovered = $state<number | null>(null);
+  const HOVER_EDGE = new THREE.Color(PALETTE.seed).lerp(EDGE_HI, 0.35);
+  function applyHover() {
+    const i = hovered;
+    if (i === null) return;
+    tgtColor[i * 3] = SEED_C.r;
+    tgtColor[i * 3 + 1] = SEED_C.g;
+    tgtColor[i * 3 + 2] = SEED_C.b;
+    tgtSize[i] = (baseSize[i] ?? 0) + 1.3;
+    tgtGlow[i] = (baseGlow[i] ?? 0) + 1.2;
+    for (const ei of incident[i] ?? []) {
+      for (const k of [0, 3]) {
+        edgeTgt[ei * 6 + k] = HOVER_EDGE.r;
+        edgeTgt[ei * 6 + k + 1] = HOVER_EDGE.g;
+        edgeTgt[ei * 6 + k + 2] = HOVER_EDGE.b;
+      }
+    }
+  }
+  const hover = (e: { index?: number }) => {
+    const i = e.index ?? null;
+    if (i !== hovered) hovered = i;
+  };
+  const unhover = () => {
+    hovered = null;
+  };
+  $effect(() => {
+    void hovered;
+    retarget(subgraph, preview);
+    applyHover();
+    renderer.domElement.style.cursor = hovered === null ? '' : 'pointer';
+  });
+
   retarget(null, null);
   colorAttr.set(tgtColor);
   sizeAttr.set(tgtSize);
   glowAttr.set(tgtGlow);
   edgeCol.set(edgeTgt);
 
-  $effect(() => {
-    retarget(subgraph, preview);
-  });
   $effect(() => {
     tgtPos = positions;
     invalidate();
@@ -222,11 +259,14 @@
     if (n < 2) return undefined;
     for (let tries = 0; tries < 8; tries++) {
       const i = Math.floor(rnd() * n);
-      if (nodes[i]?.type !== 'person' && !sparks.some((sp) => sp.i === i)) return i;
+      if (nodes[i]?.type !== 'person' && i !== hovered && !sparks.some((sp) => sp.i === i)) {
+        return i;
+      }
     }
     return undefined;
   };
   const restore = (i: number) => {
+    if (i === hovered) return;
     tgtColor[i * 3] = baseColor[i * 3] ?? 0;
     tgtColor[i * 3 + 1] = baseColor[i * 3 + 1] ?? 0;
     tgtColor[i * 3 + 2] = baseColor[i * 3 + 2] ?? 0;
@@ -342,7 +382,12 @@
   const seedLabels = $derived(
     subgraph ? [...subgraph.seeds].slice(0, 12).map((i) => ({ i, opacity: 1 })) : [],
   );
-  const labels = $derived(subgraph ? seedLabels : sparkLabels);
+  const labels = $derived.by(() => {
+    const base = subgraph ? seedLabels : sparkLabels;
+    if (hovered === null) return base;
+    const h = hovered;
+    return [{ i: h, opacity: 1 }, ...base.filter((l) => l.i !== h)];
+  });
   let labelPos = $state<Record<number, [number, number, number]>>({});
   useTask(() => {
     if (!labels.length) return;
@@ -362,7 +407,7 @@
 
 <T is={dust} />
 <T.LineSegments geometry={edgeGeo} material={edgeMat} />
-<T is={points} onclick={pick} {raycast} />
+<T is={points} onclick={pick} onpointermove={hover} onpointerleave={unhover} {raycast} />
 
 {#each labels as { i, opacity } (i)}
   <Billboard position={labelAt(i)}>
