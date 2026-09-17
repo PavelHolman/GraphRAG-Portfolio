@@ -10,7 +10,7 @@ The Knowledge Graph is hand-authored, single-subject, and consumed by GraphRAG-s
 
 | Type         | Instances   | Per-type fields                                                                                                |
 | ------------ | ----------- | -------------------------------------------------------------------------------------------------------------- |
-| Person       | exactly one | `location`, `links` (label → URL), `languages` (language → proficiency)                                        |
+| Person       | exactly one | `location`, `links` (label → URL), `languages` (language → proficiency), `availability`                        |
 | Skill        | many        | `category` ∈ `language \| framework \| platform \| practice \| leadership`, `aliases`                          |
 | Project      | many        | `start`, `end`, `url`, `repo`                                                                                  |
 | Experience   | many        | `start` (required), `end`, `role`, `employment` ∈ `full-time \| part-time \| contract \| freelance \| founder` |

@@ -1,6 +1,7 @@
 <script lang="ts">
   // Sticky header: name left, anchors centre, links and the CV button right; translucent over the
   // Hero, opaque once scrolled past it. docs/spec/page.md.
+  import Icon from './Icon.svelte';
   interface Props {
     name: string;
     links: Record<string, string>;
@@ -8,7 +9,6 @@
   }
   let { name, links, scrolled }: Props = $props();
   const anchors = ['about', 'experience', 'education', 'projects', 'skills', 'contact'];
-  const icon: Record<string, string> = { github: 'GH', linkedin: 'in', email: '@' };
   const initials = $derived(
     name
       .split(/\s+/)
@@ -33,7 +33,7 @@
         {href}
         target={href.startsWith('mailto:') ? undefined : '_blank'}
         rel="me noopener"
-        aria-label={k}>{icon[k] ?? k}</a
+        aria-label={k}><Icon name={k} size={15} /></a
       >
     {/each}
     {#if links.cv}<a class="cta" href={links.cv} target="_blank" rel="noopener">Download CV</a>{/if}
@@ -96,25 +96,26 @@
     gap: 6px;
   }
   .links a {
-    font:
-      10px/1 'Azeret Mono',
-      monospace;
-    letter-spacing: 0.08em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
     color: var(--fg);
     text-decoration: none;
     border: 1px solid var(--line);
     border-radius: 999px;
-    padding: 8px 10px;
   }
   .links a:hover {
     border-color: var(--accent);
     color: var(--accent);
   }
   .links .cta {
+    width: auto;
+    height: auto;
     font:
       500 12px 'DM Sans',
       sans-serif;
-    letter-spacing: 0;
     background: var(--accent);
     border-color: var(--accent);
     color: var(--bg);

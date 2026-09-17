@@ -120,7 +120,7 @@ const cmdAsk = (prompt: string) =>
 
 const TEMPLATES: Record<NodeType, string> = {
   person:
-    'lede: One or two sentences for the About section.\nlocation: City, Country\nlinks:\n  email: mailto:you@example.com\n  github: https://github.com/you\n  linkedin: https://www.linkedin.com/in/you\nlanguages:\n  English: professional working proficiency',
+    'lede: One or two sentences for the About section.\nlocation: City, Country\nlinks:\n  email: mailto:you@example.com\n  github: https://github.com/you\n  linkedin: https://www.linkedin.com/in/you\nlanguages:\n  English: professional working proficiency\n# availability: Open to remote work',
   skill:
     'category: language | framework | platform | practice | leadership\naliases: []\n# part-of: [skill/broader]\n# related-to: [skill/other]',
   project:

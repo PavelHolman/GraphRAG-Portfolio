@@ -1,5 +1,5 @@
 ---
-title: Algorithms and competitive programming
+title: Competitive programming
 summary: Three ICPC finals (CERC 2024, CERC 2025, EUC 2026) and CTU Open problem authoring.
 category: practice
 aliases: [ICPC, algorithms, data structures]

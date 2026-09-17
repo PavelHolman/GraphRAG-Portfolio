@@ -48,6 +48,8 @@ export const PersonFrontmatter = Schema.Struct({
   links: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
   /** Spoken languages, label to proficiency, e.g. `English: professional (FCE, B2)`. */
   languages: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+  /** One line on what the person is open to, shown in the About facts. */
+  availability: Schema.optionalKey(Schema.String),
 });
 
 export const SkillFrontmatter = Schema.Struct({

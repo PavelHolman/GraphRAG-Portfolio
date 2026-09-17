@@ -2,6 +2,7 @@
   // About, Experience, Education, Skills, Contact: server-rendered from the artifact, in a single
   // centred column with big section titles, alternating backgrounds and soft cards. docs/spec/page.md.
   import type { PageModel } from './model.ts';
+  import Icon from './Icon.svelte';
   interface Props {
     model: PageModel;
     onask: (prompt: string) => void;
@@ -15,6 +16,12 @@
       .replace(/^mailto:/, '')
       .replace(/^https?:\/\/(www\.)?/, '')
       .replace(/\/$/, '');
+  // Contact cards show the handle, not the URL; LinkedIn slugs are noise, so the name stands in.
+  const handle = (k: string, href: string) => {
+    if (href.startsWith('mailto:')) return href.slice(7);
+    if (k === 'linkedin') return model.person.name;
+    return href.replace(/\/$/, '').split('/').pop() ?? href;
+  };
   const email = $derived(model.person.links.email);
 </script>
 
@@ -26,7 +33,7 @@
         {#if model.person.lede}<p class="lede">{model.person.lede}</p>{/if}
         {#each paragraphs(model.person.body) as p (p)}<p>{p}</p>{/each}
       </article>
-      <aside class="card facts">
+      <aside class="card facts askable">
         <h3>Details</h3>
         <dl>
           <dt>Name</dt>
@@ -37,6 +44,8 @@
             <dd>{model.person.location}</dd>{/if}
           {#if email}<dt>Email</dt>
             <dd><a href={email}>{linkValue(email)}</a></dd>{/if}
+          {#if model.person.availability}<dt>Open to</dt>
+            <dd>{model.person.availability}</dd>{/if}
           {#each Object.entries(model.person.languages) as [lang, level] (lang)}
             <dt>{lang}</dt>
             <dd>{level}</dd>
@@ -55,13 +64,19 @@
     <h2>Experience</h2>
     <div class="stack">
       {#each model.experience as x (x.id)}
-        <article class="card">
+        <article class="card askable">
           <header>
             <h3>{x.role ?? x.title}</h3>
             <p class="meta">
-              <span class="org">{x.organization ?? ''}</span>{#if x.organization && x.range}<span
-                  class="sep">·</span
-                >{/if}<span>{x.range}</span>
+              {#if x.organizationUrl}<a
+                  class="org"
+                  href={x.organizationUrl}
+                  target="_blank"
+                  rel="noopener">{x.organization ?? ''}</a
+                >{:else}<span class="org">{x.organization ?? ''}</span
+                >{/if}{#if x.organization && x.range}<span class="sep">·</span>{/if}<span
+                >{x.range}</span
+              >
             </p>
           </header>
           {#each paragraphs(x.body) as p (p)}<p>{p}</p>{/each}
@@ -69,7 +84,9 @@
             <ul class="projects">
               {#each x.projects as p (p.id)}
                 <li>
-                  <b>{p.title}</b>{#if p.led}<span class="tag">led</span>{/if}
+                  {#if p.url}<a class="ext" href={p.url} target="_blank" rel="noopener"
+                      ><b>{p.title}</b><Icon name="link" size={11} /></a
+                    >{:else}<b>{p.title}</b>{/if}{#if p.led}<span class="tag">led</span>{/if}
                   {#if p.summary}<span class="sum">{p.summary}</span>{/if}
                 </li>
               {/each}
@@ -98,7 +115,7 @@
       <h2>Education</h2>
       <div class="stack">
         {#each model.education as e (e.id)}
-          <article class="card">
+          <article class="card askable">
             <header>
               <h3>{[e.degree, e.field].filter(Boolean).join(' in ') || e.title}</h3>
               <p class="meta">
@@ -112,7 +129,9 @@
               <ul class="projects">
                 {#each e.projects as p (p.id)}
                   <li>
-                    <b>{p.title}</b>
+                    {#if p.url}<a class="ext" href={p.url} target="_blank" rel="noopener"
+                        ><b>{p.title}</b><Icon name="link" size={11} /></a
+                      >{:else}<b>{p.title}</b>{/if}
                     {#if p.summary}<span class="sum">{p.summary}</span>{/if}
                   </li>
                 {/each}
@@ -134,16 +153,26 @@
       <h2>Projects</h2>
       <div class="stack">
         {#each model.projects as p (p.id)}
-          <article class="card">
+          <article class="card askable">
             <header>
               <h3>{p.title}</h3>
               <p class="meta">
                 {#if p.range}<span>{p.range}</span>{/if}
-                {#if p.range && (p.url || p.repo)}<span class="sep">·</span>{/if}
-                {#if p.url}<a href={p.url} target="_blank" rel="noopener">{linkValue(p.url)}</a
+                {#if p.url}<a
+                    class="iconbtn"
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label="website"
+                    title={linkValue(p.url)}><Icon name="link" size={13} /></a
                   >{/if}
-                {#if p.url && p.repo}<span class="sep">·</span>{/if}
-                {#if p.repo}<a href={p.repo} target="_blank" rel="noopener">{linkValue(p.repo)}</a
+                {#if p.repo}<a
+                    class="iconbtn"
+                    href={p.repo}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label="repository"
+                    title={linkValue(p.repo)}><Icon name="github" size={13} /></a
                   >{/if}
               </p>
             </header>
@@ -164,18 +193,19 @@
 <section id="skills" class="section">
   <div class="container">
     <h2>Skills</h2>
-    <div class="grid">
+    <div class="stack">
       {#each model.skills as g (g.category)}
         <article class="card">
           <h3 class="cat">{g.category}</h3>
-          <ul class="chips">
+          <ul class="chips uniform">
             {#each g.skills as s (s.id)}
               <li>
                 <button
                   class="chip"
                   title={s.summary ?? ''}
                   onclick={ask(`Tell me about your ${s.title} work`)}
-                  >{s.title}{#if s.span}<span class="span">{s.span}</span>{/if}</button
+                  ><span class="title">{s.title}</span>{#if s.span}<span class="span">{s.span}</span
+                    >{/if}</button
                 >
               </li>
             {/each}
@@ -197,8 +227,8 @@
           rel="me noopener"
           target={href.startsWith('mailto:') ? undefined : '_blank'}
         >
-          <span class="label">{linkLabel(k)}</span>
-          <span class="value">{linkValue(href)}</span>
+          <span class="label"><Icon name={k} size={14} />{linkLabel(k)}</span>
+          <span class="value">{handle(k, href)}</span>
         </a>
       {/each}
     </div>
@@ -240,11 +270,33 @@
     margin-bottom: 14px;
   }
   .card {
+    position: relative;
     background: var(--panel);
     border: 1px solid var(--line);
     border-radius: 14px;
     padding: 28px;
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  }
+  /* Cards with an "ask" affordance keep it in the top-right corner, clear of the title. */
+  .askable > header,
+  .askable > h3 {
+    padding-right: 170px;
+  }
+  .askable > .ask {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    margin: 0;
+  }
+  @media (max-width: 600px) {
+    .askable > header,
+    .askable > h3 {
+      padding-right: 0;
+    }
+    .askable > .ask {
+      position: static;
+      margin-top: 6px;
+    }
   }
   .two {
     display: grid;
@@ -285,6 +337,34 @@
   }
   .org {
     color: var(--fg);
+    text-decoration: none;
+  }
+  a.org:hover {
+    color: var(--accent);
+  }
+  .iconbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--fg);
+  }
+  .iconbtn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .ext {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--fg);
+    text-decoration: none;
+  }
+  .ext:hover {
+    color: var(--accent);
   }
   .sep {
     color: var(--fg-muted);
@@ -357,6 +437,35 @@
     letter-spacing: 0.06em;
     color: var(--fg-muted);
   }
+  /* Skills: every chip the same size, one per grid cell, titles wrapping to at most two lines. */
+  .chips.uniform {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .chips.uniform li {
+    display: grid;
+    border-radius: 12px;
+  }
+  .chips.uniform .chip {
+    width: 100%;
+    min-height: 62px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-align: center;
+    line-height: 1.25;
+  }
+  .chips.uniform .title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   .chips li:hover {
     border-color: var(--accent);
   }
@@ -407,6 +516,9 @@
     color: var(--fg);
   }
   .contact .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     font:
       10px/1 'Azeret Mono',
       monospace;

@@ -41,6 +41,9 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "availability": {
+            "type": "string"
           }
         },
         "required": [

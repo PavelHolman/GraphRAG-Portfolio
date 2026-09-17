@@ -25,4 +25,4 @@ uses:
 in-domain: [domain/lab-operations, domain/developer-tooling]
 ---
 
-Co-founder and principal engineer of poqet since June 2026, leading a three-person team building SLIM, a lab operations platform for academic laboratories. Main responsibility: the agentic development tooling the team works with, a Claude Code harness with TypeScript automation, architectural rules and guardrails, and evaluations, alongside application development in SvelteKit, Effect and SurrealDB. Does not own infrastructure at poqet.
+Co-founder and principal engineer of poqet since June 2026, leading a three-person team building SLIM, a lab operations platform for academic laboratories. Main responsibility: the agentic development tooling the team works with, a Claude Code harness with TypeScript automation, architectural rules and guardrails, and evaluations, alongside application development in SvelteKit, Effect and SurrealDB.
