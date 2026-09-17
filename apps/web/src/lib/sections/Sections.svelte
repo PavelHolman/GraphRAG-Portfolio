@@ -486,6 +486,7 @@
     align-items: baseline;
   }
   .projects .sum {
+    flex-basis: 100%;
     color: var(--fg-muted);
   }
   .tag {
