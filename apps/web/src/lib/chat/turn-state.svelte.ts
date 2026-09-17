@@ -56,6 +56,18 @@ export class TurnState {
     this.edgeIndex = new Map(graph.edges.map((e, i) => [e.id, i]));
   }
 
+  /** Close the conversation: abort anything in flight and return the Scene to rest. */
+  reset(): void {
+    this.abort?.abort();
+    this.runCounter++;
+    this.messages = [];
+    this.followups = [];
+    this.streaming = false;
+    this.focused = null;
+    this.subgraph = null;
+    this.previousUsedIds = [];
+  }
+
   focusNodeIndex(): number | null {
     return this.focused === null ? null : (this.nodeIndex.get(this.focused) ?? null);
   }

@@ -53,6 +53,7 @@
     document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
     turn.run(prompt, 'hint');
   };
+  const onclose = () => turn.reset();
   const onpick = (i: number) => {
     picked = i;
   };
@@ -138,7 +139,7 @@
   </div>
 
   <!-- Left column: the intro copy, replaced by the conversation once a question is asked. -->
-  <div class="lead">
+  <div class="lead" class:conversing>
     <div class="intro" class:aside={conversing}>
       <h1>{data.model.person.name}</h1>
       {#if data.model.person.headline}<p class="headline">{data.model.person.headline}</p>{/if}
@@ -164,6 +165,7 @@
       {onplayhint}
       {oncite}
       {oninput}
+      {onclose}
     />
   </div>
 
@@ -217,6 +219,12 @@
     gap: 22px;
     z-index: 5;
   }
+  /* With a question open the column is anchored at the top, so the streaming answer only grows
+     downward and the text already read never moves. */
+  .lead.conversing {
+    top: 12vh;
+    transform: none;
+  }
   .intro {
     transition: opacity 0.3s ease;
   }
@@ -225,7 +233,8 @@
   }
   @media (max-width: 760px) {
     /* Phones: the intro sits at the top, the chat sheet at the bottom of the Hero. */
-    .lead {
+    .lead,
+    .lead.conversing {
       position: static;
       transform: none;
       width: auto;

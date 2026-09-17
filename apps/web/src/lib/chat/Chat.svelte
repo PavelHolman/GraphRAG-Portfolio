@@ -14,6 +14,7 @@
     onplayhint: () => void;
     oncite: (id: string) => void;
     oninput: (active: boolean) => void;
+    onclose: () => void;
   }
   let {
     messages,
@@ -25,6 +26,7 @@
     onplayhint,
     oncite,
     oninput,
+    onclose,
   }: Props = $props();
   let draft = $state('');
   const current = $derived(messages.filter((m) => m.role === 'answer').at(-1));
@@ -59,6 +61,7 @@
     <section class="caption" class:suggested={lastPrompt?.suggested} aria-live="polite">
       <div class="q">
         <span>{lastPrompt?.suggested ? '✦ ' : ''}{question}</span>
+        <button class="close" onclick={onclose} aria-label="close the answer">×</button>
       </div>
       <div class="text">
         <Answer parts={current.parts} {oncite} {focused} />
@@ -223,6 +226,23 @@
   }
   .q {
     min-width: 0;
+  }
+  .close {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid rgba(241, 239, 233, 0.14);
+    background: none;
+    color: var(--fg-muted);
+    font:
+      14px/1 'DM Sans',
+      sans-serif;
+    cursor: pointer;
+  }
+  .close:hover {
+    color: var(--accent);
+    border-color: var(--accent);
   }
   .q span {
     min-width: 0;
