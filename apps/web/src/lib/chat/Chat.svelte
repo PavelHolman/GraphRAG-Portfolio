@@ -270,6 +270,8 @@
     min-width: 0;
     min-height: 0;
     overflow-y: auto;
+    /* Reserve the scrollbar's column from the start so text does not reflow when it appears. */
+    scrollbar-gutter: stable;
     padding-right: 6px;
   }
   .caret {
