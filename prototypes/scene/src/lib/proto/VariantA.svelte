@@ -4,11 +4,11 @@
 	import { T, useTask, useThrelte } from '@threlte/core';
 	import { CameraControls, interactivity } from '@threlte/extras';
 	import type CC from 'camera-controls';
-	import GraphMesh from './GraphMesh.svelte';
+	import GraphMesh, { type Style } from './GraphMesh.svelte';
 	import { forceLayout, relayout, type Graph, type Subgraph } from './graph';
 
-	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void; zoom?: number; pull?: number }
-	let { graph, subgraph, onpick, zoom = 1, pull = 0 }: Props = $props();
+	interface Props { graph: Graph; subgraph: Subgraph | null; onpick?: (i: number) => void; zoom?: number; pull?: number; style: Style }
+	let { graph, subgraph, onpick, zoom = 1, pull = 0, style }: Props = $props();
 	interactivity();
 	const base = forceLayout(graph);
 	const positions = $derived(relayout(base, subgraph, pull));
@@ -27,4 +27,4 @@
 		oncreate={(c) => c.addEventListener('controlstart', () => (idle = false))} />
 </T.PerspectiveCamera>
 
-<GraphMesh {graph} {positions} {subgraph} {onpick} />
+<GraphMesh {graph} {positions} {subgraph} {style} {onpick} />

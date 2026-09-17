@@ -8,13 +8,15 @@
 	import Switcher from '$lib/proto/Switcher.svelte';
 	import { makeGraph, makeTurns, type Subgraph } from '$lib/proto/graph';
 
+	// Iteration 3: the constellation look won, mild gravity shift won. Three flavours of the look.
 	const variants = [
-		{ key: 'A', name: 'Static layout', pull: 0 },
-		{ key: 'B', name: 'Mild gravity shift', pull: 0.45 },
-		{ key: 'C', name: 'Strong gravity shift', pull: 0.75 }
+		{ key: 'A', name: 'Ember', style: { name: 'Ember', pointScale: 1, seedGlow: 1.8, citedGlow: 0.7, haloK: 2.6, ring: 0, edgeHi: '#8a5f54', edgeRest: '#242220', dustCount: 700, dustOpacity: 0.55, upperLabels: false } },
+		{ key: 'B', name: 'Rings', style: { name: 'Rings', pointScale: 0.9, seedGlow: 0.5, citedGlow: 0.3, haloK: 3.5, ring: 1, edgeHi: '#a86e60', edgeRest: '#22201e', dustCount: 400, dustOpacity: 0.4, upperLabels: true } },
+		{ key: 'C', name: 'Nebula', style: { name: 'Nebula', pointScale: 1.15, seedGlow: 2.8, citedGlow: 1.3, haloK: 1.5, ring: 0, edgeHi: '#5a4640', edgeRest: '#1f1d1b', dustCount: 1300, dustOpacity: 0.7, upperLabels: false } }
 	];
-	const variant = $derived(page.url.searchParams.get('variant') ?? 'B');
-	const pull = $derived(variants.find((v) => v.key === variant)?.pull ?? 0.45);
+	const variant = $derived(page.url.searchParams.get('variant') ?? 'A');
+	const style = $derived(variants.find((v) => v.key === variant)?.style ?? variants[0].style);
+	const pull = 0.45;
 
 	const graph = makeGraph();
 	const turns = makeTurns(graph);
@@ -53,7 +55,7 @@
 <div class="stage">
 	<Canvas dpr={[1, 2]} renderMode="on-demand" shadows={false}>
 		{#key variant}
-			<VariantA {graph} {subgraph} {zoom} {pull} onpick={(i) => (picked = i)} />
+			<VariantA {graph} {subgraph} {zoom} {pull} {style} onpick={(i) => (picked = i)} />
 		{/key}
 	</Canvas>
 </div>

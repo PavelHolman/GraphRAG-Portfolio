@@ -7,14 +7,28 @@
 	import * as THREE from 'three';
 	import type { Graph, Subgraph } from './graph';
 
+	export interface Style {
+		name: string;
+		pointScale: number;   // multiplier on all point sizes
+		seedGlow: number;     // halo strength on seeds
+		citedGlow: number;    // halo strength on cited neighbours
+		haloK: number;        // gaussian falloff (lower = wider halo)
+		ring: number;         // 0..1 thin ring marker on seeds
+		edgeHi: string;       // cited edge colour
+		edgeRest: string;
+		dustCount: number;
+		dustOpacity: number;
+		upperLabels: boolean;
+	}
 	interface Props {
 		graph: Graph;
 		positions: Float32Array;
 		subgraph: Subgraph | null;
+		style: Style;
 		labelSeeds?: boolean;
 		onpick?: (index: number) => void;
 	}
-	let { graph, positions, subgraph, labelSeeds = true, onpick }: Props = $props();
+	let { graph, positions, subgraph, style, labelSeeds = true, onpick }: Props = $props();
 
 	const { invalidate, scene } = useThrelte();
 	scene.fog = new THREE.FogExp2('#161514', 0.016);
@@ -33,36 +47,40 @@
 	const colorAttr = new Float32Array(n * 3);
 	const sizeAttr = new Float32Array(n);
 	const glowAttr = new Float32Array(n);
+	const ringAttr = new Float32Array(n);
 	geo.setAttribute('position', new THREE.BufferAttribute(cur, 3));
+	geo.setAttribute('aRing', new THREE.BufferAttribute(ringAttr, 1));
 	geo.setAttribute('aColor', new THREE.BufferAttribute(colorAttr, 3));
 	geo.setAttribute('aSize', new THREE.BufferAttribute(sizeAttr, 1));
 	geo.setAttribute('aGlow', new THREE.BufferAttribute(glowAttr, 1));
 
 	const mat = new THREE.ShaderMaterial({
 		transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: true,
-		uniforms: { uDpr: { value: 1 }, ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog) },
+		uniforms: { uDpr: { value: 1 }, uHaloK: { value: style.haloK }, ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog) },
 		vertexShader: `
-			attribute vec3 aColor; attribute float aSize; attribute float aGlow;
-			varying vec3 vColor; varying float vGlow; varying float vFog;
+			attribute vec3 aColor; attribute float aSize; attribute float aGlow; attribute float aRing;
+			varying vec3 vColor; varying float vGlow; varying float vRing;
 			uniform float uDpr;
 			#include <fog_pars_vertex>
 			void main() {
-				vColor = aColor; vGlow = aGlow;
+				vColor = aColor; vGlow = aGlow; vRing = aRing;
 				vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 				gl_PointSize = aSize * uDpr * (520.0 / -mvPosition.z);
 				gl_Position = projectionMatrix * mvPosition;
 				#include <fog_vertex>
 			}`,
 		fragmentShader: `
-			varying vec3 vColor; varying float vGlow;
+			varying vec3 vColor; varying float vGlow; varying float vRing;
+			uniform float uHaloK;
 			#include <fog_pars_fragment>
 			void main() {
 				vec2 p = gl_PointCoord - 0.5; float d = length(p) * 2.0;
 				float core = smoothstep(0.30, 0.12, d);
-				float halo = exp(-d * d * 2.6) * vGlow;
-				float a = core + halo * 0.55;
+				float halo = exp(-d * d * uHaloK) * vGlow;
+				float ring = smoothstep(0.045, 0.0, abs(d - 0.68)) * vRing;
+				float a = core + halo * 0.55 + ring * 0.9;
 				if (a < 0.01) discard;
-				gl_FragColor = vec4(vColor * (0.9 * core + 0.8 * halo), a);
+				gl_FragColor = vec4(vColor * (0.9 * core + 0.8 * halo + ring), a);
 				#include <fog_fragment>
 			}`
 	});
@@ -70,7 +88,7 @@
 	points.frustumCulled = false;
 
 	// ---- dust field (static, very faint) ----
-	const DUST = 700;
+	const DUST = style.dustCount;
 	const dustGeo = new THREE.BufferGeometry();
 	const dustPos = new Float32Array(DUST * 3);
 	let s = 99;
@@ -79,7 +97,7 @@
 		dustPos[i * 3] = (rnd() - 0.5) * 70; dustPos[i * 3 + 1] = (rnd() - 0.5) * 40; dustPos[i * 3 + 2] = (rnd() - 0.5) * 70;
 	}
 	dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-	const dustMat = new THREE.PointsMaterial({ color: '#6b6761', size: 0.06, transparent: true, opacity: 0.55, depthWrite: false, sizeAttenuation: true });
+	const dustMat = new THREE.PointsMaterial({ color: '#6b6761', size: 0.06, transparent: true, opacity: style.dustOpacity, depthWrite: false, sizeAttenuation: true });
 	const dust = new THREE.Points(dustGeo, dustMat);
 	dust.frustumCulled = false;
 
@@ -87,6 +105,7 @@
 	const tgtColor = new Float32Array(n * 3);
 	const tgtSize = new Float32Array(n);
 	const tgtGlow = new Float32Array(n);
+	const tgtRing = new Float32Array(n);
 	const tgtPos = $state({ v: positions });
 	const tmp = new THREE.Color();
 
@@ -99,26 +118,26 @@
 	const edgeMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: true });
 	const edgeTgt = new Float32Array(graph.edges.length * 6);
 	const EDGE_DIM = new THREE.Color('#1a1816');
-	const EDGE_REST = new THREE.Color('#242220');
-	const EDGE_HI = new THREE.Color('#8a5f54');
+	const EDGE_REST = new THREE.Color(style.edgeRest);
+	const EDGE_HI = new THREE.Color(style.edgeHi);
 
 	function retarget(sg: Subgraph | null) {
 		for (let i = 0; i < n; i++) {
 			const t = graph.nodes[i].type;
 			const deg = Math.min(1, graph.nodes[i].degree / 12);
-			let size = 0, glow = 0;
+			let size = 0, glow = 0, ring = 0;
 			if (!sg) {
 				tmp.copy(t === 'person' ? PERSON_C : REST_C);
 				size = t === 'person' ? 2.4 : 0.8 + deg * 0.6; glow = t === 'person' ? 0.9 : 0.35;
 			} else if (sg.seeds.has(i)) {
-				tmp.copy(SEED_C); size = 3.0; glow = 1.8;
+				tmp.copy(SEED_C); size = 3.0; glow = style.seedGlow; ring = style.ring;
 			} else if (sg.nodes.has(i)) {
-				tmp.copy(t === 'person' ? PERSON_C : CITED_C); size = t === 'person' ? 2.6 : 1.7; glow = 0.7;
+				tmp.copy(t === 'person' ? PERSON_C : CITED_C); size = t === 'person' ? 2.6 : 1.7; glow = style.citedGlow; ring = style.ring * 0.35;
 			} else {
 				tmp.copy(DIM); size = 0.55; glow = 0;
 			}
 			tgtColor[i * 3] = tmp.r; tgtColor[i * 3 + 1] = tmp.g; tgtColor[i * 3 + 2] = tmp.b;
-			tgtSize[i] = size; tgtGlow[i] = glow;
+			tgtSize[i] = size * style.pointScale; tgtGlow[i] = glow; tgtRing[i] = ring;
 		}
 		graph.edges.forEach((e, ei) => {
 			const c = !sg ? EDGE_REST : sg.edges.has(ei) ? EDGE_HI : EDGE_DIM;
@@ -127,7 +146,7 @@
 		invalidate();
 	}
 	retarget(null);
-	colorAttr.set(tgtColor); sizeAttr.set(tgtSize); glowAttr.set(tgtGlow); edgeCol.set(edgeTgt);
+	colorAttr.set(tgtColor); sizeAttr.set(tgtSize); glowAttr.set(tgtGlow); ringAttr.set(tgtRing); edgeCol.set(edgeTgt);
 
 	$effect(() => { retarget(subgraph); });
 	$effect(() => { tgtPos.v = positions; invalidate(); });
@@ -144,9 +163,10 @@
 			}
 			const ds = tgtSize[i] - sizeAttr[i]; if (Math.abs(ds) > 1e-3) moving = true; sizeAttr[i] += ds * k;
 			const dg = tgtGlow[i] - glowAttr[i]; if (Math.abs(dg) > 1e-3) moving = true; glowAttr[i] += dg * k;
+			const dr = tgtRing[i] - ringAttr[i]; if (Math.abs(dr) > 1e-3) moving = true; ringAttr[i] += dr * k;
 		}
 		geo.attributes.position.needsUpdate = true; geo.attributes.aColor.needsUpdate = true;
-		geo.attributes.aSize.needsUpdate = true; geo.attributes.aGlow.needsUpdate = true;
+		geo.attributes.aSize.needsUpdate = true; geo.attributes.aGlow.needsUpdate = true; geo.attributes.aRing.needsUpdate = true;
 		graph.edges.forEach((e, ei) => {
 			edgePos[ei * 6] = cur[e.src * 3]; edgePos[ei * 6 + 1] = cur[e.src * 3 + 1]; edgePos[ei * 6 + 2] = cur[e.src * 3 + 2];
 			edgePos[ei * 6 + 3] = cur[e.dst * 3]; edgePos[ei * 6 + 4] = cur[e.dst * 3 + 1]; edgePos[ei * 6 + 5] = cur[e.dst * 3 + 2];
@@ -184,7 +204,9 @@
 
 {#each seedLabels as i (i)}
 	<Billboard position={labelPos[i] ?? [cur[i * 3], cur[i * 3 + 1] + 1.1, cur[i * 3 + 2]]}>
-		<Text text={graph.nodes[i].title} fontSize={0.38} color="#f1efe9" anchorX="center" anchorY="bottom"
+		<Text text={style.upperLabels ? graph.nodes[i].title.toUpperCase() : graph.nodes[i].title}
+			fontSize={style.upperLabels ? 0.3 : 0.38} letterSpacing={style.upperLabels ? 0.12 : 0}
+			color={style.upperLabels ? '#ff8a72' : '#f1efe9'} anchorX="center" anchorY="bottom"
 			fillOpacity={0.9} outlineWidth={0.015} outlineColor="#161514" outlineOpacity={0.8} />
 	</Billboard>
 {/each}
