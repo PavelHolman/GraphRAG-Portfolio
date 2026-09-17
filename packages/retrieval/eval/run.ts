@@ -2,9 +2,9 @@
 // Answer tier (--answers): live model, N runs per case, writes evals/results/<date>-<model>.{json,md}.
 // docs/spec/evals.md.
 import 'temporal-polyfill/global';
-import { Effect, Layer, Schema, Stream } from 'effect';
+import { Effect, FileSystem, Layer, Schema, Stream } from 'effect';
 import YAML from 'yaml';
-import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem';
 import { join } from 'node:path';
 import type { TurnEvent } from '@graphrag/schema';
 import { loadGraphIndex, readCache } from '@graphrag/graph-index';
@@ -58,11 +58,12 @@ const onlyCase = flag('--case');
 const runsOverride = flag('--runs');
 const modelOverride = flag('--model');
 
-const loadCases = Effect.promise(async () => {
-  const files = (await readdir(CASES)).filter((f) => f.endsWith('.yaml')).sort();
+const loadCases = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const files = (yield* fs.readDirectory(CASES)).filter((f) => f.endsWith('.yaml')).sort();
   const out: Array<Case> = [];
   for (const f of files) {
-    const raw = YAML.parse(await readFile(join(CASES, f), 'utf8')) as unknown;
+    const raw = YAML.parse(yield* fs.readFileString(join(CASES, f))) as unknown;
     const c = Schema.decodeUnknownSync(Case)(raw);
     if (!onlyCase || c.id === onlyCase) out.push(c);
   }
@@ -201,7 +202,8 @@ const main = Effect.gen(function* () {
   }
   const date = Temporal.Now.plainDateISO().toString();
   const slug = llmModel.replace(/[^a-z0-9]+/gi, '-');
-  yield* Effect.promise(() => mkdir(RESULTS, { recursive: true }));
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.makeDirectory(RESULTS, { recursive: true });
   const summary = {
     date,
     model: llmModel,
@@ -209,8 +211,9 @@ const main = Effect.gen(function* () {
     embeddingModel: model,
     results,
   };
-  yield* Effect.promise(() =>
-    writeFile(join(RESULTS, `${date}-${slug}.json`), `${JSON.stringify(summary, null, 2)}\n`),
+  yield* fs.writeFileString(
+    join(RESULTS, `${date}-${slug}.json`),
+    `${JSON.stringify(summary, null, 2)}\n`,
   );
   const md = [
     '| case | pass | runs |',
@@ -219,14 +222,18 @@ const main = Effect.gen(function* () {
       (r) => `| ${r.id} | ${r.ok ? '✓' : '✗'} ${r.passes}/${r.runs} | ${r.minPass} needed |`,
     ),
   ].join('\n');
-  yield* Effect.promise(() =>
-    writeFile(join(RESULTS, `${date}-${slug}.md`), `# ${date} ${llmModel}\n\n${md}\n`),
+  yield* fs.writeFileString(
+    join(RESULTS, `${date}-${slug}.md`),
+    `# ${date} ${llmModel}\n\n${md}\n`,
   );
   return anyFail ? 1 : 0;
 });
 
 process.exit(
   await Effect.runPromise(
-    main.pipe(Effect.catchCause((c) => Effect.sync(() => (console.error(String(c)), 1)))),
+    main.pipe(
+      Effect.provide(NodeFileSystem.layer),
+      Effect.catchCause((c) => Effect.sync(() => (console.error(String(c)), 1))),
+    ),
   ),
 );

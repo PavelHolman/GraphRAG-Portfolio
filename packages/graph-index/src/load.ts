@@ -1,4 +1,4 @@
-import { Effect, Schema } from 'effect';
+import { Effect, FileSystem, Schema } from 'effect';
 import YAML from 'yaml';
 import {
   FRONTMATTER_BY_TYPE,
@@ -9,7 +9,8 @@ import {
   type NodeType,
   isNodeId,
 } from '@graphrag/schema';
-import { listDir, pathJoin, readText, readTextIfExists, exists } from './fs.ts';
+import { join } from 'node:path';
+import { readTextIfExists } from './fs.ts';
 
 export interface LoadedNode {
   readonly id: NodeId;
@@ -54,10 +55,11 @@ const describeSchemaError = (file: string, err: Schema.SchemaError): ContentIssu
 
 const loadNode = (type: NodeType, dir: string, name: string) =>
   Effect.gen(function* () {
-    const file = pathJoin(dir, name);
+    const fs = yield* FileSystem.FileSystem;
+    const file = join(dir, name);
     const slug = name.replace(/\.md$/, '');
     const id = `${type}/${slug}`;
-    const text = yield* readText(file);
+    const text = yield* fs.readFileString(file);
     if (!isNodeId(id)) {
       return {
         issue: {
@@ -86,21 +88,22 @@ const loadNode = (type: NodeType, dir: string, name: string) =>
 /** Reads every `content/<type>/<slug>.md` plus `content/hints.yaml`. Parse and per-file validation only. */
 export const loadContent = (contentDir: string) =>
   Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
     const nodes: Array<LoadedNode> = [];
     const issues: Array<ContentIssue> = [];
     const sources: Array<{ path: string; text: string }> = [];
     for (const type of NODE_TYPES) {
-      const dir = pathJoin(contentDir, type);
-      if (!(yield* exists(dir))) continue;
-      const names = (yield* listDir(dir)).filter((n) => n.endsWith('.md')).sort();
+      const dir = join(contentDir, type);
+      if (!(yield* fs.exists(dir))) continue;
+      const names = (yield* fs.readDirectory(dir)).filter((n) => n.endsWith('.md')).sort();
       for (const name of names) {
         const r = yield* loadNode(type, dir, name);
-        sources.push({ path: pathJoin(type, name), text: r.text });
+        sources.push({ path: join(type, name), text: r.text });
         if ('issue' in r && r.issue) issues.push(r.issue);
         else if ('node' in r && r.node) nodes.push(r.node);
       }
     }
-    const hintsPath = pathJoin(contentDir, 'hints.yaml');
+    const hintsPath = join(contentDir, 'hints.yaml');
     const hintsText = yield* readTextIfExists(hintsPath);
     let hints: Array<{ id: string; prompt: string }> = [];
     if (hintsText !== undefined) {
