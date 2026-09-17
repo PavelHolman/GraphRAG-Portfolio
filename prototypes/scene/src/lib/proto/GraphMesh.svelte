@@ -169,7 +169,7 @@
 
 {#each seedLabels as i (i)}
 	<Billboard position={labelPos[i] ?? [cur[i * 3], cur[i * 3 + 1] + nodeSize * 3.2, cur[i * 3 + 2]]}>
-		<Text text={graph.nodes[i].title} fontSize={0.4} color="#f1efe9" font="https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriCZOIHTWEBlw.woff2" anchorX="center" anchorY="bottom"
+		<Text text={graph.nodes[i].title} fontSize={0.4} color="#f1efe9" anchorX="center" anchorY="bottom"
 			fillOpacity={0.95} outlineWidth={0.02} outlineColor="#161514" outlineOpacity={0.9} />
 	</Billboard>
 {/each}
