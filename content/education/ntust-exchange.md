@@ -8,4 +8,4 @@ at: [organization/ntust]
 taught: [skill/python]
 ---
 
-One exchange semester at the National Taiwan University of Science and Technology in Taipei, August 2023 to January 2024, taking machine learning and programming courses. Not a separate degree.
+One exchange semester at the National Taiwan University of Science and Technology in Taipei, August 2023 to January 2024, taking machine learning and programming courses.

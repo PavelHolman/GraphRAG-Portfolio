@@ -16,4 +16,4 @@ uses:
 in-domain: [domain/business-software]
 ---
 
-Part-time software developer at Merica s.r.o. since March 2020, with occasional project work alongside studies: workload varied from months of substantial work to months with none. Developed C# business software including an ERP system, worked in a two-person team on an employee rostering project using constraint programming, and modernised a technology stack from .NET Framework to .NET Core.
+Part-time software developer at Merica s.r.o. since March 2020, occasional project work alongside studies. Developed C# business software including an ERP system, worked in a two-person team on an employee rostering project using constraint programming, and modernised a technology stack from .NET Framework to .NET Core.

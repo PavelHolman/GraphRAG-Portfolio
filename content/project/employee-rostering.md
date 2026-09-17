@@ -1,5 +1,7 @@
 ---
 title: Employee rostering with constraint programming
+start: 2025-02
+end: 2025-06
 summary: Shift rostering solver for a Merica client, built in C# with constraint programming in a two-person team.
 uses:
   - {

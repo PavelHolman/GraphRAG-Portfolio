@@ -158,4 +158,4 @@
   />
 </T.PerspectiveCamera>
 
-<GraphMesh {graph} {positions} {subgraph} {preview} {onpick} />
+<GraphMesh {graph} {positions} {subgraph} {preview} {focus} {onpick} />

@@ -5,7 +5,7 @@ start: 2024-12
 end: 2026-02
 uses:
   - { to: skill/competitive-programming, note: 'three ICPC finals in team competition' }
-in-domain: [domain/developer-tooling]
+in-domain: [domain/competitive-programming]
 ---
 
 Competitive programming results: finalist at the ICPC Central Europe Regional Contest (CERC) in December 2024 and December 2025, and finalist at the ICPC European Championship (EUC) in February 2026. Also a problem author for CTU Open, the Czech Technical University's programming contest.
