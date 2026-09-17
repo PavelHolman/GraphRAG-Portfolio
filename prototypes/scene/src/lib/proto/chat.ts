@@ -11,15 +11,16 @@ export interface Message {
 }
 export interface ChatProps {
 	messages: Message[];
-	suggestions: string[];     // followups after a Turn, idle hints otherwise
-	attract: boolean;          // true while the idle loop is auto-playing hints
+	followups: string[];
+	hint: string;                 // the hint currently shown as ghost text in the prompt field
+	attract: boolean;             // true while the idle loop is auto-playing hints
 	streaming: boolean;
 	onsend: (prompt: string) => void;
-	onpreview: (prompt: string) => void;   // hover/focus on a hint: play it without committing
+	onplayhint: () => void;       // empty submit: play the hint currently shown
 	oncite: (nodeId: number) => void;
-	oninput: (active: boolean) => void;    // visitor is typing or focused the input
+	oninput: (active: boolean) => void;
 	focused: number | null;
-	chips?: boolean;           // show the numbered citation chip row
+	layout: 'top' | 'bottom' | 'middle';
 }
 
 // Split streamed markdown-ish text into lines so tables render as rows in the prototype.

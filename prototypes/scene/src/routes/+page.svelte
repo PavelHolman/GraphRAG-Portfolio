@@ -6,18 +6,19 @@
 	import { onMount } from 'svelte';
 	import VariantA from '$lib/proto/VariantA.svelte';
 	import Switcher from '$lib/proto/Switcher.svelte';
-	import ChatCard from '$lib/proto/ChatCard.svelte';
-	import ChatStrip from '$lib/proto/ChatStrip.svelte';
+	import ChatCentre from '$lib/proto/ChatCentre.svelte';
 	import { makeGraph, type Subgraph } from '$lib/proto/graph';
 	import { fakeTurn, emptySubgraph, type TurnEvent } from '$lib/proto/stream';
 	import type { Message } from '$lib/proto/chat';
 
+	// Iteration 6: everything centred. Three placements of the answer block relative to the prompt field.
 	const variants = [
-		{ key: 'A', name: 'Card, underlined citations' },
-		{ key: 'B', name: 'Card + citation chips' },
-		{ key: 'C', name: 'Strip + citation chips' }
+		{ key: 'A', name: 'Field on top, strip below', layout: 'top' as const },
+		{ key: 'B', name: 'Caption above bottom field', layout: 'bottom' as const },
+		{ key: 'C', name: 'Middle column', layout: 'middle' as const }
 	];
-	const variant = $derived(page.url.searchParams.get('variant') ?? 'B');
+	const variant = $derived(page.url.searchParams.get('variant') ?? 'A');
+	const layout = $derived(variants.find((v) => v.key === variant)?.layout ?? 'top');
 	const ember = { name: 'Ember', pointScale: 1, seedGlow: 1.8, citedGlow: 0.7, haloK: 2.6, ring: 0, edgeHi: '#8a5f54', edgeRest: '#242220', dustCount: 700, dustOpacity: 0.55, upperLabels: false };
 	const HINTS = ['Tell me about your Effect work', 'Does he fit a lead role with Kubernetes and Kafka?', 'Where did you study?', 'What are you strongest at?'];
 
@@ -31,9 +32,9 @@
 	let typing = $state(false);       // input focused or non-empty
 	let committed = $state(false);    // visitor has sent a real Prompt at least once
 	let attract = $state(false);
+	let hintIndex = $state(0);
+	const hint = $derived(HINTS[hintIndex % HINTS.length]);
 	let abort: AbortController | null = null;
-
-	const suggestions = $derived(followups.length && !attract ? followups : HINTS);
 
 	function run(prompt: string, suggested: boolean) {
 		abort?.abort(); // new Prompt mid-stream: interrupt, keep previous highlight until the new subgraph arrives
@@ -80,21 +81,23 @@
 		});
 	}
 	const onsend = (p: string) => { committed = true; attract = false; run(p, false); };
-	const onpreview = (p: string) => { if (streaming || committed) return; attract = false; run(p, true); };
+	// empty submit: play the hint currently shown in the field, then advance the ghost text
+	const onplayhint = () => { attract = false; run(hint, true); hintIndex++; };
 	const oncite = (nodeId: number) => { focused = nodeId; };
 	const oninput = (active: boolean) => { typing = active; if (active) attract = false; };
 
-	// attract loop: while nobody has committed and nobody is typing, auto-play a hint every 9 s
+	// ghost hint cycles every 6 s. Attract loop: until the visitor commits a real Prompt or types, the hint
+	// shown in the field auto-plays every 11 s (first one after 2.5 s). Stays off after a real Prompt.
 	onMount(() => {
-		let i = 0;
+		const cycle = setInterval(() => { if (!streaming || !attract) hintIndex++; }, 6000);
 		const tick = () => {
 			if (committed || typing || streaming) return;
 			attract = true;
-			run(HINTS[i++ % HINTS.length], true);
+			run(hint, true);
 		};
 		const first = setTimeout(tick, 2500);
 		const loop = setInterval(tick, 11000);
-		return () => { clearTimeout(first); clearInterval(loop); };
+		return () => { clearInterval(cycle); clearTimeout(first); clearInterval(loop); };
 	});
 
 	let fps = $state(0), dpr = $state(1), zoom = $state(1);
@@ -129,8 +132,7 @@
 	<aside class="pick"><span class="type">{graph.nodes[picked].type}</span><b>{graph.nodes[picked].title}</b></aside>
 {/if}
 
-{#if variant === 'C'}<ChatStrip {messages} {suggestions} {attract} {streaming} {onsend} {onpreview} {oncite} {oninput} {focused} chips />
-{:else}<ChatCard {messages} {suggestions} {attract} {streaming} {onsend} {onpreview} {oncite} {oninput} {focused} chips={variant === 'B'} />{/if}
+<ChatCentre {messages} {followups} {hint} {attract} {streaming} {onsend} {onplayhint} {oncite} {oninput} {focused} {layout} />
 
 <Switcher {variants} current={variant} />
 
