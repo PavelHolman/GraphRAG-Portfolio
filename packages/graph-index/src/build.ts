@@ -1,4 +1,4 @@
-import { Data, Effect, Schema } from 'effect';
+import { Data, Effect, FileSystem, Schema } from 'effect';
 import type {
   ArtifactEdge,
   ArtifactNode,
@@ -24,7 +24,8 @@ import {
 import { CachedTextEmbedderLayer } from '@graphrag/retrieval/adapters';
 import { deriveSpans } from './derive.ts';
 import { CacheMiss, EmbeddingCache, edgeText, embedWithCache, nodeText, sha256 } from './embed.ts';
-import { ensureDir, pathJoin, readBytes, readTextIfExists, writeBytes, writeText } from './fs.ts';
+import { join } from 'node:path';
+import { readTextIfExists } from './fs.ts';
 import { forceLayout } from './layout.ts';
 import { type ContentIssue, type LoadedContent, type LoadedNode, loadContent } from './load.ts';
 import { validate } from './validate.ts';
@@ -246,24 +247,28 @@ const jsonSchema = Effect.sync(() => {
 
 export const writeGenerated = (generatedDir: string, cacheFile: string, r: BuildResult) =>
   Effect.gen(function* () {
-    yield* ensureDir(generatedDir);
-    yield* writeText(pathJoin(generatedDir, GENERATED_FILES.graph), stringifyArtifact(r.artifact));
-    yield* writeBytes(
-      pathJoin(generatedDir, GENERATED_FILES.nodeVectors),
+    const fs = yield* FileSystem.FileSystem;
+    yield* fs.makeDirectory(generatedDir, { recursive: true });
+    yield* fs.writeFileString(
+      join(generatedDir, GENERATED_FILES.graph),
+      stringifyArtifact(r.artifact),
+    );
+    yield* fs.writeFile(
+      join(generatedDir, GENERATED_FILES.nodeVectors),
       toLittleEndian(r.nodeVectors),
     );
-    yield* writeBytes(
-      pathJoin(generatedDir, GENERATED_FILES.edgeVectors),
+    yield* fs.writeFile(
+      join(generatedDir, GENERATED_FILES.edgeVectors),
       toLittleEndian(r.edgeVectors),
     );
-    yield* writeText(
-      pathJoin(generatedDir, GENERATED_FILES.hints),
+    yield* fs.writeFileString(
+      join(generatedDir, GENERATED_FILES.hints),
       `${JSON.stringify(Schema.encodeSync(HintsArtifact)(r.hints), null, 0)}\n`,
     );
     const js = yield* jsonSchema;
-    if (js !== undefined) yield* writeText(pathJoin(generatedDir, GENERATED_FILES.schema), js);
-    yield* ensureDir(pathJoin(cacheFile, '..'));
-    yield* writeText(cacheFile, `${JSON.stringify(r.cache)}\n`);
+    if (js !== undefined) yield* fs.writeFileString(join(generatedDir, GENERATED_FILES.schema), js);
+    yield* fs.makeDirectory(join(cacheFile, '..'), { recursive: true });
+    yield* fs.writeFileString(cacheFile, `${JSON.stringify(r.cache)}\n`);
   });
 
 export const readCache = (cacheFile: string) =>
@@ -284,8 +289,9 @@ const bytesEqual = (a: Uint8Array, b: Uint8Array) =>
 /** `content:index --verify`: rebuild from the committed cache and diff against the committed artifact. */
 export const diffGenerated = (generatedDir: string, r: BuildResult) =>
   Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
     const problems: Array<string> = [];
-    const committedText = yield* readTextIfExists(pathJoin(generatedDir, GENERATED_FILES.graph));
+    const committedText = yield* readTextIfExists(join(generatedDir, GENERATED_FILES.graph));
     if (committedText === undefined) problems.push(`${GENERATED_FILES.graph} is missing`);
     else {
       // generatedAt is the only field allowed to differ between a rebuild and the committed file.
@@ -298,14 +304,14 @@ export const diffGenerated = (generatedDir: string, r: BuildResult) =>
       [GENERATED_FILES.nodeVectors, r.nodeVectors],
       [GENERATED_FILES.edgeVectors, r.edgeVectors],
     ] as const) {
-      const bytes = yield* readBytes(pathJoin(generatedDir, file)).pipe(
-        Effect.catchTag('FsError', () => Effect.succeed(undefined)),
-      );
+      const bytes = yield* fs
+        .readFile(join(generatedDir, file))
+        .pipe(Effect.catch(() => Effect.succeed(undefined)));
       if (!bytes) problems.push(`${file} is missing`);
       else if (!bytesEqual(new Uint8Array(bytes), toLittleEndian(vec)))
         problems.push(`${file} differs from a rebuild`);
     }
-    const hintsText = yield* readTextIfExists(pathJoin(generatedDir, GENERATED_FILES.hints));
+    const hintsText = yield* readTextIfExists(join(generatedDir, GENERATED_FILES.hints));
     if (hintsText === undefined) problems.push(`${GENERATED_FILES.hints} is missing`);
     else if (hintsText.trim() !== JSON.stringify(Schema.encodeSync(HintsArtifact)(r.hints))) {
       problems.push(`${GENERATED_FILES.hints} differs from a rebuild`);

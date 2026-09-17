@@ -1,28 +1,11 @@
-import { Data, Effect } from 'effect';
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+// File access goes through Effect's `FileSystem` service, with `@effect/platform-node`'s layer
+// provided by the CLI, the eval runner and the tests. This is the one helper the service does not
+// offer; everything else calls it directly.
+import { Effect, FileSystem } from 'effect';
 
-export class FsError extends Data.TaggedError('FsError')<{
-  readonly path: string;
-  readonly message: string;
-}> {}
-
-const wrap = <A>(path: string, f: () => Promise<A>) =>
-  Effect.tryPromise({ try: f, catch: (e) => new FsError({ path, message: String(e) }) });
-
-export const readText = (path: string) => wrap(path, () => readFile(path, 'utf8'));
-export const readBytes = (path: string) => wrap(path, () => readFile(path));
-export const writeText = (path: string, text: string) =>
-  wrap(path, () => writeFile(path, text, 'utf8'));
-export const writeBytes = (path: string, bytes: Uint8Array) =>
-  wrap(path, () => writeFile(path, bytes));
-export const ensureDir = (path: string) => wrap(path, () => mkdir(path, { recursive: true }));
-export const listDir = (path: string) => wrap(path, () => readdir(path));
-export const exists = (path: string) =>
-  Effect.tryPromise({ try: () => stat(path).then(() => true), catch: () => false }).pipe(
-    Effect.catch(() => Effect.succeed(false)),
-  );
+/** The file's contents as text, or undefined when it does not exist. */
 export const readTextIfExists = (path: string) =>
-  exists(path).pipe(Effect.flatMap((ok) => (ok ? readText(path) : Effect.succeed(undefined))));
-
-export const pathJoin = join;
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return (yield* fs.exists(path)) ? yield* fs.readFileString(path) : undefined;
+  });

@@ -15,6 +15,15 @@ bun add -d oxlint@1.83.0 oxfmt@0.68.0 oxlint-plugin-eslint@1.83.0 husky lint-sta
 
 Runtime: `temporal-polyfill@^1.0.5` in `apps/web` and `packages/retrieval`.
 
+## File access
+
+Build-time code reads and writes through Effect's `FileSystem` service, never `node:fs` directly:
+the interface ships in `effect`, the implementation in `@effect/platform-node` (pinned to the same
+version as `effect`), and the layer is provided once per entry point (`content:*` CLI, the eval
+runner, the unit tests). Errors are the standard `PlatformError`. Path joining stays on `node:path`,
+which is pure and needs no seam. The one exception is `apps/web`, which runs in the Worker: its
+artifact loader reads through the `ASSETS` binding, with a dev-only dynamic import for disk reads.
+
 ## `.oxlintrc.json`
 
 ```jsonc
