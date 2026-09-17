@@ -22,7 +22,7 @@
 
 	// Poqet palette
 	const DIM = new THREE.Color('#4a4743');
-	const REST_C = new THREE.Color('#bdb9b0');
+	const REST_C = new THREE.Color('#d6d2c9');
 	const PERSON_C = new THREE.Color('#f1efe9');
 	const SEED_C = new THREE.Color('#ff8a72');
 	const CITED_C = new THREE.Color('#f1efe9');
@@ -49,7 +49,7 @@
 			void main() {
 				vColor = aColor; vGlow = aGlow;
 				vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-				gl_PointSize = aSize * uDpr * (220.0 / -mvPosition.z);
+				gl_PointSize = aSize * uDpr * (520.0 / -mvPosition.z);
 				gl_Position = projectionMatrix * mvPosition;
 				#include <fog_vertex>
 			}`,
@@ -58,8 +58,8 @@
 			#include <fog_pars_fragment>
 			void main() {
 				vec2 p = gl_PointCoord - 0.5; float d = length(p) * 2.0;
-				float core = smoothstep(0.34, 0.18, d);
-				float halo = exp(-d * d * 3.2) * vGlow;
+				float core = smoothstep(0.30, 0.12, d);
+				float halo = exp(-d * d * 2.6) * vGlow;
 				float a = core + halo * 0.55;
 				if (a < 0.01) discard;
 				gl_FragColor = vec4(vColor * (0.9 * core + 0.8 * halo), a);
@@ -98,8 +98,8 @@
 	edgeGeo.setAttribute('color', new THREE.BufferAttribute(edgeCol, 3));
 	const edgeMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: true });
 	const edgeTgt = new Float32Array(graph.edges.length * 6);
-	const EDGE_DIM = new THREE.Color('#1c1a18');
-	const EDGE_REST = new THREE.Color('#2b2926');
+	const EDGE_DIM = new THREE.Color('#1a1816');
+	const EDGE_REST = new THREE.Color('#242220');
 	const EDGE_HI = new THREE.Color('#8a5f54');
 
 	function retarget(sg: Subgraph | null) {
@@ -109,9 +109,9 @@
 			let size = 0, glow = 0;
 			if (!sg) {
 				tmp.copy(t === 'person' ? PERSON_C : REST_C);
-				size = t === 'person' ? 2.6 : 0.9 + deg * 0.7; glow = t === 'person' ? 0.8 : 0.15;
+				size = t === 'person' ? 2.4 : 0.8 + deg * 0.6; glow = t === 'person' ? 0.9 : 0.35;
 			} else if (sg.seeds.has(i)) {
-				tmp.copy(SEED_C); size = 3.2; glow = 1.6;
+				tmp.copy(SEED_C); size = 3.0; glow = 1.8;
 			} else if (sg.nodes.has(i)) {
 				tmp.copy(t === 'person' ? PERSON_C : CITED_C); size = t === 'person' ? 2.6 : 1.7; glow = 0.7;
 			} else {
