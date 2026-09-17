@@ -8,7 +8,7 @@ test('the page renders the resume sections and a Turn streams to the caption', a
   await input.fill('Tell me about your Effect work');
   await page.getByRole('button', { name: 'send' }).click();
   await expect(page.locator('.caption')).toBeVisible();
-  await expect(page.locator('.caption .cites button').first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.caption .cite').first()).toBeVisible({ timeout: 30_000 });
 });
 
 test('the Turn endpoint speaks NDJSON in ADR 0003 order', async ({ request }) => {

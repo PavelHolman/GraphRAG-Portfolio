@@ -32,7 +32,7 @@
   const preview = $derived(
     !typing && !turn.streaming && turn.subgraph === null && hint ? new Set(hint.candidates) : null,
   );
-  // The intro copy steps aside once a conversation has started.
+  // On phones the intro copy makes room for the caption once a conversation has started.
   const conversing = $derived(turn.messages.length > 0);
 
   const onsend = (p: string) => turn.run(p, 'typed');
@@ -214,13 +214,15 @@
   .intro > * {
     pointer-events: auto;
   }
-  .intro.aside {
-    opacity: 0;
-    transform: translateY(-12px);
-    pointer-events: none;
-  }
-  .intro.aside > * {
-    pointer-events: none;
+  @media (max-width: 760px) {
+    .intro.aside {
+      opacity: 0;
+      transform: translateY(-12px);
+      pointer-events: none;
+    }
+    .intro.aside > * {
+      pointer-events: none;
+    }
   }
   h1 {
     font:

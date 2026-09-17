@@ -2,7 +2,7 @@
   // Centred chat: answer caption above a bottom pill field. Ghost hints cycle in the field; an empty
   // submit plays the hint shown. docs/spec/chat.md, winning variant B.
   import Answer from './Answer.svelte';
-  import type { CitePart, Message } from './types.ts';
+  import type { Message } from './types.ts';
 
   interface Props {
     messages: Message[];
@@ -31,12 +31,6 @@
   const current = $derived(messages.filter((m) => m.role === 'answer').at(-1));
   const lastPrompt = $derived([...messages].reverse().find((m) => m.role === 'visitor'));
   const question = $derived(lastPrompt?.parts[0]?.kind === 'text' ? lastPrompt.parts[0].text : '');
-  const cites = $derived(
-    (current?.parts.filter((p) => p.kind === 'cite') ?? []).filter(
-      (p, i, a) => a.findIndex((q) => (q as CitePart).id === (p as CitePart).id) === i,
-    ) as CitePart[],
-  );
-
   function submit(e: Event) {
     e.preventDefault();
     const text = draft.trim();
@@ -76,15 +70,6 @@
         {#if current.streaming}<span class="caret"></span>{/if}
         {#if current.error}<p class="error">{current.error}</p>{/if}
       </div>
-      {#if cites.length}
-        <div class="cites">
-          {#each cites as c (c.ordinal)}
-            <button class:focused={focused === c.id} onclick={cite(c.id)}
-              ><i>{c.ordinal + 1}</i>{c.title}</button
-            >
-          {/each}
-        </div>
-      {/if}
       {#if followups.length && !streaming}
         <div class="follow">
           {#each followups as f (f)}<button onclick={send(f)}>{f}</button>{/each}
@@ -287,43 +272,10 @@
       monospace;
     margin: 6px 0 0;
   }
-  .cites,
   .follow {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-  }
-  .cites button {
-    flex: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--bg);
-    border: 1px solid rgba(241, 239, 233, 0.12);
-    color: var(--fg);
-    border-radius: 999px;
-    padding: 5px 10px 5px 6px;
-    font:
-      12px 'DM Sans',
-      sans-serif;
-    cursor: pointer;
-  }
-  .cites button i {
-    font:
-      9px/1 'Azeret Mono',
-      monospace;
-    font-style: normal;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: rgba(255, 138, 114, 0.18);
-    color: var(--accent);
-  }
-  .cites button.focused,
-  .cites button:hover {
-    border-color: var(--accent);
   }
   .follow button {
     flex: none;
