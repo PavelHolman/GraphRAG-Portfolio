@@ -1,9 +1,15 @@
 // Adapter for any OpenAI-compatible `/chat/completions` endpoint with SSE streaming: Workers AI's
 // `/ai/v1` today (ADR 0006), Groq or OpenRouter later. Wraps fetch and the SSE wire; errors are
 // converted here only (ADR 0005).
-import { Effect, Layer, Stream } from 'effect';
+import { Duration, Effect, Layer, Stream } from 'effect';
 import type { Tier } from '@graphrag/schema';
 import { LanguageModelError } from '../errors.ts';
+import {
+  LM_IDLE_TIMEOUT_SECONDS,
+  LM_OPEN_TIMEOUT_SECONDS,
+  retryUpstream,
+  timeoutUpstream,
+} from '../resilience.ts';
 import { LanguageModel, type LanguageModelShape, type LmInput, type LmPart } from '../services.ts';
 
 export interface OpenAiCompatOptions {
@@ -64,6 +70,20 @@ export const sseToParts = <E, R>(
   );
 };
 
+/** Opening the stream is the retryable half: nothing has reached the visitor yet. */
+const openStream = <A, R>(open: Effect.Effect<A, LanguageModelError, R>) =>
+  open.pipe(
+    timeoutUpstream(
+      LM_OPEN_TIMEOUT_SECONDS,
+      () =>
+        new LanguageModelError({
+          message: `the model did not answer within ${LM_OPEN_TIMEOUT_SECONDS}s`,
+          retryable: true,
+        }),
+    ),
+    retryUpstream,
+  );
+
 export const openAiCompatLanguageModel = (options: OpenAiCompatOptions): LanguageModelShape => {
   const doFetch = options.fetch ?? globalThis.fetch;
   return {
@@ -71,53 +91,68 @@ export const openAiCompatLanguageModel = (options: OpenAiCompatOptions): Languag
     tier: options.tier ?? 'primary',
     stream: (input: LmInput) =>
       Stream.unwrap(
-        Effect.gen(function* () {
-          const body = {
-            model: options.model,
-            stream: true,
-            stream_options: { include_usage: true },
-            max_tokens: input.maxTokens,
-            messages: [{ role: 'system', content: input.system }, ...input.messages],
-            ...options.extra,
-          };
-          const res = yield* Effect.tryPromise({
-            try: (signal) =>
-              doFetch(`${options.baseUrl}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                  authorization: `Bearer ${options.apiKey}`,
-                  'content-type': 'application/json',
-                },
-                body: JSON.stringify(body),
-                signal,
-              }),
-            catch: (cause) =>
-              new LanguageModelError({
-                message: `LLM request failed: ${String(cause)}`,
-                retryable: true,
-                cause,
-              }),
-          });
-          if (!res.ok || !res.body) {
-            const text = yield* Effect.tryPromise({
-              try: () => res.text(),
-              catch: () =>
-                new LanguageModelError({ message: 'unreadable error body', retryable: true }),
+        openStream(
+          Effect.gen(function* () {
+            const body = {
+              model: options.model,
+              stream: true,
+              stream_options: { include_usage: true },
+              max_tokens: input.maxTokens,
+              messages: [{ role: 'system', content: input.system }, ...input.messages],
+              ...options.extra,
+            };
+            const res = yield* Effect.tryPromise({
+              try: (signal) =>
+                doFetch(`${options.baseUrl}/chat/completions`, {
+                  method: 'POST',
+                  headers: {
+                    authorization: `Bearer ${options.apiKey}`,
+                    'content-type': 'application/json',
+                  },
+                  body: JSON.stringify(body),
+                  signal,
+                }),
+              catch: (cause) =>
+                new LanguageModelError({
+                  message: `LLM request failed: ${String(cause)}`,
+                  retryable: true,
+                  cause,
+                }),
             });
-            return yield* new LanguageModelError({
-              message: `LLM returned ${res.status}: ${text.slice(0, 300)}`,
-              retryable: res.status === 429 || res.status >= 500,
-            });
-          }
-          return Stream.fromReadableStream({
-            evaluate: () => res.body as ReadableStream<Uint8Array>,
-            onError: (cause) =>
+            if (!res.ok || !res.body) {
+              const text = yield* Effect.tryPromise({
+                try: () => res.text(),
+                catch: () =>
+                  new LanguageModelError({ message: 'unreadable error body', retryable: true }),
+              });
+              return yield* new LanguageModelError({
+                message: `LLM returned ${res.status}: ${text.slice(0, 300)}`,
+                retryable: res.status === 429 || res.status >= 500,
+              });
+            }
+            return Stream.fromReadableStream({
+              evaluate: () => res.body as ReadableStream<Uint8Array>,
+              onError: (cause) =>
+                new LanguageModelError({
+                  message: `LLM stream failed: ${String(cause)}`,
+                  retryable: true,
+                  cause,
+                }),
+            }).pipe(Stream.decodeText(), Stream.splitLines, sseToParts);
+          }),
+        ),
+      ).pipe(
+        // Once the Answer is streaming a retry would replay tokens the visitor has already read,
+        // so silence past this point ends the Turn with an error instead.
+        Stream.timeoutOrElse({
+          duration: Duration.seconds(LM_IDLE_TIMEOUT_SECONDS),
+          orElse: () =>
+            Stream.fail(
               new LanguageModelError({
-                message: `LLM stream failed: ${String(cause)}`,
+                message: `the model went quiet for ${LM_IDLE_TIMEOUT_SECONDS}s`,
                 retryable: true,
-                cause,
               }),
-          }).pipe(Stream.decodeText(), Stream.splitLines, sseToParts);
+            ),
         }),
       ),
   };

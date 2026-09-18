@@ -38,6 +38,21 @@ One Durable Object (`TurnBudget`) holds per-UTC-day counters. Budget is counted 
 
 The model switch is a `LanguageModel` layer selection in retrieval's pool service; no other code changes.
 
+## Upstream retries and timeouts
+
+Implemented in `packages/retrieval/src/resilience.ts`, applied by the adapters so every caller gets
+them (Turn, `content:index`, evals).
+
+- **Retry**: only failures the adapter marked `retryable` (429, 5xx, dropped connection), two
+  attempts after the first, jittered exponential backoff from 300 ms. A missing credential or a
+  model mismatch is never retried.
+- **Timeouts**: 10 s per embedding call, 15 s to open the model stream, 30 s of silence between
+  tokens. Each fails with the adapter's own error type, so it reaches the visitor as the usual
+  `upstream` error event rather than a hung stream.
+- **Not retried**: anything after the first token, because a replay would repeat text the visitor
+  has already read.
+- Embedding batches run three at a time; the retry policy applies per batch.
+
 ## Bot mitigation
 
 Cloudflare Bot Fight Mode (free) plus the limits above. No Turnstile. Hook point recorded: the endpoint reads an optional `cf-turnstile-response` header and the schema has an optional field for it, both ignored until enabled. Prompt injection is handled by the system prompt and the eval case, not at the edge.

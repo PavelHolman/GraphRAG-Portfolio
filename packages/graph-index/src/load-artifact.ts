@@ -1,15 +1,18 @@
 import { Effect, FileSystem, Schema } from 'effect';
 import { join } from 'node:path';
-import { HintsArtifact, decodeArtifact } from '@graphrag/schema';
+import { HintsArtifact } from '@graphrag/schema';
+
+const decodeHintsJson = Schema.decodeUnknownEffect(Schema.fromJsonString(HintsArtifact));
 import { makeGraphIndex } from '@graphrag/retrieval';
-import { GENERATED_FILES, fromLittleEndian } from './build.ts';
+import { GENERATED_FILES, decodeArtifactJson, fromLittleEndian } from './build.ts';
 
 /** Disk adapter for the GraphArtifact service: build scripts, evals and tests. ADR 0002. */
 export const loadGraphIndex = (generatedDir: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const text = yield* fs.readFileString(join(generatedDir, GENERATED_FILES.graph));
-    const artifact = yield* decodeArtifact(JSON.parse(text) as unknown);
+    // Schema decodes the JSON: a truncated or corrupt artifact fails typed instead of throwing.
+    const artifact = yield* decodeArtifactJson(text);
     const nv = fromLittleEndian(
       yield* fs.readFile(join(generatedDir, GENERATED_FILES.nodeVectors)),
     );
@@ -23,5 +26,5 @@ export const loadHints = (generatedDir: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const text = yield* fs.readFileString(join(generatedDir, GENERATED_FILES.hints));
-    return yield* Schema.decodeUnknownEffect(HintsArtifact)(JSON.parse(text) as unknown);
+    return yield* decodeHintsJson(text);
   });

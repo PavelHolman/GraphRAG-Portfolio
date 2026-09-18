@@ -1,6 +1,6 @@
 import 'temporal-polyfill/global';
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem';
-import { Effect, FileSystem, Layer } from 'effect';
+import { Config, Effect, FileSystem, Layer } from 'effect';
 import { NODE_TYPES, type NodeType } from '@graphrag/schema';
 import { GraphArtifact, buildPrompt, retrieve } from '@graphrag/retrieval';
 import {
@@ -24,8 +24,8 @@ const err = (line: string) => Effect.sync(() => console.error(line));
 
 /** Local: Workers AI REST when a token is present, else the lexical fallback (announced loudly). */
 const pickEmbedder = Effect.gen(function* () {
-  const token = process.env.WORKERS_AI_TOKEN;
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const token = yield* Config.withDefault(Config.String('WORKERS_AI_TOKEN'), '');
+  const accountId = yield* Config.withDefault(Config.String('CLOUDFLARE_ACCOUNT_ID'), '');
   if (token && accountId) {
     yield* log(`embedder: ${WORKERS_AI_EMBEDDING_MODEL} (Workers AI REST)`);
     return WorkersAiRestEmbedderLayer({ accountId, token });
