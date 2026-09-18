@@ -31,13 +31,15 @@ const optional = (name: string) => Config.withDefault(Config.String(name), '');
  * The Embedder must match the model that built the committed artifact.
  */
 export const runtimeLayer = (platformEnv: App.Platform['env'] | undefined) => {
-  // In dev the platform proxy has no secrets and its AI binding is a stub that cannot serve
-  // requests, so the process environment (`.env` at the repo root) wins and the binding is dropped.
-  const processEnv = dev && typeof process !== 'undefined' ? process.env : undefined;
-  const provider = ConfigProvider.fromEnvRecord({
-    ...strings(platformEnv),
-    ...strings(processEnv),
-  });
+  const platform = strings(platformEnv);
+  // A real Worker has no `process`; dev and `vite preview` do, and that is where GRAPHRAG_FAKE_AI
+  // arrives. In dev the platform proxy has no secrets and its AI binding is a stub that cannot
+  // serve requests, so there the process environment wins and the binding is dropped. Everywhere
+  // else the platform's own secrets win and the process only fills gaps.
+  const processEnv = typeof process !== 'undefined' ? strings(process.env) : {};
+  const provider = ConfigProvider.fromEnvRecord(
+    dev ? { ...platform, ...processEnv } : { ...processEnv, ...platform },
+  );
   const ai = dev ? undefined : platformEnv?.AI;
   return pick(ai).pipe(Effect.provide(ConfigProvider.layer(provider)));
 };
