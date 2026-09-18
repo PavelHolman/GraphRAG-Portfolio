@@ -2,7 +2,7 @@ import { Effect, Stream } from 'effect';
 import { decodeTurnRequest, encodeTurnEvent, type TurnEvent } from '@graphrag/schema';
 import { GraphArtifact, toNdjson, turn } from '@graphrag/retrieval';
 import type { RequestHandler } from './$types';
-import { loadGraphIndex } from '$lib/server/artifact.ts';
+import { ArtifactError, loadGraphIndex } from '$lib/server/artifact.ts';
 import { runtimeLayer } from '$lib/server/layers.ts';
 
 const HEADERS = {
@@ -36,6 +36,26 @@ export const POST: RequestHandler = async (event) => {
     return yield* toNdjson(events).pipe(Stream.toReadableStreamEffect());
   });
 
-  const body = await Effect.runPromise(program, { signal: event.request.signal });
-  return new Response(body, { headers: HEADERS });
+  const outcome = await Effect.runPromise(
+    program.pipe(
+      Effect.map((body) => ({ ok: true as const, body })),
+      // The assets are missing or unreadable: say so on the wire, in the shape the chat reads.
+      Effect.catchTag('ArtifactError', (e: ArtifactError) =>
+        Effect.sync(() => {
+          console.error(e.message);
+          return { ok: false as const, message: e.message };
+        }),
+      ),
+    ),
+    { signal: event.request.signal },
+  );
+  if (!outcome.ok) {
+    return errorResponse(503, {
+      type: 'error',
+      tag: 'internal',
+      message: outcome.message,
+      retryable: true,
+    });
+  }
+  return new Response(outcome.body, { headers: HEADERS });
 };

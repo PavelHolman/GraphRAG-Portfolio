@@ -2,6 +2,7 @@
 // Wraps a third-party API that rejects with plain errors; conversion happens here only (ADR 0005).
 import { Effect, Layer } from 'effect';
 import { EmbedError } from '../errors.ts';
+import { EMBED_TIMEOUT_SECONDS, retryUpstream, timeoutUpstream } from '../resilience.ts';
 import { Embedder, type EmbedderShape } from '../services.ts';
 import { normalize } from '../vector.ts';
 
@@ -28,18 +29,31 @@ const toVectors = (data: ReadonlyArray<ReadonlyArray<number>> | undefined, expec
     return data.map((row) => normalize(Float32Array.from(row)));
   });
 
+/** A few batches in flight at once: enough to shorten an index run, small enough to stay polite. */
+const CONCURRENCY = 3;
+
+const timedOut = () =>
+  new EmbedError({
+    message: `Workers AI did not answer within ${EMBED_TIMEOUT_SECONDS}s`,
+    retryable: true,
+  });
+
+/**
+ * Splits into batches the API accepts and runs them with the shared upstream policy, so one slow
+ * or flaky batch costs a retry rather than the whole Turn. `Effect.forEach` keeps input order.
+ */
 const batched = (
   texts: ReadonlyArray<string>,
   run: (batch: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<Float32Array>, EmbedError>,
-) =>
-  Effect.gen(function* () {
-    const out: Array<Float32Array> = [];
-    for (let i = 0; i < texts.length; i += BATCH) {
-      const batch = texts.slice(i, i + BATCH);
-      out.push(...(yield* run(batch)));
-    }
-    return out;
-  });
+) => {
+  const batches: Array<ReadonlyArray<string>> = [];
+  for (let i = 0; i < texts.length; i += BATCH) batches.push(texts.slice(i, i + BATCH));
+  return Effect.forEach(
+    batches,
+    (batch) => run(batch).pipe(timeoutUpstream(EMBED_TIMEOUT_SECONDS, timedOut), retryUpstream),
+    { concurrency: CONCURRENCY },
+  ).pipe(Effect.map((done) => done.flatMap((vectors) => [...vectors])));
+};
 
 /** Runtime: the `AI` binding on the Worker. */
 export const workersAiBindingEmbedder = (ai: AiBinding): EmbedderShape => ({

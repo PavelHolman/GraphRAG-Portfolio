@@ -1,5 +1,6 @@
 import 'temporal-polyfill/global';
-import { Effect, Layer } from 'effect';
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem';
+import { Config, Effect, FileSystem, Layer } from 'effect';
 import { NODE_TYPES, type NodeType } from '@graphrag/schema';
 import { GraphArtifact, buildPrompt, retrieve } from '@graphrag/retrieval';
 import {
@@ -9,22 +10,22 @@ import {
 } from '@graphrag/retrieval/adapters';
 import { build, check, diffGenerated, readCache, writeGenerated } from './build.ts';
 import { CacheOnlyEmbedderLayer } from './embed.ts';
-import { exists, pathJoin, writeText } from './fs.ts';
+import { join } from 'node:path';
 import { loadGraphIndex } from './load-artifact.ts';
 import { evalPrompts } from './eval-prompts.ts';
 
-const root = pathJoin(import.meta.dir, '..', '..', '..');
-const CONTENT_DIR = pathJoin(root, 'content');
-const GENERATED_DIR = pathJoin(import.meta.dir, '..', 'generated');
-const CACHE_FILE = pathJoin(import.meta.dir, '..', '.cache', 'embeddings.json');
+const root = join(import.meta.dir, '..', '..', '..');
+const CONTENT_DIR = join(root, 'content');
+const GENERATED_DIR = join(import.meta.dir, '..', 'generated');
+const CACHE_FILE = join(import.meta.dir, '..', '.cache', 'embeddings.json');
 
 const log = (line: string) => Effect.sync(() => console.log(line));
 const err = (line: string) => Effect.sync(() => console.error(line));
 
 /** Local: Workers AI REST when a token is present, else the lexical fallback (announced loudly). */
 const pickEmbedder = Effect.gen(function* () {
-  const token = process.env.WORKERS_AI_TOKEN;
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const token = yield* Config.withDefault(Config.String('WORKERS_AI_TOKEN'), '');
+  const accountId = yield* Config.withDefault(Config.String('CLOUDFLARE_ACCOUNT_ID'), '');
   if (token && accountId) {
     yield* log(`embedder: ${WORKERS_AI_EMBEDDING_MODEL} (Workers AI REST)`);
     return WorkersAiRestEmbedderLayer({ accountId, token });
@@ -62,7 +63,7 @@ const cmdIndex = (verify: boolean) =>
           first?.vector.length ?? 768,
         )
       : yield* pickEmbedder;
-    const queries = yield* evalPrompts(pathJoin(root, 'evals', 'cases'));
+    const queries = yield* evalPrompts(join(root, 'evals', 'cases'));
     const result = yield* build(CONTENT_DIR, cache, { verify, generatedAt, queries }).pipe(
       Effect.provide(layer),
     );
@@ -144,8 +145,9 @@ const cmdNew = (type: string, slug: string) =>
       yield* err(`slug must be lowercase [a-z0-9-], got ${JSON.stringify(slug)}`);
       return 1;
     }
-    const file = pathJoin(CONTENT_DIR, type, `${slug}.md`);
-    if (yield* exists(file)) {
+    const fs = yield* FileSystem.FileSystem;
+    const file = join(CONTENT_DIR, type, `${slug}.md`);
+    if (yield* fs.exists(file)) {
       yield* err(`${file} already exists`);
       return 1;
     }
@@ -153,7 +155,7 @@ const cmdNew = (type: string, slug: string) =>
       .split('-')
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');
-    yield* writeText(
+    yield* fs.writeFileString(
       file,
       `---\ntitle: ${title}\nsummary: One line for labels and hover cards.\n${TEMPLATES[type as NodeType]}\n---\n\nDense, factual body written for the LLM: what, where, when, outcomes, numbers.\n`,
     );
@@ -190,6 +192,9 @@ const main = Effect.gen(function* () {
 });
 
 const code = await Effect.runPromise(
-  main.pipe(Effect.catchCause((cause) => err(`error: ${cause.toString()}`).pipe(Effect.as(1)))),
+  main.pipe(
+    Effect.provide(NodeFileSystem.layer),
+    Effect.catchCause((cause) => err(`error: ${cause.toString()}`).pipe(Effect.as(1))),
+  ),
 );
 process.exit(code);

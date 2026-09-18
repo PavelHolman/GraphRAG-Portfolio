@@ -3,10 +3,14 @@ import { EmbedError } from '../errors.ts';
 import { Embedder, type EmbedderShape } from '../services.ts';
 
 /** SHA-256 hex of the exact text embedded; the key of the committed embedding cache. */
-export const sha256 = (text: string): Effect.Effect<string> =>
-  Effect.promise(async () => {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+export const sha256 = (text: string): Effect.Effect<string, EmbedError> =>
+  Effect.tryPromise({
+    try: async () => {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+    },
+    catch: (cause) =>
+      new EmbedError({ message: `SHA-256 failed: ${String(cause)}`, retryable: false, cause }),
   });
 
 /**
