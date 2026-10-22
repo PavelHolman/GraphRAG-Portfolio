@@ -84,7 +84,7 @@ jobs:
       - if: github.event_name == 'pull_request'
         run: echo "${{ github.event.pull_request.title }}" | bunx commitlint
       - if: steps.filter.outputs.render == 'true'
-        run: bun run build && bunx playwright install --with-deps chromium && bun content:render --verify
+        run: bun run build && bun playwright:install && bun content:render --verify
 
   e2e:
     needs: check
@@ -97,7 +97,7 @@ jobs:
           bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
       - run: bun run build
-      - run: bunx playwright install --with-deps chromium
+      - run: bun playwright:install
       - run: bun test:e2e
 
   preview:

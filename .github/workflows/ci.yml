@@ -53,7 +53,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
       # cv.pdf must match /print; hero.png is not rendered yet. docs/spec/page.md.
       - if: steps.filter.outputs.render == 'true'
-        run: bun run build && bunx playwright install --with-deps chromium && bun content:render --verify
+        run: bun run build && bun playwright:install && bun content:render --verify
 
   e2e:
     needs: check
@@ -66,7 +66,8 @@ jobs:
           bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
       - run: bun run build
-      - run: bunx playwright install --with-deps chromium
+      # The web package's own Playwright, so the browser build matches what the tests import.
+      - run: bun playwright:install
       - run: bun test:e2e
         env:
           CI: 'true'
