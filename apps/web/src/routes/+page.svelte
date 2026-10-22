@@ -115,18 +115,23 @@
       flushSync();
     }).updateCallbackDone;
   };
+  // The answer later takes the intro's measured place, so measure the intro as it now stands
+  // (without its actions row while open) and the field never jumps when the first answer arrives.
   const askIntro = () =>
     void morph(() => {
       revealed = true;
       autofocus = true;
-    });
+    }).then(measure);
   // Keyboard focus returns to the button the field came from.
   const dismiss = () =>
     void morph(() => {
       revealed = false;
       autofocus = false;
       turn.reset();
-    }).then(() => askButton?.focus({ preventScroll: true }));
+    }).then(() => {
+      measure();
+      askButton?.focus({ preventScroll: true });
+    });
   // A selected phrase is the visitor's own words, so it counts as typed, not as a suggestion.
   const askSelected = (prompt: string) => {
     document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
@@ -235,17 +240,19 @@
       <h1>{data.model.person.name}</h1>
       {#if data.model.person.headline}<p class="headline">{data.model.person.headline}</p>{/if}
       {#if data.model.person.lede}<p class="lede">{data.model.person.lede}</p>{/if}
-      <div class="actions">
-        {#if !open}<button class="primary" bind:this={askButton} onclick={askIntro}
-            >✦ Ask about me</button
-          >{/if}
-        {#if data.model.person.links.email}<a class="secondary" href={data.model.person.links.email}
-            >Contact me</a
-          >{/if}
-        {#if data.model.person.links.cv}<a class="secondary" href={data.model.person.links.cv}
-            >Download CV</a
-          >{/if}
-      </div>
+      <!-- While the field is open it takes this row's place; the header keeps Contact and the CV. -->
+      {#if !open}
+        <div class="actions">
+          <button class="primary" bind:this={askButton} onclick={askIntro}>✦ Ask about me</button>
+          {#if data.model.person.links.email}<a
+              class="secondary"
+              href={data.model.person.links.email}>Contact me</a
+            >{/if}
+          {#if data.model.person.links.cv}<a class="secondary" href={data.model.person.links.cv}
+              >Download CV</a
+            >{/if}
+        </div>
+      {/if}
     </div>
 
     <Chat
@@ -324,7 +331,8 @@
     transform: translateY(-50%);
     width: min(520px, 46vw);
     display: grid;
-    gap: 10px;
+    /* No gap: the prompt field opens exactly where the actions row was, centred on the same line. */
+    gap: 0;
     z-index: 5;
     /* The column is transparent to the pointer so stars behind it stay hoverable and clickable;
        only the controls take events back. */
@@ -395,10 +403,41 @@
     color: var(--fg);
     max-width: 460px;
   }
+  /* One line, and as tall as the prompt field (50px) with the buttons centred in it, so opening
+     the field in this row's place moves nothing and the pill morphs about one shared centre. */
   .actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-height: 50px;
     gap: 10px;
+  }
+  /* Narrow columns and phones: a little tighter so the three still fit on one line. */
+  @media (max-width: 900px) {
+    .actions {
+      gap: 8px;
+    }
+    .intro .actions .primary,
+    .intro .actions .secondary {
+      padding: 9px 14px;
+      font-size: 13px;
+    }
+  }
+  @media (max-width: 400px) {
+    .actions {
+      gap: 6px;
+    }
+    .intro .actions .primary,
+    .intro .actions .secondary {
+      padding: 8px 11px;
+      font-size: 12px;
+    }
+  }
+  /* The very narrowest phones (320px) cannot fit three readable buttons; wrapping beats clipping. */
+  @media (max-width: 340px) {
+    .actions {
+      flex-wrap: wrap;
+    }
   }
   .actions .primary,
   .actions .secondary {
@@ -417,11 +456,11 @@
     color: var(--bg);
     border: 1px solid var(--accent);
   }
-  .actions .secondary:first-of-type {
-    view-transition-name: contact;
-  }
-  .actions .secondary:last-of-type {
-    view-transition-name: download;
+  /* Keyboard focus (closing the field hands it back here) in the page's own colours. */
+  .actions .primary:focus-visible,
+  .actions .secondary:focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 2px;
   }
   .actions .secondary {
     background: rgba(15, 14, 13, 0.6);
@@ -433,8 +472,8 @@
     border-color: var(--accent);
     color: var(--accent);
   }
-  /* The morph: one pill stretching into the other, both images pinned left and clipped to the
-     group's rounded box so neither text squashes. */
+  /* The morph: the button stretches in place into the field, both images pinned left and clipped
+     to the group's rounded box so neither text squashes. */
   :global(::view-transition-group(ask)) {
     overflow: clip;
     border-radius: 999px;
@@ -450,9 +489,9 @@
   :global(::view-transition-old(ask)) {
     animation-duration: 0.18s;
   }
-  :global(::view-transition-group(intro)),
-  :global(::view-transition-group(contact)),
-  :global(::view-transition-group(download)) {
+  /* Contact and the CV need no names: they leave with the page cross-fade. Named, Chrome would
+     copy their backdrop blur onto a transition group that smears the field for the whole morph. */
+  :global(::view-transition-group(intro)) {
     animation-duration: 0.42s;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }

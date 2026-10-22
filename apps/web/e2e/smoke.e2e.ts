@@ -11,6 +11,8 @@ test('the page renders the resume sections and a Turn streams to the caption', a
   await askButton.click();
   await expect(input).toBeFocused();
   await expect(askButton).toBeHidden();
+  // The field takes the whole actions row's place.
+  await expect(page.locator('.actions')).toBeHidden();
   await input.press('Escape');
   await expect(input).toBeHidden();
   await expect(askButton).toBeFocused();
@@ -20,6 +22,18 @@ test('the page renders the resume sections and a Turn streams to the caption', a
   await page.getByRole('button', { name: 'send' }).click();
   await expect(page.locator('.caption')).toBeVisible();
   await expect(page.locator('.caption .cite').first()).toBeVisible({ timeout: 30_000 });
+});
+
+test('hints keep rotating while the empty field has focus', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/');
+  await page.getByRole('button', { name: '✦ Ask about me' }).click();
+  await expect(page.getByLabel('Ask about this resume')).toBeFocused();
+  const ghost = page.locator('.ghost .cycle');
+  const first = await ghost.textContent();
+  // The hint cycles every 6 s; focus alone must not pause it, only text in the field.
+  await page.clock.fastForward(6500);
+  await expect(ghost).not.toHaveText(first ?? '');
 });
 
 test('the CV is linked, served and printable', async ({ page, request }) => {

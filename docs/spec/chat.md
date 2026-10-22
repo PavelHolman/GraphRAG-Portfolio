@@ -5,14 +5,14 @@ Decisions from the chat-panel prototype ([ticket](https://github.com/PavelHolman
 ## Layout
 
 - Everything is **horizontally centred**, max width 680px, 12px side gutters. Same layout on desktop and phone.
-- **Prompt field** at the bottom: pill, `--panel` background at 88% with blur, hairline border, a `›` mark on the left (coral while streaming), a round coral button on the right.
+- **Prompt field** at the bottom: pill, `--panel` background at 88% with blur, hairline border, a quiet × on the left that closes it (same footprint as the send button), a round coral send button on the right that breathes while an Answer streams.
 - **Answer caption** directly above the field: `--panel` at 82% with blur, hairline border, 14px radius. Content: a mono uppercase question line (prefixed ✦ when the Prompt came from a hint), the Answer text, the Citation chip row, then Followup chips. Capped at about 9 lines with a bottom fade and a `+` toggle that expands to 50vh scrolling.
 - The Scene keeps the upper half of the viewport; the Used Subgraph recentres at the Scene origin, which sits above the caption.
 
 ## Hints and the field
 
-- The field is **hidden until asked for**: absent on load, "Ask about me" morphs into it in one view transition (the two pills share a name; the other actions glide over) and it takes focus. A question asked from anywhere else (Sections, the pick card, a text selection) opens it without focus. A muted × inside the pill, or Escape, closes it and any answer, morphing back into the button, which gets focus. Hint previews on the Scene wait for it to open. Without view-transition support or with reduced motion the swap is instant.
-- The field shows a **ghost hint** (a suggested Prompt) as placeholder text, cycling every 6 s with a short fade, paused while streaming. Hints are authored, not generated.
+- The field is **hidden until asked for**: absent on load, "Ask about me" morphs into it in place in one view transition (the two pills share a name): the field takes the whole actions row's spot, Contact and Download CV fade out with the page (the header keeps both), and the field takes focus. The ghost hint fades only when it cycles, never on that entrance. A question asked from anywhere else (Sections, the pick card, a text selection) opens it without focus. The × at the pill's left end, or Escape, closes it and any answer, morphing back into the button, which gets focus. Hint previews on the Scene wait for it to open. Without view-transition support or with reduced motion the swap is instant.
+- The field shows a **ghost hint** (a suggested Prompt) as placeholder text, cycling every 6 s with a short fade, paused while streaming or while the field has text (focus alone does not pause it). Hints are authored, not generated.
 - **No auto-play.** Submitting an empty field (Enter or the button) sends the hint currently shown as a suggested Prompt. The button shows ▶ when the field is empty and ↵ when it has text.
 - Typing hides the ghost text.
 - **Hint preview in the Scene**: while a ghost hint is showing and no Turn is streaming, the Scene faintly lights that hint's related Nodes (the faint tier, no seeds, no Answer). Each hint carries its precomputed candidate Node ids in the static artifact, so the preview needs no request. When the hint cycles, the preview cross-fades to the next set; typing or a real Prompt clears it.
