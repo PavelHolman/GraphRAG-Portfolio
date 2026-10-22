@@ -108,7 +108,8 @@
       '@type': 'Person',
       name: data.model.person.name,
       jobTitle: data.model.person.headline,
-      sameAs: Object.values(data.model.person.links).filter((l) => !l.startsWith('mailto:')),
+      // Profiles only: the email and the site's own CV file are not other identities.
+      sameAs: Object.values(data.model.person.links).filter((l) => /^https?:/.test(l)),
       knowsAbout: data.model.skills.flatMap((g) => g.skills.map((s) => s.title)).slice(0, 12),
       worksFor: data.model.experience[0]?.organization
         ? { '@type': 'Organization', name: data.model.experience[0].organization }

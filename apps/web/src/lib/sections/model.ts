@@ -10,6 +10,8 @@ export interface ExperienceItem {
   readonly organizationUrl: string | undefined;
   readonly range: string;
   readonly body: string;
+  /** Authored CV bullets; empty when the Node has none and the CV falls back to the body. */
+  readonly highlights: ReadonlyArray<string>;
   readonly skills: ReadonlyArray<{ title: string; note: string | undefined }>;
   readonly projects: ReadonlyArray<{
     id: string;
@@ -33,6 +35,8 @@ export interface EducationItem {
     title: string;
     summary: string | undefined;
     url: string | undefined;
+    /** ISO end, so a thesis due later reads as in progress. */
+    end: string | undefined;
   }>;
 }
 /** A Project no Experience or Education owns: it gets its own card. */
@@ -45,6 +49,8 @@ export interface ProjectItem {
   readonly url: string | undefined;
   readonly repo: string | undefined;
   readonly skills: ReadonlyArray<string>;
+  /** Domain Node ids it is `in-domain` of; the CV lists competitive programming on its own. */
+  readonly domains: ReadonlyArray<string>;
 }
 export interface SkillGroup {
   readonly category: string;
@@ -67,6 +73,11 @@ export interface PageModel {
     workingSince: string | undefined;
     links: Record<string, string>;
     languages: Record<string, string>;
+    /** CV curation from the Person Node: Skill groups by title, and Node ids to leave out. */
+    cv: {
+      skills: ReadonlyArray<{ group: string; titles: ReadonlyArray<string> }>;
+      omit: ReadonlyArray<string>;
+    };
   };
   readonly experience: ReadonlyArray<ExperienceItem>;
   readonly education: ReadonlyArray<EducationItem>;
@@ -130,6 +141,7 @@ export const buildPageModel = (
       organizationUrl: urlOf(byId.get(out(n.id, 'at')[0]?.target ?? '')),
       range: range(n),
       body: n.body,
+      highlights: n.highlights ?? [],
       skills: out(n.id, 'uses')
         .sort((a, b) => (b.note ? 1 : 0) - (a.note ? 1 : 0))
         .slice(0, 6)
@@ -162,7 +174,13 @@ export const buildPageModel = (
       projects: out(n.id, 'delivered')
         .map((e) => byId.get(e.target))
         .filter((p): p is ArtifactNode => p !== undefined && !p.hidden && claim(p.id))
-        .map((p) => ({ id: p.id, title: p.title, summary: p.summary, url: urlOf(p) })),
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          summary: p.summary,
+          url: urlOf(p),
+          end: p.end ? fmt(p.end) : undefined,
+        })),
     }));
 
   // Projects nobody `delivered` or `led` stand on their own (this site, contest results).
@@ -178,6 +196,7 @@ export const buildPageModel = (
       url: field(n, 'url'),
       repo: field(n, 'repo'),
       skills: out(n.id, 'uses').map((e) => byId.get(e.target)?.title ?? e.target),
+      domains: out(n.id, 'in-domain').map((e) => e.target),
     }));
 
   const groups = new Map<string, Array<ArtifactNode>>();
@@ -216,6 +235,16 @@ export const buildPageModel = (
       ),
       links: person?.links ?? {},
       languages: person?.languages ?? {},
+      cv: {
+        skills: Object.entries(person?.cv?.skills ?? {}).map(([group, ids]) => ({
+          group,
+          titles: ids.flatMap((id) => {
+            const s = byId.get(id);
+            return s && !s.hidden ? [s.title] : [];
+          }),
+        })),
+        omit: person?.cv?.omit ?? [],
+      },
     },
     experience,
     education,

@@ -21,6 +21,7 @@
     "content:index": "oxfmt content && bun run packages/graph-index/src/cli.ts index",
     "content:ask": "bun run packages/graph-index/src/cli.ts ask",
     "content:new": "bun run packages/graph-index/src/cli.ts new",
+    "content:render": "bun run apps/web/scripts/render.ts",
     "prepare": "husky"
   },
   "devDependencies": {

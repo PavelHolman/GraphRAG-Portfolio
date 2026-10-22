@@ -11,6 +11,18 @@ test('the page renders the resume sections and a Turn streams to the caption', a
   await expect(page.locator('.caption .cite').first()).toBeVisible({ timeout: 30_000 });
 });
 
+test('the CV is linked, served and printable', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page.locator('header').getByRole('link', { name: 'Download CV' })).toHaveAttribute(
+    'href',
+    '/cv.pdf',
+  );
+  const pdf = await request.get('/cv.pdf');
+  expect(pdf.headers()['content-type']).toContain('application/pdf');
+  await page.goto('/print');
+  await expect(page.getByRole('heading', { name: 'Experience' })).toBeVisible();
+});
+
 test('the Turn endpoint speaks NDJSON in ADR 0003 order', async ({ request }) => {
   const res = await request.post('/api/turn', { data: { prompt: 'Where did you study?' } });
   expect(res.ok()).toBe(true);
