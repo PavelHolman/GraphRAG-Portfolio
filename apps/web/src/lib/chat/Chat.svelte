@@ -17,6 +17,10 @@
     onclose: () => void;
     /** Desktop: the answer box takes exactly the intro's height so the field never moves. */
     slotHeight: number;
+    /** The field stays collapsed until the visitor asks to talk; then it slides in. */
+    open: boolean;
+    /** Bumped when the visitor opens the field on purpose, so it takes focus. */
+    focusTick: number;
   }
   let {
     messages,
@@ -30,8 +34,15 @@
     oninput,
     onclose,
     slotHeight,
+    open,
+    focusTick,
   }: Props = $props();
   let draft = $state('');
+  let input = $state<HTMLInputElement | undefined>();
+  // Focus only on an explicit open: a question asked from the Sections must not pop a phone keyboard.
+  $effect(() => {
+    if (focusTick > 0) input?.focus({ preventScroll: true });
+  });
   const current = $derived(messages.filter((m) => m.role === 'answer').at(-1));
   const lastPrompt = $derived([...messages].reverse().find((m) => m.role === 'visitor'));
   const question = $derived(lastPrompt?.parts[0]?.kind === 'text' ? lastPrompt.parts[0].text : '');
@@ -78,27 +89,32 @@
     </section>
   {/if}
 
-  <form class="field" onsubmit={submit}>
-    <span class="mark" class:live={streaming}>›</span>
-    <div class="inputwrap">
-      {#if !draft}
-        <span class="ghost"
-          >{#key hint}<span class="cycle">{hint}</span>{/key}</span
+  <div class="reveal" class:open inert={!open} aria-hidden={!open}>
+    <div class="clip">
+      <form class="field" onsubmit={submit}>
+        <span class="mark" class:live={streaming}>›</span>
+        <div class="inputwrap">
+          {#if !draft}
+            <span class="ghost"
+              >{#key hint}<span class="cycle">{hint}</span>{/key}</span
+            >
+          {/if}
+          <input
+            bind:this={input}
+            bind:value={draft}
+            aria-label="Ask about this resume"
+            autocomplete="off"
+            onfocus={focusIn}
+            onblur={focusOut}
+            onkeydown={keydown}
+          />
+        </div>
+        <button type="submit" aria-label={draft ? 'send' : 'ask the suggested question'}
+          >{draft ? '↵' : '▶'}</button
         >
-      {/if}
-      <input
-        bind:value={draft}
-        aria-label="Ask about this resume"
-        autocomplete="off"
-        onfocus={focusIn}
-        onblur={focusOut}
-        onkeydown={keydown}
-      />
+      </form>
     </div>
-    <button type="submit" aria-label={draft ? 'send' : 'ask the suggested question'}
-      >{draft ? '↵' : '▶'}</button
-    >
-  </form>
+  </div>
 
   {#if followups.length && !streaming}
     <div class="follow">
@@ -120,6 +136,42 @@
   .field,
   .follow > * {
     pointer-events: auto;
+  }
+  /* Collapsed to nothing until opened; the row grows and the pill rises into place. */
+  .reveal {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(10px);
+    visibility: hidden;
+    transition:
+      grid-template-rows 0.35s ease,
+      opacity 0.3s ease,
+      transform 0.35s ease,
+      visibility 0s linear 0.35s;
+  }
+  /* Padding-free, so the closed row is truly zero high; unclipped once open so the shadow shows. */
+  .clip {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .reveal.open .clip {
+    overflow: visible;
+  }
+  .reveal.open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .reveal:not(.open) .field {
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      transition: none;
+    }
   }
   /* Phones: a sheet pinned to the bottom of the Hero. */
   @media (max-width: 760px) {

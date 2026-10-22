@@ -28,6 +28,9 @@
   let webgl = $state(true);
   let reducedMotion = $state(false);
   let picked = $state<number | null>(null);
+  // The prompt field hides until the visitor asks to talk; any question asked anywhere opens it.
+  let revealed = $state(false);
+  let focusTick = $state(0);
   // The intro's box and the column's landing position, measured while the intro is visible, so the
   // answer can take the intro's exact place and the prompt field never moves.
   let lead = $state<HTMLDivElement | undefined>();
@@ -40,13 +43,16 @@
     if (introEl.offsetHeight > 0) introSlot = introEl.offsetHeight;
     leadTop = lead.getBoundingClientRect().top - hero.getBoundingClientRect().top;
   };
+  // On phones the intro copy makes room for the caption once a conversation has started.
+  const conversing = $derived(turn.messages.length > 0);
+  const open = $derived(revealed || conversing);
   const hint = $derived(data.hints[hintIndex % Math.max(1, data.hints.length)]);
   // Hint preview: faint tier while a ghost hint shows and nothing streams or is typed.
   const preview = $derived(
-    !typing && !turn.streaming && turn.subgraph === null && hint ? new Set(hint.candidates) : null,
+    open && !typing && !turn.streaming && turn.subgraph === null && hint
+      ? new Set(hint.candidates)
+      : null,
   );
-  // On phones the intro copy makes room for the caption once a conversation has started.
-  const conversing = $derived(turn.messages.length > 0);
 
   const onsend = (p: string) => turn.run(p, 'typed');
   const onplayhint = () => {
@@ -93,7 +99,10 @@
     picked = null;
     onask(p);
   };
-  const askIntro = () => onask('What are you strongest at?');
+  const askIntro = () => {
+    revealed = true;
+    focusTick++;
+  };
   // A selected phrase is the visitor's own words, so it counts as typed, not as a suggestion.
   const askSelected = (prompt: string) => {
     document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
@@ -156,6 +165,19 @@
 <svelte:head>
   <title>{data.model.person.name} · interactive resume</title>
   <meta name="description" content={data.model.person.lede ?? ''} />
+  <!-- Link previews (LinkedIn, Slack, X): the Hero at rest, rendered by `bun content:render`. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{data.origin}/" />
+  <meta property="og:title" content="{data.model.person.name} · interactive resume" />
+  <meta property="og:description" content={data.model.person.lede ?? ''} />
+  <meta property="og:image" content="{data.origin}/hero.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta
+    property="og:image:alt"
+    content="{data.model.person.name}: {data.model.person.headline ?? ''}"
+  />
+  <meta name="twitter:card" content="summary_large_image" />
   {@html jsonLd}
 </svelte:head>
 
@@ -212,6 +234,8 @@
       {oninput}
       {onclose}
       slotHeight={introSlot}
+      {open}
+      {focusTick}
     />
   </div>
 

@@ -3,7 +3,7 @@ import { artifact, hints } from '$lib/server/artifact.ts';
 import { buildPageModel } from '$lib/sections/model.ts';
 
 /** Everything the page needs is derived from the committed artifact at request time. */
-export const load: PageServerLoad = () => {
+export const load: PageServerLoad = ({ url }) => {
   const nodes = artifact.nodes.filter((n) => !n.hidden);
   const index = new Map(nodes.map((n, i) => [n.id, i]));
   const edges = artifact.edges
@@ -37,5 +37,7 @@ export const load: PageServerLoad = () => {
     })),
     model: buildPageModel(artifact.nodes, artifact.edges),
     embeddingModel: artifact.meta.embedding.model,
+    // Link previews need absolute URLs; the origin is whatever host served this request.
+    origin: url.origin,
   };
 };

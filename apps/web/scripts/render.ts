@@ -1,6 +1,7 @@
 // `bun content:render [--verify]`: prints the `/print` route of a built app to `static/cv.pdf`
-// with Playwright. With --verify it renders to memory and compares the extracted text, whitespace
-// aside, with the committed PDF instead (bytes differ on every print). docs/spec/page.md.
+// and screenshots the Hero at rest to `static/hero.png` (the link preview) with Playwright. With
+// --verify it renders to memory and compares the PDF's extracted text, whitespace aside, and the
+// PNG's dimensions with the committed files instead (bytes differ on every run). docs/spec/page.md.
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem';
 import { Data, Effect, FileSystem, Schedule } from 'effect';
 import { chromium } from '@playwright/test';
@@ -9,6 +10,11 @@ import { join } from 'node:path';
 
 const WEB = join(import.meta.dir, '..');
 const CV = join(WEB, 'static', 'cv.pdf');
+const HERO = join(WEB, 'static', 'hero.png');
+/** The size LinkedIn, Slack and X crop link previews to. */
+const PREVIEW = { width: 1200, height: 630 };
+/** The Scene eases into its rest Layout; this is comfortably past it. */
+const SETTLE_MS = 3000;
 const PORT = 4175;
 const ORIGIN = `http://localhost:${PORT}`;
 
@@ -45,16 +51,29 @@ const browser = Effect.acquireRelease(
   (b) => Effect.promise(() => b.close()),
 );
 
-const print = Effect.gen(function* () {
+const render = Effect.gen(function* () {
   yield* preview;
-  const page = yield* Effect.flatMap(browser, (b) => attempt('open page', () => b.newPage()));
+  const b = yield* browser;
+  const page = yield* attempt('open page', () => b.newPage());
   yield* attempt('load /print', () => page.goto(`${ORIGIN}/print`, { waitUntil: 'networkidle' }));
   yield* attempt('fonts', () => page.evaluate(() => document.fonts.ready.then(() => undefined)));
   const pdf = yield* attempt('print', () =>
     page.pdf({ preferCSSPageSize: true, printBackground: true, tagged: true }),
   );
-  return new Uint8Array(pdf);
+  const hero = yield* attempt('open hero', () =>
+    b.newPage({ viewport: PREVIEW, deviceScaleFactor: 1 }),
+  );
+  yield* attempt('load /', () => hero.goto(`${ORIGIN}/`, { waitUntil: 'networkidle' }));
+  yield* attempt('settle', () => hero.waitForTimeout(SETTLE_MS));
+  const png = yield* attempt('screenshot', () => hero.screenshot({ type: 'png' }));
+  return { pdf: new Uint8Array(pdf), png: new Uint8Array(png) };
 }).pipe(Effect.scoped);
+
+/** Width and height from a PNG's IHDR chunk (big-endian, bytes 16 to 24). */
+const pngSize = (png: Uint8Array) => {
+  const v = new DataView(png.buffer, png.byteOffset, png.byteLength);
+  return { width: v.getUint32(16), height: v.getUint32(20) };
+};
 
 const textOf = (pdf: Uint8Array) =>
   attempt('extract text', async () => {
@@ -76,7 +95,7 @@ const firstDifference = (a: string, b: string): number | undefined => {
 const main = Effect.gen(function* () {
   const verify = process.argv.includes('--verify');
   const fs = yield* FileSystem.FileSystem;
-  const pdf = yield* print;
+  const { pdf, png } = yield* render;
   const { totalPages, text } = yield* textOf(pdf);
   if (totalPages !== 1) {
     yield* err(`cv.pdf has ${totalPages} pages; the CV must fit one. Shorten the content.`);
@@ -85,7 +104,20 @@ const main = Effect.gen(function* () {
   if (!verify) {
     yield* fs.writeFile(CV, pdf);
     yield* log(`wrote ${CV} (${Math.round(pdf.length / 1024)} KiB)`);
+    yield* fs.writeFile(HERO, png);
+    yield* log(`wrote ${HERO} (${Math.round(png.length / 1024)} KiB)`);
     return 0;
+  }
+  if (!(yield* fs.exists(HERO))) {
+    yield* err(`${HERO} is missing; run bun content:render and commit it.`);
+    return 1;
+  }
+  const committedSize = pngSize(yield* fs.readFile(HERO));
+  if (committedSize.width !== PREVIEW.width || committedSize.height !== PREVIEW.height) {
+    yield* err(
+      `hero.png is ${committedSize.width}x${committedSize.height}, expected ${PREVIEW.width}x${PREVIEW.height}. Run bun content:render and commit.`,
+    );
+    return 1;
   }
   if (!(yield* fs.exists(CV))) {
     yield* err(`${CV} is missing; run bun content:render and commit it.`);
@@ -99,7 +131,7 @@ const main = Effect.gen(function* () {
     yield* err(`  rendered:  …${words(text).slice(at, at + 60)}`);
     return 1;
   }
-  yield* log('ok: cv.pdf matches /print');
+  yield* log('ok: cv.pdf matches /print; hero.png is 1200x630');
   return 0;
 });
 

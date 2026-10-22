@@ -11,6 +11,7 @@ Decisions from the chat-panel prototype ([ticket](https://github.com/PavelHolman
 
 ## Hints and the field
 
+- The field is **hidden until asked for**: collapsed and inert on load, it slides in and takes focus when the visitor presses "Ask about me", and opens without focus when a question is asked from anywhere else (Sections, the pick card, a text selection). Hint previews on the Scene wait for it to open.
 - The field shows a **ghost hint** (a suggested Prompt) as placeholder text, cycling every 6 s with a short fade, paused while streaming. Hints are authored, not generated.
 - **No auto-play.** Submitting an empty field (Enter or the button) sends the hint currently shown as a suggested Prompt. The button shows ▶ when the field is empty and ↵ when it has text.
 - Typing hides the ghost text.

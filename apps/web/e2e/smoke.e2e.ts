@@ -5,6 +5,9 @@ test('the page renders the resume sections and a Turn streams to the caption', a
   await expect(page.locator('#about')).toBeVisible();
   await expect(page.locator('#experience h3').first()).toBeVisible();
   const input = page.getByLabel('Ask about this resume');
+  await expect(input).toBeHidden();
+  await page.getByRole('button', { name: '✦ Ask about me' }).click();
+  await expect(input).toBeFocused();
   await input.fill('Tell me about your Effect work');
   await page.getByRole('button', { name: 'send' }).click();
   await expect(page.locator('.caption')).toBeVisible();
@@ -17,6 +20,11 @@ test('the CV is linked, served and printable', async ({ page, request }) => {
     'href',
     '/cv.pdf',
   );
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    'content',
+    /\/hero\.png$/,
+  );
+  expect((await request.get('/hero.png')).headers()['content-type']).toContain('image/png');
   const pdf = await request.get('/cv.pdf');
   expect(pdf.headers()['content-type']).toContain('application/pdf');
   await page.goto('/print');
