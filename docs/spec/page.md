@@ -26,20 +26,20 @@ Projects owned by an Experience or Education appear under it, never twice. No co
 
 Every Experience, Education, Project and Skill item carries its Node id as an anchor, so the Scene's pick card links straight to it, and a small "ask about this" affordance. It scrolls to the Hero and submits a canned Prompt marked ✦ (for example "Tell me about your time at Acme Bank"), reusing the normal Turn pipeline. No cross-scroll hover highlighting.
 
-Selecting text anywhere in the Hero or the Sections raises the same affordance as a pill just below and right of the selection's last line, clear of the browser's own selection menu and clamped to the viewport; it sends the phrase verbatim (whitespace collapsed, 3 to 200 characters) as a **typed** Prompt. Selections inside the header, the pick card or a form field are ignored.
+Selecting text anywhere in the Hero or the Sections raises the same affordance (accent bars at the selection's ends and the pill ease after the selection as it changes, but stay pinned to the text, unanimated, while the page scrolls) as a pill just below and right of the selection's last line, clear of the browser's own selection menu and clamped to the viewport; it sends the phrase verbatim (whitespace collapsed, 3 to 200 characters) as a **typed** Prompt. Selections inside the header, the pick card or a form field are ignored.
 
 ## Navigation
 
-Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. Frosted glass throughout (translucent panel plus `backdrop-filter`), deepening once the Hero is scrolled past. On phones the anchors collapse into a menu; the three links stay as icons.
+Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. Frosted glass throughout (translucent panel plus `backdrop-filter`), deepening once the Hero is scrolled past. Below 960px the anchors step aside so the name and links keep one line each; on phones the name becomes initials and the links stay as icons.
 
 ## Generated files
 
 `bun content:render` runs after a web build (separate from `content:index`, which stays free of the app) and uses Playwright to write, committed under `apps/web/static/`:
 
-- `cv.pdf`: the sections rendered through a print stylesheet on a `/print` route.
-- `hero.png` (two sizes): the Scene at rest, rendered from the artifact's Layout, used as the no-WebGL and reduced-motion fallback and as the social preview image.
+- `cv.pdf`: one A4 page from the same page model, laid out on a `/print` route in industry order (experience, projects, education, competitive programming, skills, languages) with the portrait. Experience shows its `highlights` bullets (the body when it has none); Education and Projects use one line each; the Person's `cv.skills` sets the story-ordered Skill groups (every Skill by category when absent) and `cv.omit` drops Nodes the site keeps; Projects in the competitive-programming Domain get their own section. The render fails if the PDF runs to a second page. The Person's `links.cv` (`/cv.pdf`) shows the Download CV buttons and a Contact card; it stays out of JSON-LD `sameAs`.
+- `hero.png`: the Hero at rest at 1200×630, the link preview behind the `og:image` and `twitter:card` tags (absolute URLs from the request origin). A text-free variant for the no-WebGL and reduced-motion fallback is not rendered yet.
 
-CI runs `content:render` and diffs the PDF's extracted text and the PNG's dimensions, not bytes.
+CI runs `content:render --verify` and diffs the PDF's extracted text (whitespace ignored, since wrapping differs between machines) and the PNG's dimensions, not bytes.
 
 ## Crawlability and fallbacks
 

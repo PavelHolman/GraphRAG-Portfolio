@@ -1,0 +1,12 @@
+id: entity-ctu-open
+mode: entity
+prompt: Do you judge or organize programming contests?
+retrieval:
+  # The Domain is the entry point; the ICPC finals Project carries the CTU Open facts.
+  must_seed: [domain/competitive-programming]
+  must_include: [project/icpc-finals]
+  max_nodes: 40
+answer:
+  must_cite: [project/icpc-finals]
+  decline: false
+  shape: prose

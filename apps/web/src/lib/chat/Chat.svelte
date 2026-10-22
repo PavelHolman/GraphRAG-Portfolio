@@ -1,6 +1,7 @@
 <script lang="ts">
   // Centred chat: answer caption above a bottom pill field. Ghost hints cycle in the field; an empty
   // submit plays the hint shown. docs/spec/chat.md, winning variant B.
+  import { untrack } from 'svelte';
   import Answer from './Answer.svelte';
   import type { Message } from './types.ts';
 
@@ -17,6 +18,12 @@
     onclose: () => void;
     /** Desktop: the answer box takes exactly the intro's height so the field never moves. */
     slotHeight: number;
+    /** The field exists only once the visitor asks to talk; "Ask about me" morphs into it. */
+    open: boolean;
+    /** Opened on purpose (the button), so it takes focus; not when a Section asked a question. */
+    autofocus: boolean;
+    /** Closes the field and any answer, morphing back into the button. */
+    ondismiss: () => void;
   }
   let {
     messages,
@@ -30,8 +37,23 @@
     oninput,
     onclose,
     slotHeight,
+    open,
+    autofocus,
+    ondismiss,
   }: Props = $props();
   let draft = $state('');
+  let input = $state<HTMLInputElement | undefined>();
+  // The ghost hint fades only when it cycles, not when the field first appears: that entrance
+  // belongs to the morph, and a second fade on top of it smears the text.
+  const firstHint = untrack(() => hint);
+  let cycled = $state(false);
+  $effect(() => {
+    if (hint !== firstHint) cycled = true;
+  });
+  // Focus only on an explicit open: a question asked from the Sections must not pop a phone keyboard.
+  $effect(() => {
+    if (input && autofocus) input.focus({ preventScroll: true });
+  });
   const current = $derived(messages.filter((m) => m.role === 'answer').at(-1));
   const lastPrompt = $derived([...messages].reverse().find((m) => m.role === 'visitor'));
   const question = $derived(lastPrompt?.parts[0]?.kind === 'text' ? lastPrompt.parts[0].text : '');
@@ -45,14 +67,17 @@
   }
   // Tab in the empty field completes the ghost hint so it can be edited or sent.
   const keydown = (e: KeyboardEvent) => {
-    if (e.key === 'Tab' && !draft && hint) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      ondismiss();
+    } else if (e.key === 'Tab' && !draft && hint) {
       e.preventDefault();
       draft = hint;
     }
   };
-  const focusIn = () => oninput(true);
-  const focusOut = () => oninput(draft.length > 0);
   const send = (p: string) => () => onsend(p);
+  // Only text in the field pauses the hint rotation and the Scene's hint preview; focus alone
+  // does not, or the hints would freeze whenever "Ask about me" leaves the cursor here.
   $effect(() => {
     oninput(draft.length > 0);
   });
@@ -78,27 +103,38 @@
     </section>
   {/if}
 
-  <form class="field" onsubmit={submit}>
-    <span class="mark" class:live={streaming}>›</span>
-    <div class="inputwrap">
-      {#if !draft}
-        <span class="ghost"
-          >{#key hint}<span class="cycle">{hint}</span>{/key}</span
-        >
-      {/if}
-      <input
-        bind:value={draft}
-        aria-label="Ask about this resume"
-        autocomplete="off"
-        onfocus={focusIn}
-        onblur={focusOut}
-        onkeydown={keydown}
-      />
-    </div>
-    <button type="submit" aria-label={draft ? 'send' : 'ask the suggested question'}
-      >{draft ? '↵' : '▶'}</button
-    >
-  </form>
+  {#if open}
+    <form class="field" onsubmit={submit} aria-busy={streaming}>
+      <!-- Close on the left mirrors send on the right: the pill reads as close … ask … send. -->
+      <button
+        type="button"
+        class="dismiss"
+        aria-label="close the chat"
+        title="Close (Esc)"
+        onclick={ondismiss}>×</button
+      >
+      <div class="inputwrap">
+        {#if !draft}
+          <span class="ghost"
+            >{#key hint}<span class="cycle" class:fade={cycled}>{hint}</span>{/key}</span
+          >
+        {/if}
+        <input
+          bind:this={input}
+          bind:value={draft}
+          aria-label="Ask about this resume"
+          autocomplete="off"
+          onkeydown={keydown}
+        />
+      </div>
+      <button
+        type="submit"
+        class="send"
+        class:live={streaming}
+        aria-label={draft ? 'send' : 'ask the suggested question'}>{draft ? '↵' : '▶'}</button
+      >
+    </form>
+  {/if}
 
   {#if followups.length && !streaming}
     <div class="follow">
@@ -131,25 +167,18 @@
     }
   }
   .field {
+    /* Shares its name with the "Ask about me" button, so opening morphs one pill into the other. */
+    view-transition-name: ask;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 6px 6px 6px 16px;
+    padding: 6px;
     border-radius: 999px;
     background: rgba(15, 14, 13, 0.88);
     border: 1px solid rgba(241, 239, 233, 0.14);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-  }
-  .mark {
-    color: var(--fg-muted);
-    font:
-      16px 'Azeret Mono',
-      monospace;
-  }
-  .mark.live {
-    color: var(--accent);
   }
   .inputwrap {
     position: relative;
@@ -162,6 +191,11 @@
   input {
     position: relative;
     width: 100%;
+    /* No browser padding or margin: the caret and typed text start exactly where the ghost hint
+       does (Chromium's default 1px 2px put the caret 2px right of it). */
+    padding: 0;
+    margin: 0;
+    line-height: normal;
     background: none;
     border: 0;
     color: var(--fg);
@@ -186,6 +220,8 @@
   }
   .cycle {
     display: inline-block;
+  }
+  .cycle.fade {
     animation: fadein 0.5s ease;
   }
   @keyframes fadein {
@@ -194,7 +230,7 @@
       transform: translateY(4px);
     }
   }
-  .field button {
+  .field .send {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -205,6 +241,50 @@
     font-weight: 600;
     flex: none;
     cursor: pointer;
+  }
+  /* Close: quiet until pointed at, so it never competes with the send button. */
+  .dismiss {
+    flex: none;
+    /* Same footprint as the send button, so the two ends of the pill balance. */
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--fg-muted);
+    font-size: 17px;
+    line-height: 1;
+    opacity: 0.55;
+    cursor: pointer;
+    transition:
+      opacity 0.15s ease,
+      background 0.15s ease;
+  }
+  .dismiss:hover,
+  .dismiss:focus-visible {
+    opacity: 1;
+    background: rgba(241, 239, 233, 0.08);
+  }
+  /* While an Answer streams, the send button breathes. */
+  .send.live {
+    animation: breathe 1.4s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 138, 114, 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 7px rgba(255, 138, 114, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 138, 114, 0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .send.live {
+      animation: none;
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
   }
   .caption {
     min-width: 0;

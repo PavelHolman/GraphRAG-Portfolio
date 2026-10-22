@@ -2,6 +2,7 @@
 title: GraphRAG Portfolio
 summary: This site. A 3D resume that answers questions from a knowledge graph and highlights its evidence.
 start: 2026-09
+hidden: true
 repo: https://github.com/PavelHolman/GraphRAG
 uses:
   - {

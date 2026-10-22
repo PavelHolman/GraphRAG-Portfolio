@@ -72,6 +72,7 @@
       sans-serif;
     color: var(--fg);
     text-decoration: none;
+    white-space: nowrap;
   }
   .initials {
     display: none;
@@ -124,15 +125,25 @@
     color: var(--bg);
     padding: 8px 14px;
     margin-left: 6px;
+    /* Never "Download / CV" on two lines when the header gets tight. */
+    white-space: nowrap;
+    flex: none;
   }
   .links .cta:hover {
     color: var(--bg);
     filter: brightness(1.08);
   }
-  @media (max-width: 760px) {
+  /* Tablets and narrow laptops: the section anchors step aside so the name and links stay on
+     one line each. */
+  @media (max-width: 960px) {
     .anchors {
       display: none;
     }
+    .top {
+      grid-template-columns: auto 1fr;
+    }
+  }
+  @media (max-width: 760px) {
     .initials {
       display: inline;
     }

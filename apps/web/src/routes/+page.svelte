@@ -1,7 +1,7 @@
 <script lang="ts">
   // One route: the Hero (Scene, intro and the centred chat) and the Sections below it. docs/spec/page.md.
   import { Canvas } from '@threlte/core';
-  import { onMount, untrack } from 'svelte';
+  import { flushSync, onMount, untrack } from 'svelte';
   import Scene from '$lib/scene/Scene.svelte';
   import type { SceneGraph } from '$lib/scene/types.ts';
   import Chat from '$lib/chat/Chat.svelte';
@@ -28,6 +28,10 @@
   let webgl = $state(true);
   let reducedMotion = $state(false);
   let picked = $state<number | null>(null);
+  // The prompt field hides until the visitor asks to talk; any question asked anywhere opens it.
+  let revealed = $state(false);
+  let autofocus = $state(false);
+  let askButton = $state<HTMLButtonElement | undefined>();
   // The intro's box and the column's landing position, measured while the intro is visible, so the
   // answer can take the intro's exact place and the prompt field never moves.
   let lead = $state<HTMLDivElement | undefined>();
@@ -40,13 +44,16 @@
     if (introEl.offsetHeight > 0) introSlot = introEl.offsetHeight;
     leadTop = lead.getBoundingClientRect().top - hero.getBoundingClientRect().top;
   };
+  // On phones the intro copy makes room for the caption once a conversation has started.
+  const conversing = $derived(turn.messages.length > 0);
+  const open = $derived(revealed || conversing);
   const hint = $derived(data.hints[hintIndex % Math.max(1, data.hints.length)]);
   // Hint preview: faint tier while a ghost hint shows and nothing streams or is typed.
   const preview = $derived(
-    !typing && !turn.streaming && turn.subgraph === null && hint ? new Set(hint.candidates) : null,
+    open && !typing && !turn.streaming && turn.subgraph === null && hint
+      ? new Set(hint.candidates)
+      : null,
   );
-  // On phones the intro copy makes room for the caption once a conversation has started.
-  const conversing = $derived(turn.messages.length > 0);
 
   const onsend = (p: string) => turn.run(p, 'typed');
   const onplayhint = () => {
@@ -65,6 +72,7 @@
     typing = active;
   };
   const onask = (prompt: string) => {
+    autofocus = false;
     document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
     turn.run(prompt, 'hint');
   };
@@ -93,7 +101,37 @@
     picked = null;
     onask(p);
   };
-  const askIntro = () => onask('What are you strongest at?');
+  // One view transition: the "Ask about me" pill grows into the prompt field (both are named
+  // `ask`) and the other actions glide into its place. Without support, or with reduced motion,
+  // the change is instant.
+  // Resolves once the change is in the DOM (the animation may still be running).
+  const morph = (change: () => void): Promise<void> => {
+    if (reducedMotion || !document.startViewTransition) {
+      change();
+      return Promise.resolve();
+    }
+    return document.startViewTransition(() => {
+      change();
+      flushSync();
+    }).updateCallbackDone;
+  };
+  // The answer later takes the intro's measured place, so measure the intro as it now stands
+  // (without its actions row while open) and the field never jumps when the first answer arrives.
+  const askIntro = () =>
+    void morph(() => {
+      revealed = true;
+      autofocus = true;
+    }).then(measure);
+  // Keyboard focus returns to the button the field came from.
+  const dismiss = () =>
+    void morph(() => {
+      revealed = false;
+      autofocus = false;
+      turn.reset();
+    }).then(() => {
+      measure();
+      askButton?.focus({ preventScroll: true });
+    });
   // A selected phrase is the visitor's own words, so it counts as typed, not as a suggestion.
   const askSelected = (prompt: string) => {
     document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
@@ -108,7 +146,8 @@
       '@type': 'Person',
       name: data.model.person.name,
       jobTitle: data.model.person.headline,
-      sameAs: Object.values(data.model.person.links).filter((l) => !l.startsWith('mailto:')),
+      // Profiles only: the email and the site's own CV file are not other identities.
+      sameAs: Object.values(data.model.person.links).filter((l) => /^https?:/.test(l)),
       knowsAbout: data.model.skills.flatMap((g) => g.skills.map((s) => s.title)).slice(0, 12),
       worksFor: data.model.experience[0]?.organization
         ? { '@type': 'Organization', name: data.model.experience[0].organization }
@@ -155,6 +194,19 @@
 <svelte:head>
   <title>{data.model.person.name} · interactive resume</title>
   <meta name="description" content={data.model.person.lede ?? ''} />
+  <!-- Link previews (LinkedIn, Slack, X): the Hero at rest, rendered by `bun content:render`. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{data.origin}/" />
+  <meta property="og:title" content="{data.model.person.name} · interactive resume" />
+  <meta property="og:description" content={data.model.person.lede ?? ''} />
+  <meta property="og:image" content="{data.origin}/hero.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta
+    property="og:image:alt"
+    content="{data.model.person.name}: {data.model.person.headline ?? ''}"
+  />
+  <meta name="twitter:card" content="summary_large_image" />
   {@html jsonLd}
 </svelte:head>
 
@@ -188,15 +240,19 @@
       <h1>{data.model.person.name}</h1>
       {#if data.model.person.headline}<p class="headline">{data.model.person.headline}</p>{/if}
       {#if data.model.person.lede}<p class="lede">{data.model.person.lede}</p>{/if}
-      <div class="actions">
-        <button class="primary" onclick={askIntro}>✦ Ask about me</button>
-        {#if data.model.person.links.email}<a class="secondary" href={data.model.person.links.email}
-            >Contact me</a
-          >{/if}
-        {#if data.model.person.links.cv}<a class="secondary" href={data.model.person.links.cv}
-            >Download CV</a
-          >{/if}
-      </div>
+      <!-- While the field is open it takes this row's place; the header keeps Contact and the CV. -->
+      {#if !open}
+        <div class="actions">
+          <button class="primary" bind:this={askButton} onclick={askIntro}>✦ Ask about me</button>
+          {#if data.model.person.links.email}<a
+              class="secondary"
+              href={data.model.person.links.email}>Contact me</a
+            >{/if}
+          {#if data.model.person.links.cv}<a class="secondary" href={data.model.person.links.cv}
+              >Download CV</a
+            >{/if}
+        </div>
+      {/if}
     </div>
 
     <Chat
@@ -211,6 +267,9 @@
       {oninput}
       {onclose}
       slotHeight={introSlot}
+      {open}
+      {autofocus}
+      ondismiss={dismiss}
     />
   </div>
 
@@ -272,7 +331,8 @@
     transform: translateY(-50%);
     width: min(520px, 46vw);
     display: grid;
-    gap: 10px;
+    /* No gap: the prompt field opens exactly where the actions row was, centred on the same line. */
+    gap: 0;
     z-index: 5;
     /* The column is transparent to the pointer so stars behind it stay hoverable and clickable;
        only the controls take events back. */
@@ -285,6 +345,8 @@
     transform: none;
   }
   .intro {
+    /* Glides as one piece when the field opens below it, instead of cross-fading in two places. */
+    view-transition-name: intro;
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
@@ -341,13 +403,45 @@
     color: var(--fg);
     max-width: 460px;
   }
+  /* One line, and as tall as the prompt field (50px) with the buttons centred in it, so opening
+     the field in this row's place moves nothing and the pill morphs about one shared centre. */
   .actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-height: 50px;
     gap: 10px;
+  }
+  /* Narrow columns and phones: a little tighter so the three still fit on one line. */
+  @media (max-width: 900px) {
+    .actions {
+      gap: 8px;
+    }
+    .intro .actions .primary,
+    .intro .actions .secondary {
+      padding: 9px 14px;
+      font-size: 13px;
+    }
+  }
+  @media (max-width: 400px) {
+    .actions {
+      gap: 6px;
+    }
+    .intro .actions .primary,
+    .intro .actions .secondary {
+      padding: 8px 11px;
+      font-size: 12px;
+    }
+  }
+  /* The very narrowest phones (320px) cannot fit three readable buttons; wrapping beats clipping. */
+  @media (max-width: 340px) {
+    .actions {
+      flex-wrap: wrap;
+    }
   }
   .actions .primary,
   .actions .secondary {
+    white-space: nowrap;
     border-radius: 999px;
     padding: 10px 18px;
     font:
@@ -357,9 +451,16 @@
     cursor: pointer;
   }
   .actions .primary {
+    view-transition-name: ask;
     background: var(--accent);
     color: var(--bg);
     border: 1px solid var(--accent);
+  }
+  /* Keyboard focus (closing the field hands it back here) in the page's own colours. */
+  .actions .primary:focus-visible,
+  .actions .secondary:focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 2px;
   }
   .actions .secondary {
     background: rgba(15, 14, 13, 0.6);
@@ -370,6 +471,29 @@
   .actions .secondary:hover {
     border-color: var(--accent);
     color: var(--accent);
+  }
+  /* The morph: the button stretches in place into the field, both images pinned left and clipped
+     to the group's rounded box so neither text squashes. */
+  :global(::view-transition-group(ask)) {
+    overflow: clip;
+    border-radius: 999px;
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  :global(::view-transition-old(ask)),
+  :global(::view-transition-new(ask)) {
+    height: 100%;
+    object-fit: none;
+    object-position: left center;
+  }
+  :global(::view-transition-old(ask)) {
+    animation-duration: 0.18s;
+  }
+  /* Contact and the CV need no names: they leave with the page cross-fade. Named, Chrome would
+     copy their backdrop blur onto a transition group that smears the field for the whole morph. */
+  :global(::view-transition-group(intro)) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
   .pick {
     position: absolute;

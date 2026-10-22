@@ -27,6 +27,9 @@
   let pillHeight = $state(0);
   let viewportWidth = $state(0);
   let viewportHeight = $state(0);
+  /** True while the page scrolls or resizes: the marks then move with the text, unanimated, and
+      the ease returns with the next change to the selection itself. */
+  let snap = $state(false);
   // Clamped so a selection at the edge of the window still shows the whole pill.
   const left = $derived(Math.max(EDGE, Math.min(corner?.x ?? 0, viewportWidth - pillWidth - EDGE)));
   // Only ever lifted, for a selection on the last visible line; `read` keeps it off the header.
@@ -85,22 +88,32 @@
     });
   };
 
+  const onSelection = () => {
+    snap = false;
+    schedule();
+  };
+  const onViewport = () => {
+    snap = true;
+    schedule();
+  };
+
   onMount(() => {
-    document.addEventListener('selectionchange', schedule);
-    return () => document.removeEventListener('selectionchange', schedule);
+    document.addEventListener('selectionchange', onSelection);
+    return () => document.removeEventListener('selectionchange', onSelection);
   });
 </script>
 
 <svelte:window
   bind:innerWidth={viewportWidth}
   bind:innerHeight={viewportHeight}
-  onscroll={schedule}
-  onresize={schedule}
+  onscroll={onViewport}
+  onresize={onViewport}
 />
 
 {#each bars as b (b.id)}
   <span
     class="bar"
+    class:snap
     aria-hidden="true"
     style:transform="translate3d({b.x}px, {b.y}px, 0)"
     style:height="{b.h}px"
@@ -110,6 +123,7 @@
 {#if text && corner}
   <button
     class="pill"
+    class:snap
     bind:clientWidth={pillWidth}
     bind:clientHeight={pillHeight}
     style:transform="translate3d({left}px, {top}px, 0)"
@@ -165,6 +179,11 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     animation: appear 0.15s ease;
+  }
+  /* Scrolling: pinned to the text, no ease, so nothing trails or bounces. */
+  .bar.snap,
+  .pill.snap {
+    transition: none;
   }
   .pill:hover {
     background: var(--accent-soft);

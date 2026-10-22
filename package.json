@@ -15,12 +15,14 @@
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun test",
     "test:e2e": "bun run --filter @graphrag/web test:e2e",
+    "playwright:install": "bun run --filter @graphrag/web playwright:install",
     "eval": "bun run packages/retrieval/eval/run.ts",
     "eval:answers": "bun run packages/retrieval/eval/run.ts --answers",
     "content:check": "bun run packages/graph-index/src/cli.ts check",
     "content:index": "oxfmt content && bun run packages/graph-index/src/cli.ts index",
     "content:ask": "bun run packages/graph-index/src/cli.ts ask",
     "content:new": "bun run packages/graph-index/src/cli.ts new",
+    "content:render": "bun run apps/web/scripts/render.ts",
     "prepare": "husky"
   },
   "devDependencies": {

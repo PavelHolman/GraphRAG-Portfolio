@@ -10,7 +10,7 @@
   let { model, onask }: Props = $props();
   const paragraphs = (body: string) => body.split(/\n\s*\n/).filter((p) => p.trim());
   const ask = (prompt: string) => () => onask(prompt);
-  const linkLabel = (k: string) => k.charAt(0).toUpperCase() + k.slice(1);
+  const linkLabel = (k: string) => (k === 'cv' ? 'CV' : k.charAt(0).toUpperCase() + k.slice(1));
   const linkValue = (href: string) =>
     href
       .replace(/^mailto:/, '')
@@ -20,6 +20,7 @@
   const handle = (k: string, href: string) => {
     if (href.startsWith('mailto:')) return href.slice(7);
     if (k === 'linkedin') return model.person.name;
+    if (k === 'cv') return 'Download PDF';
     return href.replace(/\/$/, '').split('/').pop() ?? href;
   };
   const email = $derived(model.person.links.email);
@@ -225,7 +226,7 @@
         <a
           class="card contact"
           {href}
-          rel="me noopener"
+          rel={k === 'cv' ? 'noopener' : 'me noopener'}
           target={href.startsWith('mailto:') ? undefined : '_blank'}
         >
           <span class="label"><Icon name={k} size={14} />{linkLabel(k)}</span>

@@ -7,5 +7,5 @@ hints:
     prompt: Tell me about SLIM
   - id: deels
     prompt: What did you build at Deels?
-  - id: portfolio
-    prompt: How does this portfolio work?
+  - id: thesis
+    prompt: What is your master's thesis about?
