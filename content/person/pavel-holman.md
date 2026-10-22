@@ -34,7 +34,7 @@ cv:
         skill/postgresql,
         skill/csharp,
       ]
-  omit: [education/ml-prague-2026, project/graphrag-portfolio]
+  omit: [education/ml-prague-2026]
 languages:
   Czech: native
   English: professional working proficiency (Cambridge English First, B2)
