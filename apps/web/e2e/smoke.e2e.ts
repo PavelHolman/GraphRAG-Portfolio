@@ -5,8 +5,16 @@ test('the page renders the resume sections and a Turn streams to the caption', a
   await expect(page.locator('#about')).toBeVisible();
   await expect(page.locator('#experience h3').first()).toBeVisible();
   const input = page.getByLabel('Ask about this resume');
+  const askButton = page.getByRole('button', { name: '✦ Ask about me' });
+  // The field does not exist until asked for; the button morphs into it and back.
   await expect(input).toBeHidden();
-  await page.getByRole('button', { name: '✦ Ask about me' }).click();
+  await askButton.click();
+  await expect(input).toBeFocused();
+  await expect(askButton).toBeHidden();
+  await input.press('Escape');
+  await expect(input).toBeHidden();
+  await expect(askButton).toBeFocused();
+  await askButton.click();
   await expect(input).toBeFocused();
   await input.fill('Tell me about your Effect work');
   await page.getByRole('button', { name: 'send' }).click();

@@ -1,7 +1,7 @@
 <script lang="ts">
   // One route: the Hero (Scene, intro and the centred chat) and the Sections below it. docs/spec/page.md.
   import { Canvas } from '@threlte/core';
-  import { onMount, untrack } from 'svelte';
+  import { flushSync, onMount, untrack } from 'svelte';
   import Scene from '$lib/scene/Scene.svelte';
   import type { SceneGraph } from '$lib/scene/types.ts';
   import Chat from '$lib/chat/Chat.svelte';
@@ -30,7 +30,8 @@
   let picked = $state<number | null>(null);
   // The prompt field hides until the visitor asks to talk; any question asked anywhere opens it.
   let revealed = $state(false);
-  let focusTick = $state(0);
+  let autofocus = $state(false);
+  let askButton = $state<HTMLButtonElement | undefined>();
   // The intro's box and the column's landing position, measured while the intro is visible, so the
   // answer can take the intro's exact place and the prompt field never moves.
   let lead = $state<HTMLDivElement | undefined>();
@@ -71,6 +72,7 @@
     typing = active;
   };
   const onask = (prompt: string) => {
+    autofocus = false;
     document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
     turn.run(prompt, 'hint');
   };
@@ -99,10 +101,32 @@
     picked = null;
     onask(p);
   };
-  const askIntro = () => {
-    revealed = true;
-    focusTick++;
+  // One view transition: the "Ask about me" pill grows into the prompt field (both are named
+  // `ask`) and the other actions glide into its place. Without support, or with reduced motion,
+  // the change is instant.
+  // Resolves once the change is in the DOM (the animation may still be running).
+  const morph = (change: () => void): Promise<void> => {
+    if (reducedMotion || !document.startViewTransition) {
+      change();
+      return Promise.resolve();
+    }
+    return document.startViewTransition(() => {
+      change();
+      flushSync();
+    }).updateCallbackDone;
   };
+  const askIntro = () =>
+    void morph(() => {
+      revealed = true;
+      autofocus = true;
+    });
+  // Keyboard focus returns to the button the field came from.
+  const dismiss = () =>
+    void morph(() => {
+      revealed = false;
+      autofocus = false;
+      turn.reset();
+    }).then(() => askButton?.focus({ preventScroll: true }));
   // A selected phrase is the visitor's own words, so it counts as typed, not as a suggestion.
   const askSelected = (prompt: string) => {
     document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
@@ -212,7 +236,9 @@
       {#if data.model.person.headline}<p class="headline">{data.model.person.headline}</p>{/if}
       {#if data.model.person.lede}<p class="lede">{data.model.person.lede}</p>{/if}
       <div class="actions">
-        <button class="primary" onclick={askIntro}>✦ Ask about me</button>
+        {#if !open}<button class="primary" bind:this={askButton} onclick={askIntro}
+            >✦ Ask about me</button
+          >{/if}
         {#if data.model.person.links.email}<a class="secondary" href={data.model.person.links.email}
             >Contact me</a
           >{/if}
@@ -235,7 +261,8 @@
       {onclose}
       slotHeight={introSlot}
       {open}
-      {focusTick}
+      {autofocus}
+      ondismiss={dismiss}
     />
   </div>
 
@@ -310,6 +337,8 @@
     transform: none;
   }
   .intro {
+    /* Glides as one piece when the field opens below it, instead of cross-fading in two places. */
+    view-transition-name: intro;
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
@@ -373,6 +402,7 @@
   }
   .actions .primary,
   .actions .secondary {
+    white-space: nowrap;
     border-radius: 999px;
     padding: 10px 18px;
     font:
@@ -382,9 +412,16 @@
     cursor: pointer;
   }
   .actions .primary {
+    view-transition-name: ask;
     background: var(--accent);
     color: var(--bg);
     border: 1px solid var(--accent);
+  }
+  .actions .secondary:first-of-type {
+    view-transition-name: contact;
+  }
+  .actions .secondary:last-of-type {
+    view-transition-name: download;
   }
   .actions .secondary {
     background: rgba(15, 14, 13, 0.6);
@@ -395,6 +432,29 @@
   .actions .secondary:hover {
     border-color: var(--accent);
     color: var(--accent);
+  }
+  /* The morph: one pill stretching into the other, both images pinned left and clipped to the
+     group's rounded box so neither text squashes. */
+  :global(::view-transition-group(ask)) {
+    overflow: clip;
+    border-radius: 999px;
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  :global(::view-transition-old(ask)),
+  :global(::view-transition-new(ask)) {
+    height: 100%;
+    object-fit: none;
+    object-position: left center;
+  }
+  :global(::view-transition-old(ask)) {
+    animation-duration: 0.18s;
+  }
+  :global(::view-transition-group(intro)),
+  :global(::view-transition-group(contact)),
+  :global(::view-transition-group(download)) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
   .pick {
     position: absolute;

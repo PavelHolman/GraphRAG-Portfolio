@@ -17,10 +17,12 @@
     onclose: () => void;
     /** Desktop: the answer box takes exactly the intro's height so the field never moves. */
     slotHeight: number;
-    /** The field stays collapsed until the visitor asks to talk; then it slides in. */
+    /** The field exists only once the visitor asks to talk; "Ask about me" morphs into it. */
     open: boolean;
-    /** Bumped when the visitor opens the field on purpose, so it takes focus. */
-    focusTick: number;
+    /** Opened on purpose (the button), so it takes focus; not when a Section asked a question. */
+    autofocus: boolean;
+    /** Closes the field and any answer, morphing back into the button. */
+    ondismiss: () => void;
   }
   let {
     messages,
@@ -35,13 +37,14 @@
     onclose,
     slotHeight,
     open,
-    focusTick,
+    autofocus,
+    ondismiss,
   }: Props = $props();
   let draft = $state('');
   let input = $state<HTMLInputElement | undefined>();
   // Focus only on an explicit open: a question asked from the Sections must not pop a phone keyboard.
   $effect(() => {
-    if (focusTick > 0) input?.focus({ preventScroll: true });
+    if (input && autofocus) input.focus({ preventScroll: true });
   });
   const current = $derived(messages.filter((m) => m.role === 'answer').at(-1));
   const lastPrompt = $derived([...messages].reverse().find((m) => m.role === 'visitor'));
@@ -56,7 +59,10 @@
   }
   // Tab in the empty field completes the ghost hint so it can be edited or sent.
   const keydown = (e: KeyboardEvent) => {
-    if (e.key === 'Tab' && !draft && hint) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      ondismiss();
+    } else if (e.key === 'Tab' && !draft && hint) {
       e.preventDefault();
       draft = hint;
     }
@@ -89,32 +95,37 @@
     </section>
   {/if}
 
-  <div class="reveal" class:open inert={!open} aria-hidden={!open}>
-    <div class="clip">
-      <form class="field" onsubmit={submit}>
-        <span class="mark" class:live={streaming}>›</span>
-        <div class="inputwrap">
-          {#if !draft}
-            <span class="ghost"
-              >{#key hint}<span class="cycle">{hint}</span>{/key}</span
-            >
-          {/if}
-          <input
-            bind:this={input}
-            bind:value={draft}
-            aria-label="Ask about this resume"
-            autocomplete="off"
-            onfocus={focusIn}
-            onblur={focusOut}
-            onkeydown={keydown}
-          />
-        </div>
-        <button type="submit" aria-label={draft ? 'send' : 'ask the suggested question'}
-          >{draft ? '↵' : '▶'}</button
-        >
-      </form>
-    </div>
-  </div>
+  {#if open}
+    <form class="field" onsubmit={submit}>
+      <span class="mark" class:live={streaming}>›</span>
+      <div class="inputwrap">
+        {#if !draft}
+          <span class="ghost"
+            >{#key hint}<span class="cycle">{hint}</span>{/key}</span
+          >
+        {/if}
+        <input
+          bind:this={input}
+          bind:value={draft}
+          aria-label="Ask about this resume"
+          autocomplete="off"
+          onfocus={focusIn}
+          onblur={focusOut}
+          onkeydown={keydown}
+        />
+      </div>
+      <button
+        type="button"
+        class="dismiss"
+        aria-label="close the chat"
+        title="Close (Esc)"
+        onclick={ondismiss}>×</button
+      >
+      <button type="submit" class="send" aria-label={draft ? 'send' : 'ask the suggested question'}
+        >{draft ? '↵' : '▶'}</button
+      >
+    </form>
+  {/if}
 
   {#if followups.length && !streaming}
     <div class="follow">
@@ -137,42 +148,6 @@
   .follow > * {
     pointer-events: auto;
   }
-  /* Collapsed to nothing until opened; the row grows and the pill rises into place. */
-  .reveal {
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transform: translateY(10px);
-    visibility: hidden;
-    transition:
-      grid-template-rows 0.35s ease,
-      opacity 0.3s ease,
-      transform 0.35s ease,
-      visibility 0s linear 0.35s;
-  }
-  /* Padding-free, so the closed row is truly zero high; unclipped once open so the shadow shows. */
-  .clip {
-    min-height: 0;
-    overflow: hidden;
-  }
-  .reveal.open .clip {
-    overflow: visible;
-  }
-  .reveal.open {
-    grid-template-rows: 1fr;
-    opacity: 1;
-    transform: none;
-    visibility: visible;
-    transition-delay: 0s;
-  }
-  .reveal:not(.open) .field {
-    pointer-events: none;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .reveal {
-      transition: none;
-    }
-  }
   /* Phones: a sheet pinned to the bottom of the Hero. */
   @media (max-width: 760px) {
     .col {
@@ -183,6 +158,8 @@
     }
   }
   .field {
+    /* Shares its name with the "Ask about me" button, so opening morphs one pill into the other. */
+    view-transition-name: ask;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -246,7 +223,7 @@
       transform: translateY(4px);
     }
   }
-  .field button {
+  .field .send {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -257,6 +234,28 @@
     font-weight: 600;
     flex: none;
     cursor: pointer;
+  }
+  /* Close: quiet until pointed at, so it never competes with the send button. */
+  .dismiss {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--fg-muted);
+    font-size: 17px;
+    line-height: 1;
+    opacity: 0.55;
+    cursor: pointer;
+    transition:
+      opacity 0.15s ease,
+      background 0.15s ease;
+  }
+  .dismiss:hover,
+  .dismiss:focus-visible {
+    opacity: 1;
+    background: rgba(241, 239, 233, 0.08);
   }
   .caption {
     min-width: 0;

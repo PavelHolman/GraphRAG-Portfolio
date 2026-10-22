@@ -11,7 +11,7 @@ Decisions from the chat-panel prototype ([ticket](https://github.com/PavelHolman
 
 ## Hints and the field
 
-- The field is **hidden until asked for**: collapsed and inert on load, it slides in and takes focus when the visitor presses "Ask about me", and opens without focus when a question is asked from anywhere else (Sections, the pick card, a text selection). Hint previews on the Scene wait for it to open.
+- The field is **hidden until asked for**: absent on load, "Ask about me" morphs into it in one view transition (the two pills share a name; the other actions glide over) and it takes focus. A question asked from anywhere else (Sections, the pick card, a text selection) opens it without focus. A muted × inside the pill, or Escape, closes it and any answer, morphing back into the button, which gets focus. Hint previews on the Scene wait for it to open. Without view-transition support or with reduced motion the swap is instant.
 - The field shows a **ghost hint** (a suggested Prompt) as placeholder text, cycling every 6 s with a short fade, paused while streaming. Hints are authored, not generated.
 - **No auto-play.** Submitting an empty field (Enter or the button) sends the hint currently shown as a suggested Prompt. The button shows ▶ when the field is empty and ↵ when it has text.
 - Typing hides the ghost text.

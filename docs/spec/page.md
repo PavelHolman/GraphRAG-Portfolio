@@ -30,7 +30,7 @@ Selecting text anywhere in the Hero or the Sections raises the same affordance (
 
 ## Navigation
 
-Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. Frosted glass throughout (translucent panel plus `backdrop-filter`), deepening once the Hero is scrolled past. On phones the anchors collapse into a menu; the three links stay as icons.
+Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. Frosted glass throughout (translucent panel plus `backdrop-filter`), deepening once the Hero is scrolled past. Below 960px the anchors step aside so the name and links keep one line each; on phones the name becomes initials and the links stay as icons.
 
 ## Generated files
 
