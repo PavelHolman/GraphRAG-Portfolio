@@ -39,7 +39,7 @@ Sticky header: name left, section anchors centre, CV / GitHub / LinkedIn right. 
 - `cv.pdf`: one A4 page from the same page model, laid out on a `/print` route in industry order (experience, projects, education, competitive programming, skills, languages) with the portrait. Experience shows its `highlights` bullets (the body when it has none); Education and Projects use one line each; the Person's `cv.skills` sets the story-ordered Skill groups (every Skill by category when absent) and `cv.omit` drops Nodes the site keeps; Projects in the competitive-programming Domain get their own section. The render fails if the PDF runs to a second page. The Person's `links.cv` (`/cv.pdf`) shows the Download CV buttons and a Contact card; it stays out of JSON-LD `sameAs`.
 - `hero.png` (two sizes): the Scene at rest, rendered from the artifact's Layout, used as the no-WebGL and reduced-motion fallback and as the social preview image.
 
-CI runs `content:render --verify` and diffs the PDF's extracted text and the PNG's dimensions, not bytes. `hero.png` is not rendered yet.
+CI runs `content:render --verify` and diffs the PDF's extracted text (whitespace ignored, since wrapping differs between machines) and the PNG's dimensions, not bytes. `hero.png` is not rendered yet.
 
 ## Crawlability and fallbacks
 

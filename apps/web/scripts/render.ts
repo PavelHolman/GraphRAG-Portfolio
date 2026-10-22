@@ -1,6 +1,6 @@
 // `bun content:render [--verify]`: prints the `/print` route of a built app to `static/cv.pdf`
-// with Playwright. With --verify it renders to memory and compares the extracted text with the
-// committed PDF instead (bytes differ on every print). docs/spec/page.md.
+// with Playwright. With --verify it renders to memory and compares the extracted text, whitespace
+// aside, with the committed PDF instead (bytes differ on every print). docs/spec/page.md.
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem';
 import { Data, Effect, FileSystem, Schedule } from 'effect';
 import { chromium } from '@playwright/test';
@@ -63,6 +63,16 @@ const textOf = (pdf: Uint8Array) =>
     return extractText(doc, { mergePages: true });
   });
 
+// Line wrapping and text-run spacing differ between machines (font hinting, Linux vs macOS), so
+// the comparison ignores whitespace; any change to the words themselves still fails.
+const words = (text: string) => text.replace(/\s+/g, '');
+const firstDifference = (a: string, b: string): number | undefined => {
+  if (a === b) return undefined;
+  let i = 0;
+  while (i < a.length && a[i] === b[i]) i++;
+  return Math.max(0, i - 20);
+};
+
 const main = Effect.gen(function* () {
   const verify = process.argv.includes('--verify');
   const fs = yield* FileSystem.FileSystem;
@@ -82,8 +92,11 @@ const main = Effect.gen(function* () {
     return 1;
   }
   const committed = yield* textOf(yield* fs.readFile(CV));
-  if (committed.text !== text) {
+  const at = firstDifference(words(committed.text), words(text));
+  if (at !== undefined) {
     yield* err('cv.pdf is stale: its text differs from /print. Run bun content:render and commit.');
+    yield* err(`  committed: …${words(committed.text).slice(at, at + 60)}`);
+    yield* err(`  rendered:  …${words(text).slice(at, at + 60)}`);
     return 1;
   }
   yield* log('ok: cv.pdf matches /print');
