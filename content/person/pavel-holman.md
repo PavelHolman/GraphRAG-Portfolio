@@ -2,14 +2,39 @@
 title: Pavel Holman
 summary: AI engineer and co-founder writing software professionally since 2020; leads small teams that ship products; three-time ICPC finalist. Open to remote work and thesis-linked collaboration.
 headline: AI engineer and co-founder
-lede: AI master's student at CTU and co-founder of two shipped products. Leads small teams end to end, from Kotlin backends and multiplatform apps at Deels to a SvelteKit and Effect lab platform at poqet, with agentic development tooling that keeps both honest. ICPC finalist, three times.
+lede: Engineer and co-founder who applies AI to hard problems and automates work with it. Co-founded two products and leads small teams end to end; builds agentic development tooling and LLM workflows at poqet. Three-time ICPC finalist; master's thesis at CTU on applying transformers to combinatorial problems.
 location: Prague, Czechia
 links:
   email: mailto:pavelholman@email.cz
   github: https://github.com/PavelHolman
   linkedin: https://www.linkedin.com/in/pavel-holman-2b1856285/
   codeforces: https://codeforces.com/profile/pj11
+  cv: /cv.pdf
 availability: Open to remote work and to a thesis-linked research or engineering collaboration alongside the master's degree.
+cv:
+  skills:
+    AI & automation:
+      [
+        skill/agentic-engineering,
+        skill/retrieval-augmented-generation,
+        skill/langchain,
+        skill/pytorch,
+        skill/time-series-forecasting,
+      ]
+    Problem solving:
+      [skill/constraint-programming, skill/competitive-programming, skill/functional-programming]
+    Engineering:
+      [
+        skill/typescript,
+        skill/effect,
+        skill/python,
+        skill/kotlin,
+        skill/kotlin-multiplatform,
+        skill/sveltekit,
+        skill/postgresql,
+        skill/csharp,
+      ]
+  omit: [education/ml-prague-2026, project/graphrag-portfolio]
 languages:
   Czech: native
   English: professional working proficiency (Cambridge English First, B2)

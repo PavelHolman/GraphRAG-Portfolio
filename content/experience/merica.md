@@ -3,6 +3,9 @@ title: Software Developer at Merica
 summary: 'Part-time C# work since 2020: ERP software, constraint-programming rostering, .NET Core migration.'
 start: 2020-03
 role: Software Developer
+highlights:
+  - Led the constraint modelling for an employee rostering solver built with Google OR-Tools and OptalCP.
+  - Built ERP features and data loaders in C#; took part in the move from .NET Framework to .NET Core.
 employment: part-time
 at: [organization/merica]
 delivered: [project/ferp, project/employee-rostering]

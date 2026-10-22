@@ -3,6 +3,10 @@ title: Co-founder and Principal Engineer at poqet
 summary: Leads a three-person team building SLIM and owns the agentic development tooling around it.
 start: 2026-06
 role: Co-founder and Principal Engineer
+highlights:
+  - Lead a three-person team building SLIM, a lab operations platform used by research groups at three Prague institutions.
+  - "Built the team's agentic development harness: Claude Code with TypeScript automation, architectural guardrails and evaluations."
+  - 'Build internal LLM workflows: LangChain and LangGraph, retrieval-augmented generation over vector databases, traced with Langfuse.'
 employment: founder
 at: [organization/poqet]
 led: [project/slim]

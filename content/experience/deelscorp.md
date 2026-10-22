@@ -3,6 +3,10 @@ title: Co-founder and Principal Engineer at DeelsCorp
 summary: 'Led a four-person team shipping Deels end to end: mobile apps, Kotlin backend, APIs, infrastructure.'
 start: 2024-05
 role: Co-founder and Principal Engineer
+highlights:
+  - Led a four-person team that shipped Deels, a gastro marketplace used by 80 partners in Prague.
+  - 'Owned engineering end to end: Kotlin backend and GraphQL APIs, Kotlin Multiplatform and SwiftUI apps, infrastructure.'
+  - Won a CZK 1 million grant from CzechInvest's Technology Incubation programme.
 employment: founder
 at: [organization/deelscorp]
 led: [project/deels]
