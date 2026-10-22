@@ -44,6 +44,31 @@
           },
           "availability": {
             "type": "string"
+          },
+          "cv": {
+            "type": "object",
+            "properties": {
+              "skills": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "description": "a Node id of the form <type>/<slug>"
+                  }
+                }
+              },
+              "omit": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^(person|skill|project|experience|education|organization|domain)\\/[a-z0-9]+(?:-[a-z0-9]+)*$",
+                  "description": "a Node id of the form <type>/<slug>"
+                }
+              }
+            },
+            "additionalProperties": true
           }
         },
         "required": [
@@ -286,6 +311,12 @@
               "freelance",
               "founder"
             ]
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "uses": {
             "type": "array",

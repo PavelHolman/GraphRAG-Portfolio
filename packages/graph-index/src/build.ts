@@ -82,12 +82,14 @@ const toArtifactNode = (
     position,
     ...(n.frontmatter.summary !== undefined ? { summary: n.frontmatter.summary } : {}),
     ...(Array.isArray(fm.aliases) ? { aliases: fm.aliases as Array<string> } : {}),
+    ...(Array.isArray(fm.highlights) ? { highlights: fm.highlights as Array<string> } : {}),
     ...(fm.links && typeof fm.links === 'object'
       ? { links: fm.links as Record<string, string> }
       : {}),
     ...(fm.languages && typeof fm.languages === 'object'
       ? { languages: fm.languages as Record<string, string> }
       : {}),
+    ...(fm.cv && typeof fm.cv === 'object' ? { cv: fm.cv as NonNullable<ArtifactNode['cv']> } : {}),
     ...(fm.start !== undefined ? { start: fm.start as NonNullable<ArtifactNode['start']> } : {}),
     ...(fm.end !== undefined ? { end: fm.end as NonNullable<ArtifactNode['end']> } : {}),
     ...(span ? { span: span as NonNullable<ArtifactNode['span']> } : {}),

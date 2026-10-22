@@ -1,6 +1,7 @@
 import { Schema } from 'effect';
 import { EdgeId, EdgeType, NodeId, NodeType } from './ids.ts';
 import { PlainTime } from './time.ts';
+import { CvSettings } from './content.ts';
 
 export const Vec3 = Schema.Tuple([Schema.Number, Schema.Number, Schema.Number]);
 export type Vec3 = typeof Vec3.Type;
@@ -15,6 +16,8 @@ export const ArtifactNode = Schema.Struct({
   /** Markdown body written for the LLM. */
   body: Schema.String,
   aliases: Schema.optionalKey(Schema.Array(Schema.String)),
+  /** Experience bullets for the CV; the body stays the LLM's source and the site's card text. */
+  highlights: Schema.optionalKey(Schema.Array(Schema.String)),
   /** Type-specific scalar fields (role, degree, category, url, ...). */
   fields: Schema.Record(
     Schema.String,
@@ -22,6 +25,8 @@ export const ArtifactNode = Schema.Struct({
   ),
   links: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
   languages: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+  /** Person only: CV curation, see `CvSettings`. */
+  cv: Schema.optionalKey(CvSettings),
   start: Schema.optionalKey(PlainTime),
   end: Schema.optionalKey(PlainTime),
   /** Derived Span for Skills; never authored. ADR 0001. */

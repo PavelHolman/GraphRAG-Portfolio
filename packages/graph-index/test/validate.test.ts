@@ -49,6 +49,10 @@ describe('loadContent + validate', () => {
     );
     expect(messages.some((m) => m.startsWith('experience/nostart.md:'))).toBe(true);
     expect(messages.some((m) => /alias "TS" collides/.test(m))).toBe(true);
+    expect(messages.some((m) => /cv: dangling reference "skill\/missing-from-cv"/.test(m))).toBe(
+      true,
+    );
+    expect(messages.some((m) => /cv\.skills: project\/dangling is not a skill/.test(m))).toBe(true);
   });
   test('derived Skill spans come from the Experiences and Projects that use them', async () => {
     const content = await Effect.runPromise(provided(loadContent(`${fixtures}/valid`)));

@@ -99,6 +99,22 @@ export const validate = (nodes: ReadonlyArray<LoadedNode>): Validated => {
     }
   }
 
+  // CV curation on the Person names Nodes by id; they must exist, and grouped ones must be Skills.
+  for (const p of persons) {
+    const cv = 'cv' in p.frontmatter ? p.frontmatter.cv : undefined;
+    const grouped = Object.values(cv?.skills ?? {}).flat();
+    for (const id of [...grouped, ...(cv?.omit ?? [])]) {
+      if (!byId.has(id)) {
+        issues.push({ file: p.file, message: `cv: dangling reference ${JSON.stringify(id)}` });
+      }
+    }
+    for (const id of grouped) {
+      if (byId.has(id) && nodeTypeOf(id) !== 'skill') {
+        issues.push({ file: p.file, message: `cv.skills: ${id} is not a skill` });
+      }
+    }
+  }
+
   for (const n of nodes) {
     if (n.type !== 'person' && (degree.get(n.id) ?? 0) === 0) {
       issues.push({ file: n.file, message: 'orphan Node: no Edge points to or from it' });

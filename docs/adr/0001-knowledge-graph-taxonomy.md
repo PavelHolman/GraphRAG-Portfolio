@@ -8,15 +8,15 @@ The Knowledge Graph is hand-authored, single-subject, and consumed by GraphRAG-s
 
 ## Node Types
 
-| Type         | Instances   | Per-type fields                                                                                                |
-| ------------ | ----------- | -------------------------------------------------------------------------------------------------------------- |
-| Person       | exactly one | `location`, `links` (label → URL), `languages` (language → proficiency), `availability`                        |
-| Skill        | many        | `category` ∈ `language \| framework \| platform \| practice \| leadership`, `aliases`                          |
-| Project      | many        | `start`, `end`, `url`, `repo`                                                                                  |
-| Experience   | many        | `start` (required), `end`, `role`, `employment` ∈ `full-time \| part-time \| contract \| freelance \| founder` |
-| Education    | many        | `start`, `end`, `degree`, `field`                                                                              |
-| Organization | many        | `url`, `location`, `kind` ∈ `company \| university \| client \| community`                                     |
-| Domain       | many        | `aliases`                                                                                                      |
+| Type         | Instances   | Per-type fields                                                                                                                                                            |
+| ------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Person       | exactly one | `location`, `links` (label → URL), `languages` (language → proficiency), `availability`, `cv` (CV Skill groups and omissions)                                              |
+| Skill        | many        | `category` ∈ `language \| framework \| platform \| practice \| leadership`, `aliases`                                                                                      |
+| Project      | many        | `start`, `end`, `url`, `repo`                                                                                                                                              |
+| Experience   | many        | `start` (required), `end`, `role`, `employment` ∈ `full-time \| part-time \| contract \| freelance \| founder`, `highlights` (CV bullets; the body stays the LLM's source) |
+| Education    | many        | `start`, `end`, `degree`, `field`                                                                                                                                          |
+| Organization | many        | `url`, `location`, `kind` ∈ `company \| university \| client \| community`                                                                                                 |
+| Domain       | many        | `aliases`                                                                                                                                                                  |
 
 Common fields on every Node: `title` (required), `summary` (optional one-liner for labels and hover cards), `hidden` (default `false`: present in the graph, never rendered or cited), and the Edge lists below. A Node Type with fewer than two real instances is not added; the Person Node is the sole exception.
 

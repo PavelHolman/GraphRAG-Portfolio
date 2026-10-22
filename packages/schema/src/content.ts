@@ -38,6 +38,15 @@ export const Employment = Schema.Literals([
 ]);
 export const OrganizationKind = Schema.Literals(['company', 'university', 'client', 'community']);
 
+/** What the generated CV shows beyond the Sections: story-ordered Skill groups and Nodes to leave out. */
+export const CvSettings = Schema.Struct({
+  /** Group label to Skill ids, in print order; Skills in no group stay off the CV. */
+  skills: Schema.optionalKey(Schema.Record(Schema.String, Schema.Array(NodeId))),
+  /** Nodes the site shows but the one-page CV leaves out. */
+  omit: Schema.optionalKey(Schema.Array(NodeId)),
+});
+export type CvSettings = typeof CvSettings.Type;
+
 export const PersonFrontmatter = Schema.Struct({
   ...Common,
   type: Schema.Literal('person'),
@@ -50,6 +59,7 @@ export const PersonFrontmatter = Schema.Struct({
   languages: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
   /** One line on what the person is open to, shown in the About facts. */
   availability: Schema.optionalKey(Schema.String),
+  cv: Schema.optionalKey(CvSettings),
 });
 
 export const SkillFrontmatter = Schema.Struct({
@@ -79,6 +89,8 @@ export const ExperienceFrontmatter = Schema.Struct({
   end: Schema.optionalKey(PlainTime),
   role: Schema.optionalKey(Schema.String),
   employment: Schema.optionalKey(Employment),
+  /** Two to four bullets for a human reader skimming; the CV shows them in place of the body. */
+  highlights: Schema.optionalKey(Schema.Array(Schema.String)),
   uses: EdgeList,
   at: EdgeList,
   delivered: EdgeList,
