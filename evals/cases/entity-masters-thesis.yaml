@@ -1,0 +1,11 @@
+id: entity-masters-thesis
+mode: hybrid
+prompt: What is your master's thesis about?
+retrieval:
+  must_seed: [project/transformers-combinatorial-optimization]
+  must_include: [education/ctu-fee-master]
+  max_nodes: 40
+answer:
+  must_cite: [project/transformers-combinatorial-optimization]
+  decline: false
+  shape: prose

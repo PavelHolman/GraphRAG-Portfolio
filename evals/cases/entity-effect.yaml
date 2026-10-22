@@ -3,8 +3,9 @@ mode: entity
 prompt: Tell me about your Effect work
 retrieval:
   must_seed: [skill/effect]
-  must_include: [project/graphrag-portfolio, experience/poqet]
-  must_exclude: []
+  must_include: [project/slim, experience/poqet]
+  # Hidden from the page, so retrieval must never surface it.
+  must_exclude: [project/graphrag-portfolio]
   max_nodes: 40
 answer:
   must_cite: [skill/effect]
