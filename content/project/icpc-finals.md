@@ -1,6 +1,6 @@
 ---
 title: ICPC finals
-summary: Finalist at ICPC CERC 2024, CERC 2025 and the ICPC European Championship 2026; CTU Open problem author.
+summary: Finalist at ICPC CERC 2024, CERC 2025 and the ICPC European Championship 2026; CTU Open organizer, judge and problem author.
 start: 2024-12
 end: 2026-02
 uses:
@@ -8,4 +8,4 @@ uses:
 in-domain: [domain/competitive-programming]
 ---
 
-Pavel has done competitive programming since February 2024. Results: finalist at the ICPC Central Europe Regional Contest (CERC) in December 2024 and December 2025, and finalist at the ICPC European Championship (EUC) in February 2026. Also a problem author for CTU Open, the Czech Technical University's programming contest.
+Pavel has done competitive programming since February 2024. Results: finalist at the ICPC Central Europe Regional Contest (CERC) in December 2024 and December 2025, and finalist at the ICPC European Championship (EUC) in February 2026. Also on the organizing team of CTU Open, the Czech Technical University's programming contest: a room master before he started competing, now on the judge team and a problem author.
