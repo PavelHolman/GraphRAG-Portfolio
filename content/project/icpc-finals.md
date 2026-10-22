@@ -8,4 +8,4 @@ uses:
 in-domain: [domain/competitive-programming]
 ---
 
-Pavel has done competitive programming since February 2024. Results: finalist at the ICPC Central Europe Regional Contest (CERC) in December 2024 and December 2025, and finalist at the ICPC European Championship (EUC) in February 2026. Also on the organizing team of CTU Open, the Czech Technical University's programming contest: a room master before he started competing, now on the judge team and a problem author.
+Pavel has done competitive programming since February 2024. Results: finalist at the ICPC Central Europe Regional Contest (CERC) in December 2024 and December 2025, and finalist at the ICPC European Championship (EUC) in February 2026. Also on the organizing team of CTU Open, the Czech Technical University's programming contest: a room master from 2020 to 2022, before he started competing, and on the judge team as a problem author since 2026.
