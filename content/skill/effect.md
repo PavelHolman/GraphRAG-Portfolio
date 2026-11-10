@@ -2,7 +2,7 @@
 title: Effect.ts
 summary: Effect for typed errors, dependency injection, streams and schemas; used with TypeScript at poqet.
 category: framework
-aliases: [Effect-TS, effect-ts, Effect.ts]
+aliases: [Effect, Effect-TS, effect-ts]
 part-of: [skill/typescript]
 related-to: [skill/functional-programming]
 ---
