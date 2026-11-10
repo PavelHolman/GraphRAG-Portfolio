@@ -1,6 +1,6 @@
 ---
 title: Deels
-summary: Marketplace for gastro discounts, loyalty programmes and surplus food, used by 80 partners in Prague.
+summary: Restaurant marketplace for discounts, loyalty programmes and surplus food, used by 80 partners in Prague.
 start: 2024-05
 url: https://deels.cz
 uses:

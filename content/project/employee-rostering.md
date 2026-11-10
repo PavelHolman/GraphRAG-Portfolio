@@ -2,7 +2,7 @@
 title: Employee rostering with constraint programming
 start: 2025-02
 end: 2025-06
-summary: Shift rostering solver built in C# with Google OR-Tools and OptalCP in a two-person team; Pavel led the modelling.
+summary: Shift rostering solver built in C# with Google OR-Tools and OptalCP in a two-person team; Pavel contributed to the solver.
 uses:
   - {
       to: skill/constraint-programming,
@@ -12,4 +12,4 @@ uses:
 in-domain: [domain/business-software]
 ---
 
-An employee rostering project at Merica: assigning staff to shifts under availability, legal and business constraints, modelled as a constraint program and solved with Google OR-Tools and OptalCP, delivered as part of C# business software. Built in a two-person team, with Pavel leading the constraint modelling and solver work.
+An employee rostering project at Merica: assigning staff to shifts under availability, legal and business constraints, modelled as a constraint program and solved with Google OR-Tools and OptalCP, delivered as part of C# business software. Built in a two-person team, with Pavel contributing to the constraint modelling and solver work.

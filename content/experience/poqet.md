@@ -5,7 +5,8 @@ start: 2026-06
 role: Co-founder and Principal Engineer
 highlights:
   - Lead a three-person team building SLIM, a lab operations platform used by research groups at three Prague institutions.
-  - "Built the team's agentic development harness: Claude Code with TypeScript automation, architectural guardrails and evaluations."
+  - "Built the team's agentic development harness: Claude Code with TypeScript automation, architectural guardrails and evaluations, cutting feature development time from weeks to days."
+  - 'Automated sales prospecting: sourcing local business leads, generating template-based websites and preparing cold outreach emails for the sales team.'
   - 'Build internal LLM workflows: LangChain and LangGraph, retrieval-augmented generation over vector databases, traced with Langfuse.'
 employment: founder
 at: [organization/poqet]
@@ -41,4 +42,4 @@ uses:
 in-domain: [domain/lab-operations, domain/developer-tooling]
 ---
 
-Co-founder and principal engineer of poqet since June 2026, leading a three-person team building SLIM, a lab operations platform for academic laboratories. Main responsibility: the agentic development tooling the team works with, a Claude Code harness with TypeScript automation, architectural rules and guardrails, and evaluations, alongside application development in SvelteKit, Effect and SurrealDB. Also builds poqet's internal LLM workflows with LangChain, LangGraph, retrieval-augmented generation over vector databases and semantic search, traced with Langfuse, deployed with Coolify and observed with OpenObserve.
+Co-founder and principal engineer of poqet since June 2026, leading a three-person team building SLIM, a lab operations platform for academic laboratories. Main responsibility: the agentic development tooling the team works with, a Claude Code harness with TypeScript automation, architectural rules and guardrails, and evaluations, which cut feature development time from weeks to days, alongside application development in SvelteKit, Effect and SurrealDB. Also builds poqet's internal LLM workflows with LangChain, LangGraph, retrieval-augmented generation over vector databases and semantic search, traced with Langfuse, deployed with Coolify and observed with OpenObserve. Also automated sales prospecting for the sales team: sourcing local business leads, generating template-based websites and preparing cold outreach emails.

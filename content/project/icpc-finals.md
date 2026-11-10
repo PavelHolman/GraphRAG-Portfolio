@@ -1,6 +1,6 @@
 ---
 title: ICPC finals
-summary: Finalist at ICPC CERC 2024, CERC 2025 and the ICPC European Championship 2026; CTU Open organizer, judge and problem author.
+summary: ICPC finalist at CERC 2024 and 2025 and the European Championship 2026; CTU Open organizer, judge and problem author.
 start: 2024-12
 end: 2026-02
 uses:

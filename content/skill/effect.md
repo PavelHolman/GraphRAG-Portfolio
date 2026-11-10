@@ -1,6 +1,6 @@
 ---
-title: Effect
-summary: Effect for typed errors, dependency injection, streams and schemas; paired with TypeScript as a strongest skill.
+title: Effect.ts
+summary: Effect for typed errors, dependency injection, streams and schemas; used with TypeScript at poqet.
 category: framework
 aliases: [Effect-TS, effect-ts, Effect.ts]
 part-of: [skill/typescript]

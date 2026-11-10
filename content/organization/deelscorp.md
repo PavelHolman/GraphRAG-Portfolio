@@ -7,4 +7,4 @@ location: Prague, Czechia
 in-domain: [domain/consumer-marketplaces]
 ---
 
-DeelsCorp is the company behind Deels, a marketplace connecting gastro businesses with customers in Prague. Co-founded by Pavel Holman in May 2024 with a four-person development team. The product is shipped and in maintenance.
+DeelsCorp is the company behind Deels, a marketplace connecting gastro businesses with customers in Prague. Co-founded by Pavel Holman in May 2024 with a four-person development team. Pavel was there from May 2024 to May 2026. The product is shipped and in maintenance.

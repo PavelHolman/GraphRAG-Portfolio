@@ -1,6 +1,6 @@
 ---
 title: TypeScript
-summary: Strict TypeScript across backend, tooling and the browser; one of Pavel's three strongest skills.
+summary: Strict TypeScript across backend, tooling and the browser, used daily at poqet.
 category: language
 aliases: [TS]
 ---
