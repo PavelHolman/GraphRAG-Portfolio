@@ -104,7 +104,8 @@
             {#each linked(x.projects) as o, i (o.id)}{#if i}<span class="sep">
                   ·
                 </span>{/if}{#if o.url}<a href={o.url}>{o.title}</a>{:else}<b>{o.title}</b
-                >{/if}{#if x.highlights.length && o.url}{' '}<span class="url">{bare(o.url)}</span
+                >{/if}{#if x.highlights.length && o.url}{' '}<a class="url" href={o.url}
+                  >{bare(o.url)}</a
                 >{:else if o.summary}: {o.summary}{/if}{/each}
           </p>
         {/if}
@@ -153,16 +154,25 @@
       </article>
     {/each}
     {#each courses as e (e.id)}
-      <div class="row course">
-        <span>{e.title}</span><span class="when">{dates(e.range)}</span>
-      </div>
+      <article>
+        <div class="row">
+          <h3>{e.organization ?? e.title}</h3>
+          <span class="when">{dates(e.range)}</span>
+        </div>
+        {#if e.organization}<p class="owned">{e.title}</p>{/if}
+      </article>
     {/each}
   </section>
 
   {#if contests.length}
     <section>
       <h2>Competitive programming</h2>
-      {#each contests as x (x.id)}<p>{x.summary ?? x.title}</p>{/each}
+      <ul>
+        <!-- A Project summary of the form "A; B" prints as two bullets. -->
+        {#each contests as x (x.id)}
+          {#each (x.summary ?? x.title).split('; ') as part (part)}<li>{part}</li>{/each}
+        {/each}
+      </ul>
     </section>
   {/if}
 
@@ -179,11 +189,9 @@
   {#if Object.keys(p.languages).length}
     <section>
       <h2>Languages</h2>
-      <p>
-        {Object.entries(p.languages)
-          .map(([lang, level]) => `${lang}: ${level}`)
-          .join(' · ')}
-      </p>
+      <ul>
+        {#each Object.entries(p.languages) as [lang, level] (lang)}<li>{lang}: {level}</li>{/each}
+      </ul>
     </section>
   {/if}
 </main>
@@ -320,11 +328,10 @@
     color: var(--ink);
     font-weight: 600;
   }
-  .url {
+  .url,
+  .owned a.url {
     color: var(--muted);
-  }
-  .course {
-    margin-top: 0.4mm;
+    font-weight: 400;
   }
   .skills {
     display: grid;

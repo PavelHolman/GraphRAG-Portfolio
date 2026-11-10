@@ -1,5 +1,5 @@
 ---
-title: Charles University
+title: Faculty of Mathematics and Physics, Charles University
 summary: Prague university where Pavel took the Deep Learning and Deep Reinforcement Learning courses.
 kind: university
 url: https://cuni.cz

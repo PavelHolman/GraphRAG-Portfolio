@@ -1,5 +1,5 @@
 ---
-title: Exchange semester at NTUST
+title: Exchange semester in Taipei, Taiwan
 summary: One semester of machine learning and programming courses in Taipei, August 2023 to January 2024.
 start: 2023-08
 end: 2024-01

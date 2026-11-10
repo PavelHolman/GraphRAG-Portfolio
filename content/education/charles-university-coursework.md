@@ -1,5 +1,5 @@
 ---
-title: Deep Learning and Deep Reinforcement Learning at Charles University
+title: Deep Learning and Deep Reinforcement Learning
 summary: Milan Straka's DL and DRL courses, taken as additional coursework with PyTorch and Keras.
 start: 2024-02
 end: 2026-06

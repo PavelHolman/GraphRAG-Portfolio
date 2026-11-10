@@ -2,10 +2,12 @@
 title: Co-founder and Principal Engineer at DeelsCorp
 summary: 'Led a four-person team shipping Deels end to end: mobile apps, Kotlin backend, APIs, infrastructure.'
 start: 2024-05
+end: 2026-05
 role: Co-founder and Principal Engineer
 highlights:
-  - Led a four-person team that shipped Deels, a gastro marketplace used by 80 partners in Prague.
+  - Led a four-person team that shipped Deels, a restaurant marketplace used by 80 partners in Prague.
   - 'Owned engineering end to end: Kotlin backend and GraphQL APIs, Kotlin Multiplatform and SwiftUI apps, infrastructure.'
+  - Shared about 50% of mobile code across iOS and Android with Kotlin Multiplatform, reducing duplicate implementation and speeding up feature development.
   - Won a CZK 1 million grant from CzechInvest's Technology Incubation programme.
 employment: founder
 at: [organization/deelscorp]
@@ -42,4 +44,4 @@ uses:
 in-domain: [domain/consumer-marketplaces]
 ---
 
-Co-founder and principal engineer of DeelsCorp since May 2024. Led engineering end to end for a four-person team: mobile applications, backend services, APIs and infrastructure. Backend in Kotlin with PostgreSQL, exposed through PostGraphile behind a GraphQL Hive and Mesh gateway; apps with Kotlin Multiplatform, Compose Multiplatform and SwiftUI; Docker for services, hosted on Oracle Cloud Infrastructure and observed with Grafana, Loki, Tempo and Prometheus. Mentored the team and reviewed its Kotlin and Swift code. DeelsCorp won a CZK 1 million grant from CzechInvest's Technology Incubation programme. Deels shipped and is now in maintenance with little ongoing work.
+Co-founder and principal engineer of DeelsCorp from May 2024 to May 2026. Led engineering end to end for a four-person team: mobile applications, backend services, APIs and infrastructure. Backend in Kotlin with PostgreSQL, exposed through PostGraphile behind a GraphQL Hive and Mesh gateway; apps with Kotlin Multiplatform, Compose Multiplatform and SwiftUI; Docker for services, hosted on Oracle Cloud Infrastructure and observed with Grafana, Loki, Tempo and Prometheus. Mentored the team and reviewed its Kotlin and Swift code. DeelsCorp won a CZK 1 million grant from CzechInvest's Technology Incubation programme. Deels shipped and is now in maintenance with little ongoing work.
